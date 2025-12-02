@@ -13,7 +13,7 @@ const StudentDashboard = () => {
   return (
     <div className="student-dashboard">
       <h1>Student Dashboard</h1>
-      <p>Mirë se vini në panelin e studentit</p>
+      <p>Mirë se vini në panelin E AV..</p>
     </div>
   );
 };
