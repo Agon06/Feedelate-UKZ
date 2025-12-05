@@ -20,7 +20,10 @@ function App() {
         </nav> */}
 
         <Routes>
-          <Route path="/" element={<Login />} />
+          {/* For testing on the `test` branch we show the Student dashboard at root
+              so you can view student UI without logging in. */}
+          <Route path="/" element={<StudentDashboard />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/profesor" element={<ProfesorDashboard />} />
           <Route path="/student" element={<StudentDashboard />} />
