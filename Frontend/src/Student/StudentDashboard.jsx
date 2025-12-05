@@ -18,6 +18,16 @@ const StudentDashboard = () => {
     fontFamily: 'Inter, system-ui, Arial, sans-serif'
   };
 
+  // full-bleed wrapper to escape any centered parent (#root) max-width
+  const fullBleed = {
+    width: '100vw',
+    position: 'relative',
+    left: '50%',
+    right: '50%',
+    marginLeft: '-50vw',
+    marginRight: '-50vw'
+  };
+
   const topBarStyle = {
     display: 'flex',
     justifyContent: 'space-between',
@@ -76,7 +86,7 @@ const StudentDashboard = () => {
 
   return (
     <div className="student-dashboard" style={pageStyle}>
-      <div style={topBarStyle}>
+      <div style={{...fullBleed, ...topBarStyle}}>
         <div style={brandStyle}>Feedelate</div>
         <div style={{flex: 1}} />
         <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
@@ -84,11 +94,13 @@ const StudentDashboard = () => {
         </div>
       </div>
 
-      <div style={titleStyle}>
+      <div style={{...fullBleed}}>
+        <div style={titleStyle}>
         <h2 style={{margin: 0}}>Universiteti Publik Kadri Zeka</h2>
+        </div>
       </div>
 
-      <main style={layoutContainer}>
+      <main style={{...fullBleed, ...layoutContainer}}>
         {years.map((y, idx) => {
           const pos = smallScreen ? { left: '50%', top: `${20 + idx * 26}%`, transform: 'translateX(-50%)' } : positions[idx];
           return (
