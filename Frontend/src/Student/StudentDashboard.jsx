@@ -15,17 +15,8 @@ const StudentDashboard = () => {
     background: 'linear-gradient(180deg, rgba(10,18,12,1) 0%, rgba(14,28,20,1) 50%, rgba(12,30,18,1) 100%)',
     padding: 0,
     margin: 0,
-    fontFamily: 'Inter, system-ui, Arial, sans-serif'
-  };
-
-  // full-bleed wrapper to escape any centered parent (#root) max-width
-  const fullBleed = {
-    width: '100vw',
-    position: 'relative',
-    left: '50%',
-    right: '50%',
-    marginLeft: '-50vw',
-    marginRight: '-50vw'
+    fontFamily: 'Inter, system-ui, Arial, sans-serif',
+    boxSizing: 'border-box'
   };
 
   const topBarStyle = {
@@ -86,7 +77,8 @@ const StudentDashboard = () => {
 
   return (
     <div className="student-dashboard" style={pageStyle}>
-      <div style={{...fullBleed, ...topBarStyle}}>
+      {/* Top bar - uses full available width (no negative margins) */}
+      <div style={{...topBarStyle, width: '100%', boxSizing: 'border-box'}}>
         <div style={brandStyle}>Feedelate</div>
         <div style={{flex: 1}} />
         <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
@@ -94,13 +86,13 @@ const StudentDashboard = () => {
         </div>
       </div>
 
-      <div style={{...fullBleed}}>
+      <div style={{width: '100%', boxSizing: 'border-box'}}>
         <div style={titleStyle}>
-        <h2 style={{margin: 0}}>Universiteti Publik Kadri Zeka</h2>
+          <h2 style={{margin: 0}}>Universiteti Publik Kadri Zeka</h2>
         </div>
       </div>
 
-      <main style={{...fullBleed, ...layoutContainer}}>
+      <main style={{...layoutContainer, width: '100%', boxSizing: 'border-box'}}>
         {years.map((y, idx) => {
           const pos = smallScreen ? { left: '50%', top: `${20 + idx * 26}%`, transform: 'translateX(-50%)' } : positions[idx];
           return (
