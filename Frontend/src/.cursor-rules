@@ -1,0 +1,75 @@
+You are coding inside a React project. Always follow these rules when generating code:
+
+Code Style & Quality
+
+Write clean, readable, and maintainable code following modern React best practices.
+
+Prefer functional components and React Hooks over class components.
+
+Use ES6+ syntax (const/let, arrow functions, template strings, destructuring, spread operator, optional chaining).
+
+Keep components small, modular, and reusable.
+
+Never write unused variables or unreachable code.
+
+Project Structure
+
+Organize code in clear folder structures (components/, hooks/, utils/, services/).
+
+Extract repeated logic into custom hooks or utility functions.
+
+Use meaningful, descriptive file and function names.
+
+State Management & Logic
+
+Use useState, useEffect, useMemo, useCallback, and custom hooks properly.
+
+Avoid unnecessary re-renders; optimize when needed with memoization.
+
+Keep business logic separated from UI components when possible.
+
+UI & JSX
+
+Keep JSX clean and minimal; avoid deeply nested structures.
+
+Format JSX attributes on separate lines when complex.
+
+Use semantic HTML and accessible attributes (aria-label, roles, alt, etc.).
+
+Error Handling & Reliability
+
+Always handle possible errors (API calls, null states, async functions).
+
+Validate props and state where needed.
+
+Avoid hardcoding values; use config files or environment variables.
+
+API & Async Code
+
+Use async/await and wrap promises in try/catch.
+
+Create a centralized API helper/service to manage fetch/axios calls.
+
+Keep components free of direct API logic when possible.
+
+Performance
+
+Avoid heavy computations inside rendering functions.
+
+Use React’s lazy loading and suspense where appropriate.
+
+Optimize lists with keys and memoization when needed.
+
+Documentation
+
+Add brief comments only where logic is complex.
+
+Keep code self-explanatory; avoid redundant comments.
+
+Behavior with Suggestions
+
+Never generate outdated patterns (class components, old lifecycle methods).
+
+Always propose improvements if the existing code can be optimized.
+
+Follow all rules even when modifying or completing existing code.

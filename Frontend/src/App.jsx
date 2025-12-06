@@ -1,9 +1,11 @@
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 import Login from './Login/Login';
 import AdminDashboard from './Admin/AdminDashboard';
 import ProfesorDashboard from './Profesor/ProfesorDashboard';
 import StudentDashboard from './Student/StudentDashboard';
+import Lendet from './Student/lendet';
+import IdeaPage from './Student/Ide'; 
 
 
 function App() {
@@ -20,13 +22,13 @@ function App() {
         </nav> */}
 
         <Routes>
-          {/* For testing on the `test` branch we show the Student dashboard at root
-              so you can view student UI without logging in. */}
-          <Route path="/" element={<StudentDashboard />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Login />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/profesor" element={<ProfesorDashboard />} />
           <Route path="/student" element={<StudentDashboard />} />
+          <Route path="/student/lendet/:yearId" element={<Lendet />} />
+          <Route path="/student/ide" element={<IdeaPage />} />
+
         </Routes>
       </div>
     </Router>
