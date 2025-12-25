@@ -18,6 +18,8 @@ const StudentDashboard = () => {
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
+  const studentName = 'Student';
+  const avatarLetter = 'S';
 
   const pageStyle = {
     color: '#fff',
@@ -154,8 +156,8 @@ const StudentDashboard = () => {
             🔔
           </div>
           <div style={studentBadge}>
-            <div style={avatarStyle}>S</div>
-            <span>Student</span>
+            <div style={avatarStyle}>{avatarLetter}</div>
+            <span>{studentName}</span>
           </div>
         </div>
       </div>
@@ -168,7 +170,7 @@ const StudentDashboard = () => {
 
       <main style={{...layoutContainer, width: '100%', boxSizing: 'border-box'}}>
         {years.map(({ id, label }, idx) => {
-          const pos = positions[idx];
+          const pos = positions[idx % positions.length];
           const transformStyle = pos.transform ? { transform: pos.transform } : {};
           return (
             <div

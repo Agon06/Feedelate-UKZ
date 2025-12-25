@@ -3,6 +3,7 @@ import { DataSource } from "typeorm";
 import dotenv from "dotenv";
 
 dotenv.config();
+//e lidh bc me db,  i k
 
 export const AppDataSource = new DataSource({
   type: "mysql",

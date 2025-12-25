@@ -1,16 +1,99 @@
-import React, { useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { getStudentIdeas, createStudentIdea } from '../services/studentApi';
 
 const IdeaPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const subjectName = location.state?.subject ?? 'Lëndë e pa specifikuar';
+  const lendaId = location.state?.lendaId ?? null;
+  const STUDENT_ID = 1;
 
-  const ideas = useMemo(() => ([
-    { id: 'UKMS', type: 'User' },
-    { id: 'SHKU', type: 'User' },
-    { id: 'LM', type: 'Link' }
-  ]), []);
+  const [ideas, setIdeas] = useState([]);
+  const [listStatus, setListStatus] = useState({ loading: true, error: null });
+  const [formData, setFormData] = useState({
+    titulli: '',
+    shkurtesa: subjectName
+      .split(' ')
+      .map((word) => word?.[0] ?? '')
+      .join('')
+      .slice(0, 4)
+      .toUpperCase(),
+  });
+  const [formFeedback, setFormFeedback] = useState({ type: null, message: null });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const loadIdeas = useCallback(async () => {
+    setListStatus({ loading: true, error: null });
+    try {
+      const response = await getStudentIdeas(STUDENT_ID, lendaId);
+      setIdeas(response);
+      setListStatus({ loading: false, error: null });
+    } catch (error) {
+      setListStatus({
+        loading: false,
+        error: error?.message ?? 'Nuk u lexuan idetë aktuale.',
+      });
+    }
+  }, [STUDENT_ID, lendaId]);
+
+  useEffect(() => {
+    loadIdeas();
+  }, [loadIdeas]);
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (isSubmitting) return;
+
+    if (!lendaId) {
+      setFormFeedback({ type: 'error', message: 'Zgjidh lëndën përmes faqes së lëndëve përpara se të dërgosh një ide.' });
+      return;
+    }
+
+    if (!formData.titulli.trim() || !formData.shkurtesa.trim()) {
+      setFormFeedback({ type: 'error', message: 'Titulli dhe shkurtesa janë të detyrueshme.' });
+      return;
+    }
+
+    setIsSubmitting(true);
+    setFormFeedback({ type: null, message: null });
+    try {
+      const payload = {
+        lendaId,
+        titulli: formData.titulli.trim(),
+        shkurtesa: formData.shkurtesa.trim().toUpperCase(),
+      };
+      const created = await createStudentIdea(STUDENT_ID, payload);
+      setIdeas((prev) => [created, ...prev]);
+      setFormData({ titulli: '', shkurtesa: '' });
+      setFormFeedback({ type: 'success', message: 'Idea u ruajt me sukses.' });
+    } catch (error) {
+      setFormFeedback({ type: 'error', message: error?.message ?? 'Nuk u ruajt ideja.' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleFeedback = () => {
+    //nese ka feedback
+    const feedBackId = 1; //kete do e marim nga backendi ne te ardhmen
+    if (feedBackId === 1) {
+    navigate('/student/feedback', {
+      state: {
+        context: `Ide për lëndën: ${subjectName} (ID: ${lendaId})`
+      }
+    });
+  }
+    else {
+      alert('Nuk ka ende feedback të lidhur me këtë ide.');
+    }
+  };
+
 
   const pageStyle = {
     minHeight: '100vh',
@@ -137,6 +220,14 @@ const IdeaPage = () => {
     cursor: 'pointer'
   };
 
+  const bannerStyle = {
+    borderRadius: 12,
+    padding: '0.75rem 1rem',
+    marginTop: '0.5rem',
+    textAlign: 'center',
+    fontSize: 13,
+  };
+
   return (
     <div style={pageStyle}>
       <div style={modalStyle}>
@@ -148,42 +239,97 @@ const IdeaPage = () => {
 
         <div style={columnsStyle}>
           <div style={columnCard}>
-            <input type="text" placeholder="Search" style={searchInput} />
+            <input type="text" placeholder="Search" style={searchInput} disabled />
             <div style={ideaList}>
-              {ideas.map((idea) => (
+              {listStatus.loading && (
+                <div style={{ textAlign: 'center', opacity: 0.8 }}>Duke u ngarkuar...</div>
+              )}
+              {listStatus.error && (
+                <div style={{ textAlign: 'center', color: '#f8b4b4' }}>{listStatus.error}</div>
+              )}
+              {!listStatus.loading && !listStatus.error && ideas.length === 0 && (
+                <div style={{ textAlign: 'center', opacity: 0.8 }}>Ende nuk ka ide për këtë lëndë.</div>
+              )}
+              {!listStatus.loading && !listStatus.error && ideas.map((idea) => (
                 <div key={idea.id} style={ideaItem}>
-                  <strong>{idea.id}</strong>
-                  <span style={tagStyle}>{idea.type}</span>
+                  <div>
+                    <strong>{idea.title}</strong>
+                    {idea.subject?.name && (
+                      <p style={{ margin: 0, fontSize: 12, opacity: 0.8 }}>{idea.subject.name}</p>
+                    )}
+                  </div>
+                  <span style={tagStyle}>{idea.shorthand}</span>
                 </div>
               ))}
             </div>
-            <button style={{ ...secondaryButton, width: '100%', marginTop: '1.5rem' }}>
-              Shiko idetë e të tjerëve
+            <button
+              style={{ ...secondaryButton, width: '100%', marginTop: '1.5rem' }}
+              onClick={loadIdeas}
+              disabled={listStatus.loading}
+            >
+              Rifresko listën
             </button>
           </div>
 
           <div style={columnCard}>
             <div style={formField}>
-              <label>Emri Mbiemri</label>
-              <input style={inputStyle} placeholder="Enter full name..." />
+              <label>Lënda</label>
+              <input style={inputStyle} value={subjectName} disabled />
             </div>
-            <div style={formField}>
-              <label>Titulli</label>
-              <input style={inputStyle} placeholder="Enter title..." />
-            </div>
-            <div style={formField}>
-              <label>Shkurtesa</label>
-              <input style={inputStyle} defaultValue="SEW..." />
-            </div>
-            <button style={{ ...primaryButton, width: '100%' }}>Shto Iden</button>
+            <form onSubmit={handleSubmit}>
+              <div style={formField}>
+                <label>Titulli</label>
+                <input
+                  style={inputStyle}
+                  placeholder="P.sh. Ide për projektin praktik"
+                  name="titulli"
+                  value={formData.titulli}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div style={formField}>
+                <label>Shkurtesa</label>
+                <input
+                  style={inputStyle}
+                  placeholder="Shkurtesa e idesë"
+                  name="shkurtesa"
+                  value={formData.shkurtesa}
+                  onChange={handleInputChange}
+                />
+              </div>
+              {formFeedback.message && (
+                <div
+                  style={{
+                    ...bannerStyle,
+                    background: formFeedback.type === 'error' ? 'rgba(255,82,82,0.12)' : 'rgba(23,199,122,0.15)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                  }}
+                >
+                  {formFeedback.message}
+                </div>
+              )}
+              <button style={{ ...primaryButton, width: '100%', marginTop: '1rem' }} type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Duke u ruajtur...' : 'Shto idenë'}
+              </button>
+            </form>
           </div>
         </div>
 
         <div style={footerStyle}>
-          <button style={primaryButton}>Dorëzo</button>
-          <button style={secondaryButton}>Feedback</button>
+          <button 
+            style={primaryButton} 
+            onClick={() => navigate('/student/dorezimi', {
+              state: {
+                lendaId: lendaId,
+                subject: subjectName
+              }
+            })}
+          >
+            Dorëzo
+          </button>
+          <button style={secondaryButton} onClick={handleFeedback}>Feedback</button>
         </div>
-      </div>
+      </div> 
     </div>
   );
 };

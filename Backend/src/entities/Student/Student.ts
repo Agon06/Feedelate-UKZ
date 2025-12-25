@@ -1,4 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from "typeorm";
+import { Idete } from "./Idete";
+import { DorezimiIdes } from "./dorezimiIdes";
 
 @Entity("studentet")
 export class Student {
@@ -11,23 +13,21 @@ export class Student {
   @Column()
   mbiemri: string;
 
+  // email duhet te jete vetem %.st@uni-gjilan.net
   @Column({ unique: true })
   email: string;
 
   @Column()
   password: string;
 
-  @Column({ nullable: true })
-  nrPersonal: string;
+  @Column({ nullable: true, unique: true })
+  nrIdCard: string;
 
-  @Column({ nullable: true })
-  drejtimi: string;
+  @OneToMany(() => Idete, (idete) => idete.student, { cascade: false })
+  idete: Idete[];
 
-  @Column({ type: "int", nullable: true })
-  viti: number;
-
-  @Column({ nullable: true })
-  telefoni: string;
+  @OneToMany(() => DorezimiIdes, (dorezim) => dorezim.student, { cascade: false })
+  dorezime: DorezimiIdes[];
 
   @CreateDateColumn()
   createdAt: Date;

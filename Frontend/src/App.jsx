@@ -6,6 +6,11 @@ import ProfesorDashboard from './Profesor/ProfesorDashboard';
 import StudentDashboard from './Student/StudentDashboard';
 import Lendet from './Student/lendet';
 import IdeaPage from './Student/Ide'; 
+import DorezimPage from './Student/Dorezimi';
+import StudentProfile from './Student/profile';
+import Student from './Student/test';
+import feedback from './Student/feedback';
+import TEST from './Student/test';
 
 
 function App() {
@@ -28,6 +33,11 @@ function App() {
           <Route path="/student" element={<StudentDashboard />} />
           <Route path="/student/lendet/:yearId" element={<Lendet />} />
           <Route path="/student/ide" element={<IdeaPage />} />
+          <Route path="/student/dorezimi" element={<DorezimPage />} />
+          <Route path="/student/profile" element={<StudentProfile />} /> 
+          <Route path="/student/test" element={<TEST />} /> 
+          <Route path="/student/feedback" element={<feedback />} />
+        
 
         </Routes>
       </div>

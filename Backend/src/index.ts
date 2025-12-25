@@ -7,7 +7,7 @@ import profesorRoutes from "./routes/Profesor/profesorRoutes";
 import studentRoutes from "./routes/Student/studentRoutes";
 import adminRoutes from "./routes/Admin/adminRoutes";
 
-dotenv.config();
+dotenv.config(); 
 
 const app: Application = express();
 const PORT = process.env.PORT || 5000;
@@ -22,12 +22,17 @@ app.get("/", (req: Request, res: Response) => {
     res.json({ message: "Welcome to Feedelate API" });
 });
 
+// Serve uploaded files
+import path from "path";
+app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
 
-// API Routes
+//intex i bashkon krejt me routes entetis edhe nis serverin pa u kan ky okej nuk nis.
+// API Routes 
 app.use("/api/users", userRoutes);
 app.use("/api/profesoret", profesorRoutes);
 app.use("/api/studentet", studentRoutes);
 app.use("/api/admins", adminRoutes);
+
 
 // Initialize Database and Start Server
 AppDataSource.initialize()

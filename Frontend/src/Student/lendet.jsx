@@ -1,58 +1,51 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-
-const curriculum = {
-  '1': {
-    title: 'Viti I',
-    semesters: [
-      {
-        name: 'Semestri 1',
-        subjects: ['Programim 1', 'Shkrim Akademik', 'Qarqe Digitale', 'Matematika 1', 'Anglisht 1', 'Arkitektura']
-      },
-      {
-        name: 'Semestri 2',
-        subjects: ['Anglisht 2', 'Rrjeta Kompjuterike', 'Programim 2', 'Algoritme', 'Bazat e te Dhenave', 'Logjike Matematike']
-      }
-    ],
-    electives: ['Mikrokontrolleret', 'Analiza e kerkesave per web aplikacione', 'Senzoret dhe nderfaqet', 'Zhvillimet per internet']
-  },
-  '2': {
-    title: 'Viti II',
-    semesters: [
-      {
-        name: 'Semestri 3',
-        subjects: ['Inxhinieri Softuerike', 'Siguria e te Dhenave', 'Sistemet Operative', 'Programim i Avancuar']
-      },
-      {
-        name: 'Semestri 4',
-        subjects: ['Projektim i Sistemeve', 'Inteligjence Artificiale', 'Menaxhim Projektesh', 'Rrjeta te Avancuara']
-      }
-    ],
-    electives: ['Softuer i Integruar', 'Analize Biznesi', 'Robotike Baze']
-  },
-  '3': {
-    title: 'Viti III',
-    semesters: [
-      {
-        name: 'Semestri 5',
-        subjects: ['Cloud Computing', 'Analize e Dhenave', 'Programim per Pajisje Mobile']
-      },
-      {
-        name: 'Semestri 6',
-        subjects: ['Praktike Profesionale', 'Projekt Diplome', 'Zhvillim i Shperndare']
-      }
-    ],
-    electives: ['Shkenca e te Dhenave', 'DevOps', 'Realitet Virtual']
-  }
-};
+import { getStudentYearData } from '../services/studentApi';
 
 const Lendet = () => {
   const { yearId } = useParams();
   const navigate = useNavigate();
+  const STUDENT_ID = 1;
   const [isMobile, setIsMobile] = useState(false);
   const [showElectives, setShowElectives] = useState(false);
   const [selectedElectives, setSelectedElectives] = useState([]);
   const [activeModal, setActiveModal] = useState({ open: false, subject: null });
+  const [yearData, setYearData] = useState(null);
+  const [status, setStatus] = useState({ loading: true, error: null });
+
+  const baseSemesters = useMemo(() => {
+    const parsed = Number(yearId);
+    if (Number.isNaN(parsed) || parsed < 1) {
+      return [];
+    }
+    return [parsed * 2 - 1, parsed * 2];
+  }, [yearId]);
+
+  const semestersToRender = useMemo(() => {
+    const actualSemesters = yearData?.semesters ?? [];
+    if (!baseSemesters.length) {
+      return actualSemesters;
+    }
+
+    const fallback = baseSemesters.map((semNumber) => {
+      const existing = actualSemesters.find((semester) => semester.id === semNumber);
+      return existing ?? {
+        id: semNumber,
+        name: `Semestri ${semNumber}`,
+        subjects: [],
+      };
+    });
+
+    const extras = actualSemesters.filter((semester) => !baseSemesters.includes(semester.id));
+    return [...fallback, ...extras];
+  }, [baseSemesters, yearData]);
+
+  const electiveAnchorSemesterId = useMemo(() => {
+    if (yearData?.semesters?.length) {
+      return yearData.semesters[yearData.semesters.length - 1].id;
+    }
+    return baseSemesters[baseSemesters.length - 1];
+  }, [baseSemesters, yearData]);
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -61,7 +54,36 @@ const Lendet = () => {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const yearData = useMemo(() => curriculum[yearId], [yearId]);
+  useEffect(() => {
+    let isMounted = true;
+    setStatus({ loading: true, error: null });
+
+    const fetchYearData = async () => {
+      try {
+        const data = await getStudentYearData(STUDENT_ID, yearId);
+        if (!isMounted) return;
+        setYearData(data);
+        const initialElectives = Array.isArray(data?.selectedElectives) ? data.selectedElectives : [];
+        setSelectedElectives(initialElectives);
+        setStatus({ loading: false, error: null });
+      } catch (error) {
+        if (!isMounted) return;
+        setStatus({
+          loading: false,
+          error: error?.message ?? 'Nuk u lexuan lendet per kete vit.',
+        });
+      }
+    };
+
+    fetchYearData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [STUDENT_ID, yearId]);
+
+  const studentName = yearData?.student?.fullName ?? 'Student';
+  const avatarLetter = yearData?.student?.emri?.[0]?.toUpperCase() ?? 'S';
 
   const pageStyle = {
     color: '#fff',
@@ -88,6 +110,15 @@ const Lendet = () => {
     display: 'flex',
     alignItems: 'center',
     gap: isMobile ? 10 : 18
+  };
+
+  const bannerStyle = {
+    border: '1px solid rgba(255,255,255,0.15)',
+    borderRadius: 14,
+    padding: '0.85rem 1rem',
+    marginTop: 16,
+    textAlign: 'center',
+    fontWeight: 600,
   };
 
   const bellStyle = {
@@ -167,6 +198,16 @@ const Lendet = () => {
     display: 'grid',
     gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))',
     gap: 12
+  };
+
+  const emptySubjectsStyle = {
+    gridColumn: '1 / -1',
+    textAlign: 'center',
+    border: '1px dashed rgba(255,255,255,0.25)',
+    borderRadius: 12,
+    padding: '1rem',
+    color: '#c4f0da',
+    fontStyle: 'italic'
   };
 
   const subjectItem = {
@@ -293,11 +334,10 @@ const Lendet = () => {
   };
 
   const handleElectiveToggle = useCallback((course) => {
-    setSelectedElectives((prev) =>
-      prev.includes(course)
-        ? prev.filter((item) => item !== course)
-        : [...prev, course]
-    );
+    setSelectedElectives((prev) => {
+      const exists = prev.some((item) => item.id === course.id);
+      return exists ? prev.filter((item) => item.id !== course.id) : [...prev, course];
+    });
   }, []);
 
   const openSubjectModal = useCallback((subject) => {
@@ -310,7 +350,13 @@ const Lendet = () => {
 
   const handleModalChoice = useCallback((choice) => {
     if (choice === 'idea') {
-      navigate('/student/ide', { state: { subject: activeModal.subject, yearId } });
+      navigate('/student/ide', {
+        state: {
+          subject: activeModal.subject?.name,
+          lendaId: activeModal.subject?.id,
+          yearId,
+        },
+      });
       setActiveModal({ open: false, subject: null });
     } else {
       // Placeholder for future routes (projects/deadlines)
@@ -320,18 +366,33 @@ const Lendet = () => {
 
   const handleBack = useCallback(() => navigate('/student'), [navigate]);
 
-  if (!yearData) {
-    return (
-      <div style={{ ...pageStyle, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: 22, marginBottom: 16 }}>Nuk ekzistojne te dhena per kete vit.</p>
-          <button style={backButton} onClick={handleBack}>
-            &#8592; Kthehu te paneli
-          </button>
+  const renderStateBanner = () => {
+    if (status.loading) {
+      return (
+        <div style={{ ...bannerStyle, background: 'rgba(23,199,122,0.15)', borderColor: 'rgba(23,199,122,0.45)' }}>
+          Po ngarkohen të dhënat...
         </div>
-      </div>
-    );
-  }
+      );
+    }
+
+    if (status.error) {
+      return (
+        <div style={{ ...bannerStyle, background: 'rgba(255,82,82,0.1)', borderColor: 'rgba(255,82,82,0.4)' }}>
+          {status.error}
+        </div>
+      );
+    }
+
+    if (!yearData) {
+      return (
+        <div style={{ ...bannerStyle, background: 'rgba(255,255,255,0.05)' }}>
+          Nuk ekzistojnë të dhëna për këtë vit.
+        </div>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <div style={pageStyle}>
@@ -341,40 +402,42 @@ const Lendet = () => {
         <div style={actionsStyle}>
           <div style={bellStyle} aria-label="notifications" role="img">🔔</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 600 }}>
-            <div style={avatarStyle}>S</div>
-            <span>Student</span>
+            <div style={avatarStyle}>{avatarLetter}</div>
+            <span>{studentName}</span>
           </div>
         </div>
       </div>
 
       <div style={layoutStyle}>
         <div style={headerRow}>
-          <h1 style={{ margin: 0 }}>{yearData.title}</h1>
+          <h1 style={{ margin: 0 }}>{yearData?.year?.title ?? 'Viti Akademik'}</h1>
           <button style={backButton} onClick={handleBack}>
             &#8592; Back to Dashboard
           </button>
         </div>
 
-        <div style={semesterGrid}>
-          {yearData.semesters.map((semester, index) => {
-            const extendedSubjects = index === 1
-              ? [...semester.subjects, ...selectedElectives]
-              : semester.subjects;
+        {renderStateBanner()}
 
-            return (
-              <div key={semester.name} style={semesterCard}>
+        {yearData && semestersToRender.length > 0 && (
+          <div style={semesterGrid}>
+            {semestersToRender.map((semester) => (
+              <div key={semester.id ?? semester.name} style={semesterCard}>
                 <div style={semesterTitle}>{semester.name}</div>
                 <div style={subjectGrid}>
-                  {extendedSubjects.map((subject) => {
-                    const isElective = index === 1 && selectedElectives.includes(subject);
+                  {semester.subjects.length === 0 && (
+                    <div style={emptySubjectsStyle}>Ende nuk ka lëndë për këtë semestër.</div>
+                  )}
+                  {semester.subjects.map((subject) => {
+                    const isElective = Boolean(subject.isElective);
+                    const isSelected = selectedElectives.some((item) => item.id === subject.id);
                     return (
                       <div
-                        key={`${semester.name}-${subject}`}
+                        key={`${semester.id}-${subject.id}`}
                         style={{
                           ...subjectItem,
-                          border: isElective ? '1px solid rgba(23,199,122,0.65)' : subjectItem.border,
-                          color: isElective ? '#1fdc8c' : subjectItem.color,
-                          opacity: isElective ? 1 : 0.92,
+                          border: isSelected ? '1px solid rgba(23,199,122,0.65)' : subjectItem.border,
+                          color: isSelected ? '#1fdc8c' : subjectItem.color,
+                          opacity: isElective ? 0.95 : 1,
                           cursor: 'pointer'
                         }}
                         role="button"
@@ -387,33 +450,37 @@ const Lendet = () => {
                           }
                         }}
                       >
-                        {subject}
-                        {isElective && <span style={{ fontSize: 12, display: 'block', marginTop: 4, color: '#9bf3c8' }}>Lendë zgjedhore</span>}
+                        {subject.name}
+                        {isElective && (
+                          <span style={{ fontSize: 12, display: 'block', marginTop: 4, color: '#9bf3c8' }}>
+                            Lëndë zgjedhore
+                          </span>
+                        )}
                       </div>
                     );
                   })}
                 </div>
 
-                {index === 1 && yearData.electives?.length > 0 && (
+                {semester.id === electiveAnchorSemesterId && yearData.electives?.length > 0 && (
                   <>
                     <button
                       style={electiveButton}
                       onClick={() => setShowElectives((prev) => !prev)}
                       aria-expanded={showElectives}
                     >
-                      {showElectives ? '−' : '+'} Lendet zgjedhore
+                      {showElectives ? '−' : '+'} Lëndët zgjedhore
                     </button>
                     {showElectives && (
                       <div style={electivePanel}>
                         {yearData.electives.map((elective) => (
-                          <label key={elective} style={electiveItem}>
+                          <label key={elective.id} style={electiveItem}>
                             <input
                               type="checkbox"
                               style={{ accentColor: '#18c776' }}
-                              checked={selectedElectives.includes(elective)}
+                              checked={selectedElectives.some((item) => item.id === elective.id)}
                               onChange={() => handleElectiveToggle(elective)}
                             />
-                            {elective}
+                            {elective.name}
                           </label>
                         ))}
                       </div>
@@ -421,16 +488,16 @@ const Lendet = () => {
                   </>
                 )}
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
 
         {selectedElectives.length > 0 && (
           <div style={selectedContainer}>
             <div style={{ fontWeight: 700, color: '#1fdc8c' }}>Lendet e zgjedhura</div>
             <div style={selectedList}>
               {selectedElectives.map((course) => (
-                <span key={course} style={selectedPill}>{course}</span>
+                <span key={course.id} style={selectedPill}>{course.name}</span>
               ))}
             </div>
           </div>
@@ -443,7 +510,7 @@ const Lendet = () => {
             <header style={modalHeaderStyle}>
               <div>
                 <p style={{ margin: 0, color: '#8bf0c1', fontSize: 12 }}>Lënda</p>
-                <h3 style={{ margin: 0 }}>{activeModal.subject}</h3>
+                <h3 style={{ margin: 0 }}>{activeModal.subject?.name}</h3>
               </div>
               <button style={closeButtonStyle} onClick={closeSubjectModal} aria-label="Mbyll">
                 ✕
