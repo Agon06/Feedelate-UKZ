@@ -4,6 +4,7 @@ export default function TEST() {
     <div>
       <h1>Student Test Page</h1>
       <p>This is a test page for students.</p>
+      <p>LOLI</p>
     </div>
   );
 }
