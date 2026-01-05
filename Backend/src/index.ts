@@ -6,6 +6,7 @@ import userRoutes from "./routes/userRoutes";
 import profesorRoutes from "./routes/Profesor/profesorRoutes";
 import studentRoutes from "./routes/Student/studentRoutes";
 import adminRoutes from "./routes/Admin/adminRoutes";
+import projektiRoutes from "./routes/Student/projektiRoutes";
 
 dotenv.config(); 
 
@@ -32,6 +33,9 @@ app.use("/api/users", userRoutes);
 app.use("/api/profesoret", profesorRoutes);
 app.use("/api/studentet", studentRoutes);
 app.use("/api/admins", adminRoutes);
+app.use("/api/projekti", projektiRoutes);
+
+
 
 
 // Initialize Database and Start Server

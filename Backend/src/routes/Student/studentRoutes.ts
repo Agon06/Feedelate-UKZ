@@ -8,8 +8,14 @@ import fs from "fs";
 import { Student } from "../../entities/Student/Student";
 import { Lendet } from "../../entities/Student/Lendet";
 import { Idete } from "../../entities/Student/Idete";
-import { testi } from "../../entities/Student/testi";
 import { DorezimiIdes } from "../../entities/Student/dorezimiIdes";
+import { Projekti } from "../../entities/Student/projekti"; 
+
+
+
+
+
+
 
 
 const router = Router();
@@ -17,8 +23,10 @@ const studentRepository = AppDataSource.getRepository(Student);
 const lendeRepository = AppDataSource.getRepository(Lendet);
 const ideaRepository = AppDataSource.getRepository(Idete);
 const dorezimRepository = AppDataSource.getRepository(DorezimiIdes);
+const projektiRepository = AppDataSource.getRepository(Projekti);
+
 //e thirr repositorin e testi
-const testiRepository = AppDataSource.getRepository(testi);
+
 
 // Multer config for file upload (disk storage)
 const uploadDir = path.resolve(process.cwd(), "uploads", "dorezime");
@@ -487,16 +495,5 @@ router.delete("/:id", async (req: Request, res: Response) => {
   }
 });
 
-//krijoma per shtim e te dhenave te tabeles testi
-router.post("/testi", async (req: Request, res: Response) => {
-  try {
-    //ketu i tregojm qe me na kriju tek test repo
-    const testi = testiRepository.create(req.body); 
-    const result = await testiRepository.save(testi);
-    res.status(201).json(result);
-  } catch (error) {
-    res.status(500).json({ message: "Error creating testi", error });
-  }
-});
 
 export default router;

@@ -14,7 +14,7 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_NAME || "feedelate",
   synchronize: true,
   logging: false,
-  entities: ["src/entities/**/*.ts"],
-  migrations: ["src/migrations/**/*.ts"],
+  entities: ["dist/entities/**/*.js"],
+  migrations: ["dist/migrations/**/*.js"],
   subscribers: [],
 });
