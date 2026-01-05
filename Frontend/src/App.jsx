@@ -9,6 +9,9 @@ import IdeaPage from './Student/Ide';
 import DorezimPage from './Student/Dorezimi';
 import StudentProfile from './Student/profile';
 import feedback from './Student/feedback';
+import Projekti from './Student/projekti';
+
+
 
 
 
@@ -36,7 +39,9 @@ function App() {
           <Route path="/student/dorezimi" element={<DorezimPage />} />
           <Route path="/student/profile" element={<StudentProfile />} /> 
           <Route path="/student/feedback" element={<feedback />} />
-        
+          <Route path="/student/projekti" element={<Projekti />} />
+
+        // ketu shtohen rruget e reja
 
         </Routes>
       </div>
