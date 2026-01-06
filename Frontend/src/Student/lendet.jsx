@@ -6,8 +6,9 @@ const Lendet = () => {
   const { yearId } = useParams();
   const navigate = useNavigate();
   const STUDENT_ID = 1;
+  const electiveStorageKey = useMemo(() => `selectedElectives:${STUDENT_ID}:${yearId}`, [STUDENT_ID, yearId]);
   const [isMobile, setIsMobile] = useState(false);
-  const [showElectives, setShowElectives] = useState(false);
+  const [showElectivePicker, setShowElectivePicker] = useState(false);
   const [selectedElectives, setSelectedElectives] = useState([]);
   const [activeModal, setActiveModal] = useState({ open: false, subject: null });
   const [yearData, setYearData] = useState(null);
@@ -63,7 +64,18 @@ const Lendet = () => {
         const data = await getStudentYearData(STUDENT_ID, yearId);
         if (!isMounted) return;
         setYearData(data);
-        const initialElectives = Array.isArray(data?.selectedElectives) ? data.selectedElectives : [];
+        const stored = localStorage.getItem(electiveStorageKey);
+        let initialElectives = Array.isArray(data?.selectedElectives) ? data.selectedElectives : [];
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) {
+              initialElectives = parsed;
+            }
+          } catch (e) {
+            console.warn('Could not parse stored electives', e);
+          }
+        }
         setSelectedElectives(initialElectives);
         setStatus({ loading: false, error: null });
       } catch (error) {
@@ -80,7 +92,12 @@ const Lendet = () => {
     return () => {
       isMounted = false;
     };
-  }, [STUDENT_ID, yearId]);
+  }, [STUDENT_ID, yearId, electiveStorageKey]);
+
+  // Save to localStorage whenever selectedElectives change
+  useEffect(() => {
+    localStorage.setItem(electiveStorageKey, JSON.stringify(selectedElectives));
+  }, [electiveStorageKey, selectedElectives]);
 
   const studentName = yearData?.student?.fullName ?? 'Student';
   const avatarLetter = yearData?.student?.emri?.[0]?.toUpperCase() ?? 'S';
@@ -236,16 +253,28 @@ const Lendet = () => {
   };
 
   const electivePanel = {
-    position: isMobile ? 'static' : 'absolute',
-    right: isMobile ? 0 : 24,
-    top: isMobile ? 'auto' : 60,
-    marginTop: isMobile ? 16 : 0,
+    position: 'absolute',
+    zIndex: 5,
+    top: '110%',
+    left: 0,
     background: 'rgba(5,10,7,0.95)',
-    borderRadius: 18,
-    padding: '1rem',
-    border: '1px solid rgba(255,255,255,0.08)',
-    width: isMobile ? '100%' : 260,
-    boxShadow: '0 14px 35px rgba(0,0,0,0.55)'
+    borderRadius: 14,
+    padding: '0.85rem',
+    border: '1px solid rgba(255,255,255,0.12)',
+    width: 240,
+    boxShadow: '0 16px 38px rgba(0,0,0,0.55)'
+  };
+
+  const electiveTriggerRow = {
+    position: 'relative',
+    display: 'inline-block',
+    marginTop: 18
+  };
+
+  const smallHint = {
+    fontSize: 12,
+    color: '#9bf3c8',
+    marginTop: 6
   };
 
   const electiveItem = {
@@ -338,6 +367,8 @@ const Lendet = () => {
       const exists = prev.some((item) => item.id === course.id);
       return exists ? prev.filter((item) => item.id !== course.id) : [...prev, course];
     });
+    // Mbyll popover-in pasi u zgjodh/hoq një lëndë zgjedhore
+    setShowElectivePicker(false);
   }, []);
 
   const openSubjectModal = useCallback((subject) => {
@@ -411,10 +442,57 @@ const Lendet = () => {
       <div style={layoutStyle}>
         <div style={headerRow}>
           <h1 style={{ margin: 0 }}>{yearData?.year?.title ?? 'Viti Akademik'}</h1>
-          <button style={backButton} onClick={handleBack}>
-            &#8592; Back to Dashboard
-          </button>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+            <button style={backButton} onClick={handleBack}>
+              &#8592; Back to Dashboard
+            </button>
+          </div>
         </div>
+
+        {yearData?.electives?.length > 0 && (
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
+            <div style={{ ...electiveTriggerRow }}>
+              <button
+                style={{ ...electiveButton, position: 'static' }}
+                onClick={() => setShowElectivePicker((prev) => !prev)}
+                aria-expanded={showElectivePicker}
+              >
+                {showElectivePicker ? 'Mbyll zgjedhjet zgjedhore' : 'Lëndët zgjedhore'}
+              </button>
+              {showElectivePicker && (
+                <div style={electivePanel}>
+                  {yearData.electives.map((elective) => {
+                    const picked = selectedElectives.some((item) => item.id === elective.id);
+                    return (
+                      <div
+                        key={elective.id}
+                        style={{
+                          ...subjectItem,
+                          marginBottom: 8,
+                          border: picked ? '1px solid rgba(23,199,122,0.7)' : '1px solid rgba(23,199,122,0.25)',
+                          color: picked ? '#1fdc8c' : '#c5f5df',
+                          cursor: 'pointer'
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => handleElectiveToggle(elective)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            handleElectiveToggle(elective);
+                          }
+                        }}
+                      >
+                        {elective.name}
+                        {picked && <span style={{ display: 'block', fontSize: 12, marginTop: 4, color: '#9bf3c8' }}>E zgjedhur</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {renderStateBanner()}
 
@@ -424,11 +502,10 @@ const Lendet = () => {
               <div key={semester.id ?? semester.name} style={semesterCard}>
                 <div style={semesterTitle}>{semester.name}</div>
                 <div style={subjectGrid}>
-                  {semester.subjects.length === 0 && (
+                  {semester.subjects.filter((s) => !s.isElective).length === 0 && (
                     <div style={emptySubjectsStyle}>Ende nuk ka lëndë për këtë semestër.</div>
                   )}
-                  {semester.subjects.map((subject) => {
-                    const isElective = Boolean(subject.isElective);
+                  {semester.subjects.filter((s) => !s.isElective).map((subject) => {
                     const isSelected = selectedElectives.some((item) => item.id === subject.id);
                     return (
                       <div
@@ -437,7 +514,6 @@ const Lendet = () => {
                           ...subjectItem,
                           border: isSelected ? '1px solid rgba(23,199,122,0.65)' : subjectItem.border,
                           color: isSelected ? '#1fdc8c' : subjectItem.color,
-                          opacity: isElective ? 0.95 : 1,
                           cursor: 'pointer'
                         }}
                         role="button"
@@ -451,53 +527,39 @@ const Lendet = () => {
                         }}
                       >
                         {subject.name}
-                        {isElective && (
-                          <span style={{ fontSize: 12, display: 'block', marginTop: 4, color: '#9bf3c8' }}>
-                            Lëndë zgjedhore
-                          </span>
-                        )}
                       </div>
                     );
                   })}
                 </div>
-
-                {semester.id === electiveAnchorSemesterId && yearData.electives?.length > 0 && (
-                  <>
-                    <button
-                      style={electiveButton}
-                      onClick={() => setShowElectives((prev) => !prev)}
-                      aria-expanded={showElectives}
-                    >
-                      {showElectives ? '−' : '+'} Lëndët zgjedhore
-                    </button>
-                    {showElectives && (
-                      <div style={electivePanel}>
-                        {yearData.electives.map((elective) => (
-                          <label key={elective.id} style={electiveItem}>
-                            <input
-                              type="checkbox"
-                              style={{ accentColor: '#18c776' }}
-                              checked={selectedElectives.some((item) => item.id === elective.id)}
-                              onChange={() => handleElectiveToggle(elective)}
-                            />
-                            {elective.name}
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
               </div>
             ))}
           </div>
         )}
-
         {selectedElectives.length > 0 && (
           <div style={selectedContainer}>
-            <div style={{ fontWeight: 700, color: '#1fdc8c' }}>Lendet e zgjedhura</div>
-            <div style={selectedList}>
+            <div style={subjectGrid}>
               {selectedElectives.map((course) => (
-                <span key={course.id} style={selectedPill}>{course.name}</span>
+                <div
+                  key={course.id}
+                  style={{
+                    ...subjectItem,
+                    border: '1px solid rgba(23,199,122,0.65)',
+                    color: '#1fdc8c',
+                    cursor: 'pointer'
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => openSubjectModal({ ...course, isElective: true })}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      openSubjectModal({ ...course, isElective: true });
+                    }
+                  }}
+                >
+                  {course.name}
+                  <span style={{ fontSize: 12, display: 'block', marginTop: 4, color: '#9bf3c8' }}>Zgjedhore</span>
+                </div>
               ))}
             </div>
           </div>

@@ -71,6 +71,35 @@ export const uploadStudentDorezim = async (studentId, { lendaId, file }) => {
 export const getStudentTemplate = (studentId, lendaId) =>
   request(`/studentet/${studentId}/dorezime/shabllon?lendaId=${lendaId}`);
 
+export const getStudentProjects = (studentId) =>
+  request(`/projekti/${studentId}`);
+
+export const getStudentProject = (studentId, projectId) =>
+  request(`/projekti/${studentId}/${projectId}`);
+
+export const createStudentProject = (studentId, payload) =>
+  request(`/projekti/${studentId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+export const updateStudentProject = (studentId, projectId, payload) =>
+  request(`/projekti/${studentId}/${projectId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+export const deleteStudentProject = (studentId, projectId) =>
+  request(`/projekti/${studentId}/${projectId}`, {
+    method: 'DELETE',
+  });
+
 export default {
   getStudentDashboard,
   getStudentYearData,
@@ -79,4 +108,9 @@ export default {
   getStudentProfile,
   uploadStudentDorezim,
   getStudentTemplate,
+  getStudentProjects,
+  getStudentProject,
+  createStudentProject,
+  updateStudentProject,
+  deleteStudentProject,
 };

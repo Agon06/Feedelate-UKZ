@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getStudentIdeas, createStudentIdea } from '../services/studentApi';
+import './Ide.css';
 
 const IdeaPage = () => {
   const location = useLocation();
@@ -11,6 +12,7 @@ const IdeaPage = () => {
 
   const [ideas, setIdeas] = useState([]);
   const [listStatus, setListStatus] = useState({ loading: true, error: null });
+  const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
     titulli: '',
     shkurtesa: subjectName
@@ -103,7 +105,8 @@ const IdeaPage = () => {
     alignItems: 'center',
     justifyContent: 'center',
     fontFamily: 'Inter, system-ui, sans-serif',
-    padding: '2rem'
+    padding: '2rem',
+    overflow: 'hidden'
   };
 
   const modalStyle = {
@@ -157,7 +160,11 @@ const IdeaPage = () => {
   const ideaList = {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.8rem'
+    gap: '0.8rem',
+    maxHeight: '220px',
+    overflowY: 'auto',
+    overflowX: 'hidden',
+    paddingRight: '0.5rem'
   };
 
   const ideaItem = {
@@ -239,18 +246,32 @@ const IdeaPage = () => {
 
         <div style={columnsStyle}>
           <div style={columnCard}>
-            <input type="text" placeholder="Search" style={searchInput} disabled />
-            <div style={ideaList}>
+            <input 
+              type="text" 
+              placeholder="Kërko idenë..." 
+              style={searchInput}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <div style={ideaList} className="idea-list-scroll">
               {listStatus.loading && (
                 <div style={{ textAlign: 'center', opacity: 0.8 }}>Duke u ngarkuar...</div>
               )}
               {listStatus.error && (
                 <div style={{ textAlign: 'center', color: '#f8b4b4' }}>{listStatus.error}</div>
               )}
-              {!listStatus.loading && !listStatus.error && ideas.length === 0 && (
-                <div style={{ textAlign: 'center', opacity: 0.8 }}>Ende nuk ka ide për këtë lëndë.</div>
+              {!listStatus.loading && !listStatus.error && ideas.filter(idea => 
+                idea.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                idea.shorthand.toLowerCase().includes(searchTerm.toLowerCase())
+              ).length === 0 && (
+                <div style={{ textAlign: 'center', opacity: 0.8 }}>
+                  {searchTerm ? 'Nuk u gjet asnjë ide me këtë kriter.' : 'Ende nuk ka ide për këtë lëndë.'}
+                </div>
               )}
-              {!listStatus.loading && !listStatus.error && ideas.map((idea) => (
+              {!listStatus.loading && !listStatus.error && ideas.filter(idea => 
+                idea.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                idea.shorthand.toLowerCase().includes(searchTerm.toLowerCase())
+              ).map((idea) => (
                 <div key={idea.id} style={ideaItem}>
                   <div>
                     <strong>{idea.title}</strong>
