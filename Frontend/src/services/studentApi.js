@@ -68,6 +68,9 @@ export const uploadStudentDorezim = async (studentId, { lendaId, file }) => {
   return handleResponse(response);
 };
 
+export const getStudentIdeaSubmission = (studentId, lendaId) =>
+  request(`/studentet/${studentId}/dorezime?lendaId=${lendaId}`);
+
 export const getStudentTemplate = (studentId, lendaId) =>
   request(`/studentet/${studentId}/dorezime/shabllon?lendaId=${lendaId}`);
 
@@ -107,6 +110,7 @@ export default {
   createStudentIdea,
   getStudentProfile,
   uploadStudentDorezim,
+  getStudentIdeaSubmission,
   getStudentTemplate,
   getStudentProjects,
   getStudentProject,

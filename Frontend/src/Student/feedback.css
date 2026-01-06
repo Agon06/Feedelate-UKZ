@@ -1,0 +1,256 @@
+.feedback-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #183024;
+  color: #f5f5f5;
+}
+
+.feedback-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-bottom: 2px solid #2a4a3a;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #4ade80;
+}
+
+.feedback-nav {
+  display: flex;
+  gap: 30px;
+}
+
+.nav-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: #a8e6c1;
+  padding-bottom: 5px;
+}
+
+.nav-text strong {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.feedback-content {
+  flex: 1;
+  padding: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.status-bar {
+  margin-bottom: 30px;
+  padding: 15px 20px;
+  background-color: rgba(74, 222, 128, 0.1);
+  border-left: 4px solid #4ade80;
+  border-radius: 4px;
+}
+
+.status-info {
+  display: flex;
+  gap: 40px;
+  align-items: center;
+}
+
+.status-label,
+.vleresimi-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: #a8e6c1;
+}
+
+.status-label strong,
+.vleresimi-label strong {
+  color: #4ade80;
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.feedback-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.display-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.display-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.display-group label {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #4ade80;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.display-box {
+  padding: 15px;
+  background-color: rgba(0, 0, 0, 0.4);
+  border: 2px solid #2a4a3a;
+  border-radius: 6px;
+  color: #f5f5f5;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 260px; /* Unified card height */
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.file-box {
+  display: flex;
+  flex-direction: column; /* Stack file info and preview */
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 16px;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+  background-color: rgba(74, 222, 128, 0.08);
+  padding: 12px; /* Slightly smaller */
+  border-radius: 6px;
+  border: 1px solid rgba(74, 222, 128, 0.2);
+}
+
+.file-icon {
+  font-size: 28px; /* Smaller icon */
+  flex-shrink: 0;
+}
+
+.file-info {
+  flex: 1;
+}
+
+.file-name {
+  margin: 0;
+  font-weight: 600;
+  color: #4ade80;
+  font-size: 15px;
+}
+
+.file-type {
+  margin: 4px 0 0 0;
+  color: #668f7d;
+  font-size: 12px;
+}
+
+.download-btn {
+  padding: 8px 16px;
+  background-color: #4ade80;
+  color: #0a120c;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 13px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.download-btn--small {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.download-btn:hover {
+  background-color: #2a9d5f;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);
+}
+
+.download-btn:active {
+  transform: translateY(0);
+}
+
+/* Office embed toggle */
+/* Office embed styles removed for local-only usage */
+
+/* Inline DOCX preview removed; Office embed handles original view */
+
+.back-btn {
+  padding: 12px 24px;
+  background-color: rgba(74, 222, 128, 0.15);
+  border: 2px solid #4ade80;
+  border-radius: 6px;
+  color: #4ade80;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  align-self: flex-start;
+  margin-top: 20px;
+}
+
+.back-btn:hover {
+  background-color: rgba(74, 222, 128, 0.25);
+  transform: translateX(-3px);
+}
+
+.back-btn:active {
+  transform: translateX(0);
+}
+
+.feedback-footer {
+  padding: 20px 40px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-top: 2px solid #2a4a3a;
+  text-align: center;
+  font-size: 14px;
+  color: #668f7d;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .feedback-header {
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px 20px;
+  }
+
+  .feedback-nav {
+    gap: 20px;
+  }
+
+  .feedback-content {
+    padding: 20px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  /* Stack on mobile */
+  .display-row {
+    grid-template-columns: 1fr;
+  }
+}
+

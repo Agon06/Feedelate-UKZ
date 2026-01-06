@@ -8,8 +8,8 @@ import Lendet from './Student/lendet';
 import IdeaPage from './Student/Ide'; 
 import DorezimPage from './Student/Dorezimi';
 import StudentProfile from './Student/profile';
-import feedback from './Student/feedback';
 import Projekti from './Student/projekti';
+import Feedback from './Student/feedback';
 
 
 
@@ -38,8 +38,9 @@ function App() {
           <Route path="/student/ide" element={<IdeaPage />} />
           <Route path="/student/dorezimi" element={<DorezimPage />} />
           <Route path="/student/profile" element={<StudentProfile />} /> 
-          <Route path="/student/feedback" element={<feedback />} />
           <Route path="/student/projekti" element={<Projekti />} />
+          <Route path="/student/feedback" element={<Feedback />} />
+    
 
         // ketu shtohen rruget e reja
 

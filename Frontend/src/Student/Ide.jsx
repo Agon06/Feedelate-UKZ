@@ -87,7 +87,8 @@ const IdeaPage = () => {
     if (feedBackId === 1) {
     navigate('/student/feedback', {
       state: {
-        context: `Ide për lëndën: ${subjectName} (ID: ${lendaId})`
+        lendaId: lendaId,
+        subject: subjectName
       }
     });
   }
