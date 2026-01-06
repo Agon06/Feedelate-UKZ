@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from "typeorm";
 import { Idete } from "./Idete";
-import { DorezimiIdes } from "./dorezimiIdes";
+import { DorezimiIdes } from "./dorezimiides";
 
 
 @Entity("lendet")

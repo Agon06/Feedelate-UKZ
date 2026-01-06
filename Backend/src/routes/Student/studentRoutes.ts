@@ -8,7 +8,7 @@ import fs from "fs";
 import { Student } from "../../entities/Student/Student";
 import { Lendet } from "../../entities/Student/Lendet";
 import { Idete } from "../../entities/Student/Idete";
-import { DorezimiIdes } from "../../entities/Student/dorezimiIdes";
+import { DorezimiIdes } from "../../entities/Student/dorezimiides";
 import { Projekti } from "../../entities/Student/projekti"; 
 
 
@@ -412,6 +412,64 @@ router.get("/:id/dorezime/shabllon", async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Template fetch error:", error);
     res.status(500).json({ message: "Error fetching template", error: String(error) });
+  }
+});
+
+// Get student's submitted idea file (non-template) by lenda
+router.get("/:id/dorezime", async (req: Request, res: Response) => {
+  const studentId = Number(req.params.id);
+  const lendaId = req.query.lendaId ? Number(req.query.lendaId) : undefined;
+
+  if (Number.isNaN(studentId)) {
+    return res.status(400).json({ message: "Student id is invalid" });
+  }
+
+  if (!lendaId || Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "lendaId eshte i detyrueshem" });
+  }
+
+  try {
+    const student = await studentRepository.findOneBy({ id: studentId });
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const lenda = await lendeRepository.findOneBy({ id: lendaId });
+    if (!lenda) {
+      return res.status(404).json({ message: "Lenda nuk u gjet" });
+    }
+
+    const submission = await dorezimRepository.findOne({
+      where: {
+        student: { id: studentId },
+        lenda: { id: lendaId },
+        isShabllon: false,
+      },
+      order: { createdAt: "DESC" },
+    });
+
+    if (!submission) {
+      return res.status(404).json({ message: "Nuk u gjet dorezim per kete lende" });
+    }
+
+    const normalizedPath = submission.fileDorezimi.replace(/\\/g, "/");
+    const fileUrl = normalizedPath.startsWith("uploads/")
+      ? `/` + normalizedPath
+      : `/uploads/${normalizedPath}`;
+
+    res.json({
+      id: submission.id,
+      fileName: submission.fileName,
+      fileDorezimi: submission.fileDorezimi,
+      fileUrl,
+      status: null,
+      vleresimi: null,
+      feedbackText: null,
+      createdAt: submission.createdAt,
+    });
+  } catch (error) {
+    console.error("Error fetching dorezim", error);
+    res.status(500).json({ message: "Error fetching dorezim", error: String(error) });
   }
 });
 

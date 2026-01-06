@@ -1,10 +1,11 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from "typeorm";
 import { Student } from "./Student";
 import { Lendet } from "./Lendet";
-@Entity("dorezimiIdes")
+
+@Entity('dorezimiides')
 export class DorezimiIdes { //krijojm nje entitet qe perfshin lenden tek dorezimi i ides 
     @PrimaryGeneratedColumn()
-    id: number;
+    id: number;   
 
     // nje student munet me pas nje dorezim te ides brenda nje lende por mund te mos kete id std
 
