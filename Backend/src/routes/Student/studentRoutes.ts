@@ -4,6 +4,7 @@ import { AppDataSource } from "../../data-source";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import bcrypt from "bcrypt";
 //ketu thirren kejt tabelat qe ti ki me punu qofte me njo ose dy ose tri ose...
 import { Student } from "../../entities/Student/Student";
 import { Lendet } from "../../entities/Student/Lendet";
@@ -711,5 +712,57 @@ router.delete("/:id/projekti/:lendaId", async (req: Request, res: Response) => {
   }
 });
 
+// Signup route for students
+router.post("/signup", async (req: Request, res: Response) => {
+  try {
+    const { emri, mbiemri, email, password, nrIdCard } = req.body;
+
+    if (!email.endsWith('.st@uni-gjilan.net')) {
+      return res.status(400).json({ message: 'Only .st@uni-gjilan.net emails are allowed' });
+    }
+
+    const existingEmail = await studentRepository.findOneBy({ email });
+    const existingNrId = nrIdCard ? await studentRepository.findOneBy({ nrIdCard }) : null;
+    if (existingEmail || existingNrId) {
+      return res.status(400).json({ message: 'Email or Nr.ID already exists' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const student = studentRepository.create({
+      emri,
+      mbiemri,
+      email,
+      password: hashedPassword,
+      nrIdCard
+    });
+
+    await studentRepository.save(student);
+    res.status(201).json({ message: 'Student created successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating student', error });
+  }
+});
+
+// Login route for students
+router.post("/login", async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    const student = await studentRepository.findOneBy({ email });
+    if (!student) {
+      return res.status(400).json({ message: 'Invalid email or password' });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, student.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ message: 'Invalid email or password' });
+    }
+
+    res.json({ message: 'Login successful', student: { id: student.id, emri: student.emri, mbiemri: student.mbiemri, email: student.email } });
+  } catch (error) {
+    res.status(500).json({ message: 'Error logging in', error });
+  }
+});
 
 export default router;

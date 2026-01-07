@@ -5,7 +5,13 @@ import { getStudentYearData } from '../services/studentApi';
 const Lendet = () => {
   const { yearId } = useParams();
   const navigate = useNavigate();
-  const STUDENT_ID = 1;
+
+  const student = JSON.parse(localStorage.getItem('student') || '{}');
+  if (!student.id) {
+    navigate('/');
+    return null;
+  }
+  const STUDENT_ID = student.id;
   const electiveStorageKey = useMemo(() => `selectedElectives:${STUDENT_ID}:${yearId}`, [STUDENT_ID, yearId]);
   const [isMobile, setIsMobile] = useState(false);
   const [showElectivePicker, setShowElectivePicker] = useState(false);

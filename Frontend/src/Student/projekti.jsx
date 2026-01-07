@@ -2,7 +2,13 @@ import React, { useState, useEffect } from "react";
 import { getStudentProjects, createStudentProject, deleteStudentProject } from "../services/studentApi";
 
 const Projekti = () => {
-  const STUDENT_ID = 1;
+  const student = JSON.parse(localStorage.getItem('student') || '{}');
+  if (!student.id) {
+    // navigate to login, but no navigate here
+    window.location.href = '/';
+    return null;
+  }
+  const STUDENT_ID = student.id;
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

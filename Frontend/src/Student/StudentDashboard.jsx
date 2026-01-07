@@ -18,8 +18,9 @@ const StudentDashboard = () => {
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
-  const studentName = 'Student';
-  const avatarLetter = 'S';
+  const student = JSON.parse(localStorage.getItem('student') || '{}');
+  const studentName = `${student.emri || ''} ${student.mbiemri || ''}`.trim() || 'Student';
+  const avatarLetter = (student.emri && student.emri.length > 0) ? student.emri[0].toUpperCase() : 'S';
 
   const pageStyle = {
     color: '#fff',

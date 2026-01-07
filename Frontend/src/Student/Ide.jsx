@@ -8,7 +8,13 @@ const IdeaPage = () => {
   const navigate = useNavigate();
   const subjectName = location.state?.subject ?? 'Lëndë e pa specifikuar';
   const lendaId = location.state?.lendaId ?? null;
-  const STUDENT_ID = 1;
+
+  const student = JSON.parse(localStorage.getItem('student') || '{}');
+  if (!student.id) {
+    navigate('/');
+    return null;
+  }
+  const STUDENT_ID = student.id;
 
   const [ideas, setIdeas] = useState([]);
   const [listStatus, setListStatus] = useState({ loading: true, error: null });

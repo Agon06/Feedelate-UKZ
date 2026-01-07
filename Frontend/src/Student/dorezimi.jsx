@@ -8,6 +8,13 @@ const DorezimPage = () => {
   const lendaId = location.state?.lendaId ?? null;
   const subjectName = location.state?.subject ?? 'Lëndë e pa specifikuar';
 
+  const student = JSON.parse(localStorage.getItem('student') || '{}');
+  if (!student.id) {
+    navigate('/');
+    return null;
+  }
+  const STUDENT_ID = student.id;
+
   const [formData, setFormData] = useState({
     skedari: null,
     skedarName: '',
@@ -31,7 +38,6 @@ const DorezimPage = () => {
       if (!lendaId) return;
       
       try {
-        const STUDENT_ID = 1;
         const data = await getStudentTemplate(STUDENT_ID, lendaId);
         console.log('Template fetched:', data);
         setTemplate(data);
@@ -99,7 +105,6 @@ const DorezimPage = () => {
     setFormFeedback({ type: null, message: null });
     
     try {
-      const STUDENT_ID = 1;
       console.log('Uploading file:', { lendaId, fileName: formData.skedarName, fileSize: formData.skedari?.size });
       
       const result = await uploadStudentDorezim(STUDENT_ID, { lendaId, file: formData.skedari });

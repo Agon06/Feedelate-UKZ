@@ -3,7 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { getStudentProfile } from '../services/studentApi';
 
 const StudentProfile = () => {
-    const STUDENT_ID = 1; // Në të ardhmen mund të vijë nga sesioni i autentikimit
+    const student = JSON.parse(localStorage.getItem('student') || '{}');
+    if (!student.id) {
+      window.location.href = '/';
+      return null;
+    }
+    const STUDENT_ID = student.id; // Në të ardhmen mund të vijë nga sesioni i autentikimit
     const [studentData, setStudentData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);

@@ -12,7 +12,13 @@ const DorzimiProjektit = () => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [dorezimData, setDorezimData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const STUDENT_ID = 1; // Mund ta marrësh nga auth context
+
+    const student = JSON.parse(localStorage.getItem('student') || '{}');
+    if (!student.id) {
+      navigate('/');
+      return null;
+    }
+    const STUDENT_ID = student.id; // Mund ta marrësh nga auth context
 
     // Fetch projektin e dorëzuar kur ngarkohet komponenti
     useEffect(() => {

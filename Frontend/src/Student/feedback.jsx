@@ -12,7 +12,13 @@ const Feedback = () => {
   const location = useLocation();
   const lendaId = location.state?.lendaId || null;
   const selectedLenda = location.state?.subject || "Matematika";
-  const STUDENT_ID = 1;
+
+  const student = JSON.parse(localStorage.getItem('student') || '{}');
+  if (!student.id) {
+    navigate('/');
+    return null;
+  }
+  const STUDENT_ID = student.id;
   
   // Data coming from backend
   const [feedbackData, setFeedbackData] = useState({
