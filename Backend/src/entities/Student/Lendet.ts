@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from "typeorm";
 import { Idete } from "./Idete";
-import { DorezimiIdes } from "./dorezimiides";
+import { DorezimiIdes } from "./dorezimiIdes";
+import { dorzimiProjektit } from "./dorzimiProjektit";
 
 
 @Entity("lendet")
@@ -25,6 +26,9 @@ export class Lendet {
 
     @OneToMany(() => DorezimiIdes, (dorezim) => dorezim.lenda)
     dorezime: DorezimiIdes[];
+
+    @OneToMany(() => dorzimiProjektit, (dorezim) => dorezim.lenda)
+    dorezimeProjektit: dorzimiProjektit[];
 
     @CreateDateColumn()
     createdAt: Date;

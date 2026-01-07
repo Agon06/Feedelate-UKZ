@@ -8,8 +8,9 @@ import fs from "fs";
 import { Student } from "../../entities/Student/Student";
 import { Lendet } from "../../entities/Student/Lendet";
 import { Idete } from "../../entities/Student/Idete";
-import { DorezimiIdes } from "../../entities/Student/dorezimiides";
+import { DorezimiIdes } from "../../entities/Student/dorezimiIdes";
 import { Projekti } from "../../entities/Student/projekti"; 
+import { dorzimiProjektit } from "../../entities/Student/dorzimiProjektit";
 
 
 
@@ -24,7 +25,7 @@ const lendeRepository = AppDataSource.getRepository(Lendet);
 const ideaRepository = AppDataSource.getRepository(Idete);
 const dorezimRepository = AppDataSource.getRepository(DorezimiIdes);
 const projektiRepository = AppDataSource.getRepository(Projekti);
-
+const dorezimProjektitRepository = AppDataSource.getRepository(dorzimiProjektit);
 //e thirr repositorin e testi
 
 
@@ -56,6 +57,22 @@ const upload = multer({
     }
   },
   limits: { fileSize: 10 * 1024 * 1024 }
+});
+
+// Multer config për projektet (ZIP dhe RAR)
+const uploadProjekti = multer({
+  storage,
+  fileFilter: (_req, file, cb) => {
+    const allowed = [".zip", ".rar", "application/zip", "application/x-zip-compressed", "application/x-rar-compressed", "application/octet-stream"];
+    const ext = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf('.'));
+    const mime = file.mimetype;
+    if (allowed.includes(ext) || allowed.includes(mime)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Lejohen vetem ZIP ose RAR"));
+    }
+  },
+  limits: { fileSize: 150 * 1024 * 1024 } // 150MB për projektet
 });
 
 const formatStudentSummary = (student: Student) => ({
@@ -550,6 +567,147 @@ router.delete("/:id", async (req: Request, res: Response) => {
     res.json({ message: "Student deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error deleting student", error });
+  }
+});
+
+// ============ DOREZIMI I PROJEKTIT ROUTES ============
+
+// GET: Merr projektin e dorëzuar për një lëndë
+router.get("/:id/projekti/:lendaId", async (req: Request, res: Response) => {
+  const studentId = Number(req.params.id);
+  const lendaId = Number(req.params.lendaId);
+
+  if (Number.isNaN(studentId) || Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "Invalid student or lenda ID" });
+  }
+
+  try {
+    const dorezim = await dorezimProjektitRepository.findOne({
+      where: { 
+        student: { id: studentId },
+        lenda: { id: lendaId }
+      },
+      relations: ["student", "lenda"]
+    });
+
+    if (!dorezim) {
+      return res.json({ 
+        isDorzuar: false, 
+        message: "Nuk ka dorëzim për këtë lëndë" 
+      });
+    }
+
+    res.json({
+      isDorzuar: true,
+      id: dorezim.id,
+      fileName: dorezim.fileName,
+      fileDorezimi: dorezim.fileDorezimi,
+      afatiDorezimit: dorezim.afatiDorezimit,
+      piket: dorezim.piket,
+      statusi: dorezim.statusi,
+      createdAt: dorezim.createdAt
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching projekt", error });
+  }
+});
+
+// POST: Dorëzo projektin
+router.post("/:id/projekti/dorezo", uploadProjekti.single("file"), async (req: Request, res: Response) => {
+  const studentId = Number(req.params.id);
+  const { lendaId } = req.body;
+
+  if (Number.isNaN(studentId) || !lendaId) {
+    return res.status(400).json({ message: "Invalid student or lenda ID" });
+  }
+
+  if (!req.file) {
+    return res.status(400).json({ message: "File is required" });
+  }
+
+  try {
+    const student = await studentRepository.findOneBy({ id: studentId });
+    const lenda = await lendeRepository.findOneBy({ id: Number(lendaId) });
+
+    if (!student || !lenda) {
+      return res.status(404).json({ message: "Student or Lenda not found" });
+    }
+
+    // Kontrollo nëse ekziston një dorëzim i mëparshëm
+    const existing = await dorezimProjektitRepository.findOne({
+      where: {
+        student: { id: studentId },
+        lenda: { id: Number(lendaId) }
+      }
+    });
+
+    if (existing) {
+      // Fshij file-in e vjetër
+      const oldPath = path.resolve(process.cwd(), existing.fileDorezimi);
+      if (fs.existsSync(oldPath)) {
+        fs.unlinkSync(oldPath);
+      }
+      // Fshij dorëzimin e vjetër
+      await dorezimProjektitRepository.remove(existing);
+    }
+
+    const relativePath = path.relative(process.cwd(), req.file.path);
+
+    const dorezim = dorezimProjektitRepository.create({
+      student,
+      lenda,
+      fileName: req.file.originalname,
+      fileDorezimi: relativePath,
+      afatiDorezimit: new Date(), // Mund ta marrësh nga req.body nëse dëshiron
+      piket: 0, // Default 0, do të përditësohet nga profesori
+      statusi: "Dorzuar"
+    });
+
+    await dorezimProjektitRepository.save(dorezim);
+
+    res.json({
+      message: "Projekti u dorëzua me sukses!",
+      id: dorezim.id,
+      fileName: dorezim.fileName,
+      isDorzuar: true
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error submitting projekt", error });
+  }
+});
+
+// DELETE: Fshij projektin e dorëzuar
+router.delete("/:id/projekti/:lendaId", async (req: Request, res: Response) => {
+  const studentId = Number(req.params.id);
+  const lendaId = Number(req.params.lendaId);
+
+  if (Number.isNaN(studentId) || Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "Invalid student or lenda ID" });
+  }
+
+  try {
+    const dorezim = await dorezimProjektitRepository.findOne({
+      where: {
+        student: { id: studentId },
+        lenda: { id: lendaId }
+      }
+    });
+
+    if (!dorezim) {
+      return res.status(404).json({ message: "Dorezimi not found" });
+    }
+
+    // Fshij file-in
+    const filePath = path.resolve(process.cwd(), dorezim.fileDorezimi);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    await dorezimProjektitRepository.remove(dorezim);
+
+    res.json({ message: "Projekti u fshi me sukses!" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting projekt", error });
   }
 });
 
