@@ -42,7 +42,7 @@ router.post("/setup/profesor", async (req, res) => {
     }
 
     // Seed missing years 1, 2, and 3
-    const seedYear = async (year, subjects) => {
+    const seedYear = async (year: number, subjects: any[]) => {
       const existing = await lendetpRepository.find({ where: { viti: year } });
       if (existing.length > 0) {
         return false; // already seeded
