@@ -6,10 +6,12 @@ import userRoutes from "./routes/userRoutes";
 import profesorRoutes from "./routes/Profesor/profesorRoutes";
 import studentRoutes from "./routes/Student/studentRoutes";
 import adminRoutes from "./routes/Admin/adminRoutes";
+import projektiRoutes from "./routes/Student/projektiRoutes";
+import projektipRoutes from "./routes/Profesor/projektiRoutesp";
 import setupRoutes from "./routes/setup";
 
 
-dotenv.config(); 
+dotenv.config();
 
 const app: Application = express();
 const PORT = process.env.PORT || 5000;
@@ -34,6 +36,11 @@ app.use("/api/users", userRoutes);
 app.use("/api/profesoret", profesorRoutes);
 app.use("/api/studentet", studentRoutes);
 app.use("/api/admins", adminRoutes);
+<<<<<<< HEAD
+=======
+app.use("/api/projekti", projektiRoutes);
+app.use("/api/projektip", projektipRoutes);
+>>>>>>> 8052edc2ae8ce4553f262115e408569cc48a2874
 app.use("/api", setupRoutes);
 
 

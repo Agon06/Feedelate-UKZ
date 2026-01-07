@@ -1,0 +1,27 @@
+{
+  "profesor": { "id": 1, "emri": "Test", "mbiemri": "Profesor", "fullName": "Test Profesor", "email": "test.profesor@uni-gjilan.net" },
+  "year": { "id": "2", "title": "Viti II" },
+  "semesters": [
+    {
+      "id": 3,
+      "name": "Semestri 3",
+      "subjects": [
+        { "id": 301, "name": "Rrjetat Kompjuterike", "isElective": false },
+        { "id": 302, "name": "Siguria e Informacionit", "isElective": false }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Semestri 4",
+      "subjects": [
+        { "id": 401, "name": "Inteligjenca Artificiale", "isElective": true },
+        { "id": 402, "name": "Machine Learning", "isElective": true }
+      ]
+    }
+  ],
+  "electives": [
+    { "id": 401, "name": "Inteligjenca Artificiale", "semester": 4 },
+    { "id": 402, "name": "Machine Learning", "semester": 4 }
+  ],
+  "selectedElectives": []
+}

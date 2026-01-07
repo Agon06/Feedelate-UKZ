@@ -9,7 +9,7 @@ import { Student } from "../../entities/Student/Student";
 import { Lendet } from "../../entities/Student/Lendet";
 import { Idete } from "../../entities/Student/Idete";
 import { DorezimiIdes } from "../../entities/Student/dorezimiIdes";
-import { Projekti } from "../../entities/Student/projekti"; 
+import { Projekti } from "../../entities/Student/projekti";
 import { dorzimiProjektit } from "../../entities/Student/dorzimiProjektit";
 
 
@@ -315,7 +315,7 @@ router.post("/:id/dorezime", upload.single("file"), async (req: Request, res: Re
   console.log("Params:", req.params);
   console.log("Body:", req.body);
   console.log("File:", req.file ? { name: req.file.originalname, size: req.file.size, path: req.file.path } : "NO FILE");
-  
+
   const studentId = Number(req.params.id);
   const { lendaId } = req.body;
 
@@ -511,7 +511,7 @@ router.get("/:id", async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ message: "Error fetching student", error });
   }
-});  
+});
 
 // Create student
 router.post("/", async (req: Request, res: Response) => {
@@ -583,7 +583,7 @@ router.get("/:id/projekti/:lendaId", async (req: Request, res: Response) => {
 
   try {
     const dorezim = await dorezimProjektitRepository.findOne({
-      where: { 
+      where: {
         student: { id: studentId },
         lenda: { id: lendaId }
       },
@@ -591,9 +591,9 @@ router.get("/:id/projekti/:lendaId", async (req: Request, res: Response) => {
     });
 
     if (!dorezim) {
-      return res.json({ 
-        isDorzuar: false, 
-        message: "Nuk ka dorëzim për këtë lëndë" 
+      return res.json({
+        isDorzuar: false,
+        message: "Nuk ka dorëzim për këtë lëndë"
       });
     }
 

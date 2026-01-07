@@ -1,0 +1,44 @@
+{
+  "lenda": { "id": 101, "name": "Matematika Diskrete" },
+  "submissions": [
+    {
+      "id": 1,
+      "student": {
+        "id": 1,
+        "emri": "Agon",
+        "mbiemri": "Krasniqi",
+        "fullName": "Agon Krasniqi"
+      },
+      "fileName": "detyra-matematika-agon.docx",
+      "fileDorezimi": "uploads/dorezime/detyra-1.docx",
+      "fileUrl": "/uploads/dorezime/detyra-1.docx",
+      "createdAt": "2026-01-05T10:30:00Z"
+    },
+    {
+      "id": 2,
+      "student": {
+        "id": 2,
+        "emri": "Blerta",
+        "mbiemri": "Hoxha",
+        "fullName": "Blerta Hoxha"
+      },
+      "fileName": "detyra-matematika-blerta.docx",
+      "fileDorezimi": "uploads/dorezime/detyra-2.docx",
+      "fileUrl": "/uploads/dorezime/detyra-2.docx",
+      "createdAt": "2026-01-06T14:20:00Z"
+    },
+    {
+      "id": 3,
+      "student": {
+        "id": 3,
+        "emri": "Dardan",
+        "mbiemri": "Berisha",
+        "fullName": "Dardan Berisha"
+      },
+      "fileName": "detyra-matematika-dardan.docx",
+      "fileDorezimi": "uploads/dorezime/detyra-3.docx",
+      "fileUrl": "/uploads/dorezime/detyra-3.docx",
+      "createdAt": "2026-01-07T09:15:00Z"
+    }
+  ]
+}
