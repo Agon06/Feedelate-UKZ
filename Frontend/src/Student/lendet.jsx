@@ -389,8 +389,17 @@ const Lendet = () => {
         },
       });
       setActiveModal({ open: false, subject: null });
+    } else if (choice === 'project') {
+      navigate('/student/dorzimiProjektit', {
+        state: {
+          subject: activeModal.subject?.name,
+          lendaId: activeModal.subject?.id,
+          yearId,
+        },
+      });
+      setActiveModal({ open: false, subject: null });
     } else {
-      // Placeholder for future routes (projects/deadlines)
+      // Placeholder for deadlines route
       setActiveModal({ open: false, subject: null });
     }
   }, [activeModal.subject, navigate, yearId]);

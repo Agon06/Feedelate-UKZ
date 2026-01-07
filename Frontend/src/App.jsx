@@ -5,11 +5,12 @@ import AdminDashboard from './Admin/AdminDashboard';
 import ProfesorDashboard from './Profesor/ProfesorDashboard';
 import StudentDashboard from './Student/StudentDashboard';
 import Lendet from './Student/lendet';
-import IdeaPage from './Student/Ide'; 
+import IdeaPage from './Student/Ide';
 import DorezimPage from './Student/Dorezimi';
 import StudentProfile from './Student/profile';
 import Projekti from './Student/projekti';
 import Feedback from './Student/feedback';
+import DorzimiProjektit from './Student/dorzimiProjektit';
 
 
 
@@ -37,10 +38,11 @@ function App() {
           <Route path="/student/lendet/:yearId" element={<Lendet />} />
           <Route path="/student/ide" element={<IdeaPage />} />
           <Route path="/student/dorezimi" element={<DorezimPage />} />
-          <Route path="/student/profile" element={<StudentProfile />} /> 
+          <Route path="/student/profile" element={<StudentProfile />} />
           <Route path="/student/projekti" element={<Projekti />} />
           <Route path="/student/feedback" element={<Feedback />} />
-    
+          <Route path="/student/dorzimiProjektit" element={<DorzimiProjektit />} />
+
 
         // ketu shtohen rruget e reja
 
