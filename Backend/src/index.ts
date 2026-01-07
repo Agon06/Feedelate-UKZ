@@ -7,6 +7,7 @@ import profesorRoutes from "./routes/Profesor/profesorRoutes";
 import studentRoutes from "./routes/Student/studentRoutes";
 import adminRoutes from "./routes/Admin/adminRoutes";
 import projektiRoutes from "./routes/Student/projektiRoutes";
+import projektipRoutes from "./routes/Profesor/projektiRoutesp";
 import setupRoutes from "./routes/setup";
 
 
@@ -36,6 +37,7 @@ app.use("/api/profesoret", profesorRoutes);
 app.use("/api/studentet", studentRoutes);
 app.use("/api/admins", adminRoutes);
 app.use("/api/projekti", projektiRoutes);
+app.use("/api/projektip", projektipRoutes);
 app.use("/api", setupRoutes);
 
 

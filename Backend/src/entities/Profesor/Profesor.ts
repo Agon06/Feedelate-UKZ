@@ -1,4 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from "typeorm";
+import { Idetep } from "./Idetep";
+import { DorezimiIdesp } from "./dorezimiIdesp";
 
 @Entity("profesoret")
 export class Profesor {
@@ -25,6 +27,12 @@ export class Profesor {
 
   @Column({ nullable: true })
   telefoni: string;
+
+  @OneToMany(() => Idetep, (idetep) => idetep.profesor, { cascade: false })
+  idetep: Idetep[];
+
+  @OneToMany(() => DorezimiIdesp, (dorezim) => dorezim.profesor, { cascade: false })
+  dorezime: DorezimiIdesp[];
 
   @CreateDateColumn()
   createdAt: Date;

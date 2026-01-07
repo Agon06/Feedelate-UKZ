@@ -11,7 +11,14 @@ import StudentProfile from './Student/profile';
 import Projekti from './Student/projekti';
 import Feedback from './Student/feedback';
 
-
+// Profesor imports
+import Lendetp from './Profesor/lendetp';
+import Idetep from './Profesor/idetep';
+import Dorezimip from './Profesor/dorezimip';
+import Profilep from './Profesor/profilep';
+import Projektip from './Profesor/projektip';
+import Feedbackp from './Profesor/feedback';
+import DoreziметStudentesh from './Profesor/dorezimet-studentesh';
 
 
 
@@ -32,7 +39,19 @@ function App() {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          
+          {/* Profesor routes */}
           <Route path="/profesor" element={<ProfesorDashboard />} />
+          <Route path="/profesor/dashboard" element={<ProfesorDashboard />} />
+          <Route path="/profesor/lendet/:yearId" element={<Lendetp />} />
+          <Route path="/profesor/idete" element={<Idetep />} />
+          <Route path="/profesor/dorezimi" element={<Dorezimip />} />
+          <Route path="/profesor/dorezimet-studentesh" element={<DoreziметStudentesh />} />
+          <Route path="/profesor/profile" element={<Profilep />} />
+          <Route path="/profesor/projekti" element={<Projektip />} />
+          <Route path="/profesor/feedback" element={<Feedbackp />} />
+          
+          {/* Student routes */}
           <Route path="/student" element={<StudentDashboard />} />
           <Route path="/student/lendet/:yearId" element={<Lendet />} />
           <Route path="/student/ide" element={<IdeaPage />} />
@@ -40,10 +59,6 @@ function App() {
           <Route path="/student/profile" element={<StudentProfile />} /> 
           <Route path="/student/projekti" element={<Projekti />} />
           <Route path="/student/feedback" element={<Feedback />} />
-    
-
-        // ketu shtohen rruget e reja
-
         </Routes>
       </div>
     </Router>
