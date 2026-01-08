@@ -60,17 +60,36 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 }
 });
 
-// Multer config për projektet (ZIP dhe RAR)
+// Multer config për projektet (lejon ZIP/RAR dhe dokumente të zakonshme)
 const uploadProjekti = multer({
   storage,
   fileFilter: (_req, file, cb) => {
-    const allowed = [".zip", ".rar", "application/zip", "application/x-zip-compressed", "application/x-rar-compressed", "application/octet-stream"];
+    const allowed = [
+      ".zip",
+      ".rar",
+      ".doc",
+      ".docx",
+      ".pdf",
+      ".ppt",
+      ".pptx",
+      ".txt",
+      "application/zip",
+      "application/x-zip-compressed",
+      "application/x-rar-compressed",
+      "application/octet-stream",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/pdf",
+      "application/vnd.ms-powerpoint",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "text/plain",
+    ];
     const ext = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf('.'));
     const mime = file.mimetype;
     if (allowed.includes(ext) || allowed.includes(mime)) {
       cb(null, true);
     } else {
-      cb(new Error("Lejohen vetem ZIP ose RAR"));
+      cb(new Error("Lejohen ZIP, RAR, DOC, DOCX ose PDF, PPT"));
     }
   },
   limits: { fileSize: 150 * 1024 * 1024 } // 150MB për projektet
@@ -709,6 +728,38 @@ router.delete("/:id/projekti/:lendaId", async (req: Request, res: Response) => {
     res.json({ message: "Projekti u fshi me sukses!" });
   } catch (error) {
     res.status(500).json({ message: "Error deleting projekt", error });
+  }
+});
+
+// DOWNLOAD: Shkarko projektin me emrin origjinal
+router.get("/:id/projekti/:lendaId/download", async (req: Request, res: Response) => {
+  const studentId = Number(req.params.id);
+  const lendaId = Number(req.params.lendaId);
+
+  if (Number.isNaN(studentId) || Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "Invalid student or lenda ID" });
+  }
+
+  try {
+    const dorezim = await dorezimProjektitRepository.findOne({
+      where: {
+        student: { id: studentId },
+        lenda: { id: lendaId }
+      }
+    });
+
+    if (!dorezim) {
+      return res.status(404).json({ message: "Dorezimi not found" });
+    }
+
+    const absolutePath = path.resolve(process.cwd(), dorezim.fileDorezimi);
+    if (!fs.existsSync(absolutePath)) {
+      return res.status(404).json({ message: "File not found on disk" });
+    }
+
+    return res.download(absolutePath, dorezim.fileName);
+  } catch (error) {
+    res.status(500).json({ message: "Error downloading projekt", error });
   }
 });
 

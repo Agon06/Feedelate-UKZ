@@ -66,15 +66,6 @@ router.delete("/:id", async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error deleting user", error });
   }
 });
-//krijoje nje insertim te test files ne db 
-router.post("/inserttest", async (req: Request, res: Response) => {
-  try {
-    const testUser = userRepository.create({ username: "testuser" }); 
-    const result = await userRepository.save(testUser);
-    res.status(201).json(result);
-  } catch (error) {
-    res.status(500).json({ message: "Error creating test user", error });
-  }     
-}); 
+
 
 export default router;

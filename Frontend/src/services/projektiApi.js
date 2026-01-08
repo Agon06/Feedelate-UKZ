@@ -45,15 +45,30 @@ export const fshijProjektin = async (studentId, lendaId) => {
   return handleResponse(response);
 };
 
-// Shkarko projektin
-export const shkarkoProjektin = (fileDorezimi, fileName) => {
-  const API_BASE = API_BASE_URL.replace('/api', '');
-  const url = `${API_BASE}/${fileDorezimi}`;
+// Shkarko projektin (shkarkim me emrin origjinal nga serveri)
+export const shkarkoProjektin = async (studentId, lendaId, fallbackName = "projekti") => {
+  const response = await fetch(`${API_BASE_URL}/studentet/${studentId}/projekti/${lendaId}/download`);
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || 'Shkarkimi deshtoi');
+  }
+
+  // Merr emrin nga Content-Disposition nëse ekziston
+  const disposition = response.headers.get('content-disposition');
+  let filename = fallbackName;
+  if (disposition && disposition.includes('filename=')) {
+    const match = disposition.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
+    filename = decodeURIComponent(match?.[1] || match?.[2] || fallbackName);
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = fileName;
-  a.target = '_blank';
+  a.download = filename;
   document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
+  a.remove();
+  window.URL.revokeObjectURL(url);
 };

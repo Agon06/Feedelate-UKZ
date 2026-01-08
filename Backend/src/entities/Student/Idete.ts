@@ -18,7 +18,8 @@ export class Idete {
     @ManyToOne(() => Lendet, (lenda) => lenda.idete, { onDelete: "CASCADE" })
     @JoinColumn({ name: "lendaId" })
     lenda: Lendet;
-
+//TO DO:UNIQUE PER KETE VIT
+//titulli te jet unik brenda nje viti
     @Column()
     titulli: string;
 //TO DO:UNIQUE PER KETE VIT

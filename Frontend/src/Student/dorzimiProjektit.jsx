@@ -188,9 +188,16 @@ const DorzimiProjektit = () => {
         }
     };
 
-    const handleShkarko = () => {
-        if (dorezimData && dorezimData.fileDorezimi) {
-            shkarkoProjektin(dorezimData.fileDorezimi, dorezimData.fileName);
+    const handleShkarko = async () => {
+        if (dorezimData && dorezimData.id) {
+            try {
+                setIsLoading(true);
+                await shkarkoProjektin(STUDENT_ID, lendaId, dorezimData.fileName);
+            } catch (error) {
+                alert("Error: " + (error.message || "Nuk u shkarkua"));
+            } finally {
+                setIsLoading(false);
+            }
         }
     };
 
@@ -242,19 +249,19 @@ const DorzimiProjektit = () => {
                         style={tabButtonStyle(activeTab === "projekti")}
                         onClick={() => setActiveTab("projekti")}
                     >
-                        📤 Projekti
+                        Projekti
                     </button>
                     <button
                         style={tabButtonStyle(activeTab === "piket")}
                         onClick={() => setActiveTab("piket")}
                     >
-                        📊 Piket
+                        Piket
                     </button>
                     <button
                         style={tabButtonStyle(activeTab === "afatet")}
                         onClick={() => setActiveTab("afatet")}
                     >
-                        📅 Afati i dorzimit
+                        Afati i dorzimit
                     </button>
                 </div>
 
@@ -273,7 +280,7 @@ const DorzimiProjektit = () => {
                                 <input
                                     type="file"
                                     onChange={handleFileChange}
-                                    disabled={isDorzuar || isLoading}
+                                    disabled={isLoading}
                                     style={{
                                         display: "block",
                                         marginBottom: "1rem",
@@ -283,17 +290,17 @@ const DorzimiProjektit = () => {
                                         borderRadius: 8,
                                         color: "#c4f0da",
                                         width: "100%",
-                                        opacity: isDorzuar ? 0.5 : 1,
-                                        cursor: isDorzuar ? "not-allowed" : "pointer"
+                                        opacity: isLoading ? 0.5 : 1,
+                                        cursor: isLoading ? "not-allowed" : "pointer"
                                     }}
                                 />
                                 <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
                                     <button 
-                                        style={{ ...buttonStyle, flex: 1, opacity: (isDorzuar || isLoading) ? 0.5 : 1 }}
+                                        style={{ ...buttonStyle, flex: 1, opacity: isLoading ? 0.5 : 1 }}
                                         onClick={handleDorzoProjektin}
-                                        disabled={isDorzuar || isLoading}
+                                        disabled={isLoading}
                                     >
-                                        {isLoading ? "⏳ Duke procesuar..." : "📤 Dorëzo Projektin"}
+                                        {isLoading ? "Duke procesuar..." : "Dorëzo Projektin"}
                                     </button>
                                     <div style={statusBadgeStyle(isDorzuar)}>
                                         {isDorzuar ? "✓ Dorzuar" : "⏳ Pa dorzuar"}
@@ -314,7 +321,7 @@ const DorzimiProjektit = () => {
                                             fontWeight: 700, 
                                             marginBottom: "0.7rem" 
                                         }}>
-                                            📁 Projekti i Dorëzuar
+                                            Projekti i Dorëzuar
                                         </h3>
                                         <div style={{ 
                                             padding: "0.7rem", 
