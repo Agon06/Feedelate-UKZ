@@ -7,11 +7,18 @@ const Lendet = () => {
   const navigate = useNavigate();
 
   const student = JSON.parse(localStorage.getItem('student') || '{}');
+  const STUDENT_ID = student.id;
+
+  useEffect(() => {
+    if (!student.id) {
+      navigate('/');
+    }
+  }, [navigate, student.id]);
+
   if (!student.id) {
-    navigate('/');
     return null;
   }
-  const STUDENT_ID = student.id;
+
   const electiveStorageKey = useMemo(() => `selectedElectives:${STUDENT_ID}:${yearId}`, [STUDENT_ID, yearId]);
   const [isMobile, setIsMobile] = useState(false);
   const [showElectivePicker, setShowElectivePicker] = useState(false);
