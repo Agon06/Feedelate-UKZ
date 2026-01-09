@@ -48,13 +48,23 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   fileFilter: (_req, file, cb) => {
-    const allowed = [".doc", ".docx", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+    const allowed = [
+      ".doc", ".docx", ".pdf", ".ppt", ".pptx", ".xls", ".xlsx", ".txt",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/pdf",
+      "application/vnd.ms-powerpoint",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "text/plain"
+    ];
     const ext = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf('.'));
     const mime = file.mimetype;
     if (allowed.includes(ext) || allowed.includes(mime)) {
       cb(null, true);
     } else {
-      cb(new Error("Lejohen vetem DOC/DOCX"));
+      cb(new Error("Lejohen Word, PDF, PowerPoint, Excel, TXT"));
     }
   },
   limits: { fileSize: 10 * 1024 * 1024 }
@@ -507,6 +517,42 @@ router.get("/:id/dorezime", async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error fetching dorezim", error);
     res.status(500).json({ message: "Error fetching dorezim", error: String(error) });
+  }
+});
+
+// Delete student dorezim by id
+router.delete("/:id/dorezime/:dorezimId", async (req: Request, res: Response) => {
+  const studentId = Number(req.params.id);
+  const dorezimId = Number(req.params.dorezimId);
+
+  if (Number.isNaN(studentId) || Number.isNaN(dorezimId)) {
+    return res.status(400).json({ message: "Invalid IDs" });
+  }
+
+  try {
+    const dorezim = await dorezimRepository.findOne({
+      where: {
+        id: dorezimId,
+        student: { id: studentId },
+        isShabllon: false,
+      },
+    });
+
+    if (!dorezim) {
+      return res.status(404).json({ message: "Dorezim nuk u gjet" });
+    }
+
+    // Delete file from disk
+    const filePath = path.resolve(process.cwd(), dorezim.fileDorezimi);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    await dorezimRepository.remove(dorezim);
+    res.json({ message: "Dorezim u fshi me sukses" });
+  } catch (error) {
+    console.error("Error deleting dorezim:", error);
+    res.status(500).json({ message: "Error deleting dorezim", error: String(error) });
   }
 });
 

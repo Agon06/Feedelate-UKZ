@@ -103,6 +103,11 @@ export const deleteStudentProject = (studentId, projectId) =>
     method: 'DELETE',
   });
 
+export const deleteStudentDorezim = (studentId, dorezimId) =>
+  request(`/studentet/${studentId}/dorezime/${dorezimId}`, {
+    method: 'DELETE',
+  });
+
 export default {
   getStudentDashboard,
   getStudentYearData,
@@ -112,6 +117,7 @@ export default {
   uploadStudentDorezim,
   getStudentIdeaSubmission,
   getStudentTemplate,
+  deleteStudentDorezim,
   getStudentProjects,
   getStudentProject,
   createStudentProject,

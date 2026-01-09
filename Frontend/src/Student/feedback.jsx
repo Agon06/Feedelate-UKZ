@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import "./feedback.css";
-import { getStudentIdeaSubmission } from "../services/studentApi";
+import { getStudentIdeaSubmission, deleteStudentDorezim } from "../services/studentApi";
 
 // Backend origin used for static file access (uploads)
 const API_ORIGIN = ((import.meta.env?.VITE_API_URL) || "http://localhost:5000/api").replace(/\/$/, "").replace(/\/api$/, "");
@@ -33,11 +33,37 @@ const Feedback = () => {
     feedback: "Shpjegime shumë të mira dhe të qarta",
   });
 
+  const [dorezimId, setDorezimId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // Toggle Office embed for exact layout
   const [showOfficeView, setShowOfficeView] = useState(false);
 
   const handleBack = () => {
     navigate(-1); // Go back in browser history instead of hardcoding route
+  };
+
+  const handleDelete = async () => {
+    if (!dorezimId) {
+      alert("Dorezim ID nuk u gjet");
+      return;
+    }
+
+    if (!window.confirm("A jeni të sigurt që doni të fshini këtë dorëzim?")) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await deleteStudentDorezim(STUDENT_ID, dorezimId);
+      alert("Dorezimi u fshi me sukses!");
+      navigate(-1);
+    } catch (error) {
+      console.error("Error deleting dorezim:", error);
+      alert(error?.message || "Dështoi fshirja e dorezimit");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   // Fetch Word file from dorezimiides table using lendaId
@@ -63,6 +89,7 @@ const Feedback = () => {
           vleresimi: data.vleresimi ?? null,
           feedback: data.feedbackText || prev.feedback,
         }));
+        setDorezimId(data.id);
       } catch (error) {
         console.error("Error fetching idea file:", error);
         setFeedbackData((prev) => ({
@@ -116,9 +143,30 @@ const Feedback = () => {
                     <p className="file-type">Word Document</p>
                   </div>
                   {feedbackData.idejaFile.fileUrl && (
-                    <a href={feedbackData.idejaFile.fileUrl} download className="download-btn download-btn--small" aria-label="Shkarko dokumentin">
-                      ⬇ Shkarko
-                    </a>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <a href={feedbackData.idejaFile.fileUrl} download className="download-btn download-btn--small" aria-label="Shkarko dokumentin">
+                        ⬇ Shkarko
+                      </a>
+                      <button 
+                        onClick={handleDelete} 
+                        disabled={isDeleting}
+                        className="delete-btn delete-btn--small" 
+                        aria-label="Fshi dorëzimin"
+                        style={{
+                          padding: '0.5rem 1rem',
+                          borderRadius: '8px',
+                          border: '1px solid rgba(255,82,82,0.5)',
+                          background: 'rgba(255,82,82,0.15)',
+                          color: '#ff5252',
+                          cursor: isDeleting ? 'not-allowed' : 'pointer',
+                          fontSize: '13px',
+                          fontWeight: 600,
+                          opacity: isDeleting ? 0.5 : 1
+                        }}
+                      >
+                        {isDeleting ? '🗑️ Duke fshirë...' : '🗑️ Fshi'}
+                      </button>
+                    </div>
                   )}
                 </div>
                 {/* Office embed hidden in local-only mode */}

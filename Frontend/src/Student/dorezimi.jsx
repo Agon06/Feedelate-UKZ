@@ -331,11 +331,11 @@ const DorezimPage = () => {
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: isMobile ? '16px' : '20px' }}>
               <div style={formField}>
-                <label style={labelStyle}>Ngarko Detyren (Word) *</label>
+                <label style={labelStyle}>Ngarko Detyren *</label>
                 <input
                   style={inputStyle}
                   type="file"
-                  accept=".doc,.docx"
+                  accept=".doc,.docx,.pdf,.ppt,.pptx,.xls,.xlsx,.txt"
                   onChange={handleFileChange}
                   required
                 />
@@ -345,7 +345,7 @@ const DorezimPage = () => {
                   </p>
                 )}
                 <p style={{ margin: '0.5rem 0 0 0', fontSize: 12, opacity: 0.7 }}>
-                  (Maksimumi: 10MB - DOC, DOCX)
+                  (Maksimumi: 10MB - Word, PDF, PowerPoint, Excel)
                 </p>
               </div>
 
