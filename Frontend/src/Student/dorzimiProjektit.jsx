@@ -81,7 +81,7 @@ const DorzimiProjektit = () => {
         border: "1px solid rgba(23,199,122,0.35)",
         borderRadius: 18,
         padding: "2rem 1.5rem",
-        height: "fit-content",
+        height: "rem, fit-content",
         position: "sticky",
         top: "2rem",
     };
@@ -355,7 +355,7 @@ const DorzimiProjektit = () => {
                                                 style={{
                                                     ...buttonStyle,
                                                     flex: window.innerWidth < 768 ? "none" : 1,
-                                                    background: "linear-gradient(135deg, #17a0c7 0%, #1489b5 100%)",
+                                                    background: "linear-gradient(135deg, #2bb0a9 0%, #1f9187 100%)",
                                                 }}
                                                 onClick={handleShkarko}
                                                 disabled={isLoading}
@@ -366,7 +366,7 @@ const DorzimiProjektit = () => {
                                                 style={{
                                                     ...buttonStyle,
                                                     flex: window.innerWidth < 768 ? "none" : 1,
-                                                    background: "linear-gradient(135deg, #ff5252 0%, #e04545 100%)",
+                                                    background: "linear-gradient(135deg, #f37c7c 0%, #e26464 100%)",
                                                     color: "#ffffff",
                                                 }}
                                                 onClick={handleFshij}
