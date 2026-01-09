@@ -91,13 +91,13 @@ const IdeaPage = () => {
     //nese ka feedback
     const feedBackId = 1; //kete do e marim nga backendi ne te ardhmen
     if (feedBackId === 1) {
-    navigate('/student/feedback', {
-      state: {
-        lendaId: lendaId,
-        subject: subjectName
-      }
-    });
-  }
+      navigate('/student/feedback', {
+        state: {
+          lendaId: lendaId,
+          subject: subjectName
+        }
+      });
+    }
     else {
       alert('Nuk ka ende feedback të lidhur me këtë ide.');
     }
@@ -253,9 +253,9 @@ const IdeaPage = () => {
 
         <div style={columnsStyle}>
           <div style={columnCard}>
-            <input 
-              type="text" 
-              placeholder="Kërko idenë..." 
+            <input
+              type="text"
+              placeholder="Kërko idenë..."
               style={searchInput}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -267,26 +267,30 @@ const IdeaPage = () => {
               {listStatus.error && (
                 <div style={{ textAlign: 'center', color: '#f8b4b4' }}>{listStatus.error}</div>
               )}
-              {!listStatus.loading && !listStatus.error && ideas.filter(idea => 
+              {!listStatus.loading && !listStatus.error && ideas.filter(idea =>
                 idea.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 idea.shorthand.toLowerCase().includes(searchTerm.toLowerCase())
               ).length === 0 && (
-                <div style={{ textAlign: 'center', opacity: 0.8 }}>
-                  {searchTerm ? 'Nuk u gjet asnjë ide me këtë kriter.' : 'Ende nuk ka ide për këtë lëndë.'}
-                </div>
-              )}
-              {!listStatus.loading && !listStatus.error && ideas.filter(idea => 
+                  <div style={{ textAlign: 'center', opacity: 0.8 }}>
+                    {searchTerm ? 'Nuk u gjet asnjë ide me këtë kriter.' : 'Ende nuk ka ide për këtë lëndë.'}
+                  </div>
+                )}
+              {!listStatus.loading && !listStatus.error && ideas.filter(idea =>
                 idea.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 idea.shorthand.toLowerCase().includes(searchTerm.toLowerCase())
               ).map((idea) => (
                 <div key={idea.id} style={ideaItem}>
                   <div>
+                    <div style={{ fontSize: 11, opacity: 0.6, marginBottom: '0.25rem' }}>Titulli:</div>
                     <strong>{idea.title}</strong>
                     {idea.subject?.name && (
                       <p style={{ margin: 0, fontSize: 12, opacity: 0.8 }}>{idea.subject.name}</p>
                     )}
                   </div>
-                  <span style={tagStyle}>{idea.shorthand}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
+                    <div style={{ fontSize: 11, opacity: 0.6 }}>Shkurtesa:</div>
+                    <span style={tagStyle}>{idea.shorthand}</span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -344,8 +348,8 @@ const IdeaPage = () => {
         </div>
 
         <div style={footerStyle}>
-          <button 
-            style={primaryButton} 
+          <button
+            style={primaryButton}
             onClick={() => navigate('/student/dorezimi', {
               state: {
                 lendaId: lendaId,
@@ -357,7 +361,7 @@ const IdeaPage = () => {
           </button>
           <button style={secondaryButton} onClick={handleFeedback}>Feedback</button>
         </div>
-      </div> 
+      </div>
     </div>
   );
 };
