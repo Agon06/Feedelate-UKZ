@@ -486,7 +486,7 @@ router.get("/:id/dorezime", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Lenda nuk u gjet" });
     }
 
-    const submission = await dorezimRepository.findOne({
+    const submissions = await dorezimRepository.find({
       where: {
         student: { id: studentId },
         lenda: { id: lendaId },
@@ -495,25 +495,29 @@ router.get("/:id/dorezime", async (req: Request, res: Response) => {
       order: { createdAt: "DESC" },
     });
 
-    if (!submission) {
+    if (submissions.length === 0) {
       return res.status(404).json({ message: "Nuk u gjet dorezim per kete lende" });
     }
 
-    const normalizedPath = submission.fileDorezimi.replace(/\\/g, "/");
-    const fileUrl = normalizedPath.startsWith("uploads/")
-      ? `/` + normalizedPath
-      : `/uploads/${normalizedPath}`;
+    const result = submissions.map(submission => {
+      const normalizedPath = submission.fileDorezimi.replace(/\\/g, "/");
+      const fileUrl = normalizedPath.startsWith("uploads/")
+        ? `/` + normalizedPath
+        : `/uploads/${normalizedPath}`;
 
-    res.json({
-      id: submission.id,
-      fileName: submission.fileName,
-      fileDorezimi: submission.fileDorezimi,
-      fileUrl,
-      status: null,
-      vleresimi: null,
-      feedbackText: null,
-      createdAt: submission.createdAt,
+      return {
+        id: submission.id,
+        fileName: submission.fileName,
+        fileDorezimi: submission.fileDorezimi,
+        fileUrl,
+        status: null,
+        vleresimi: null,
+        feedbackText: null,
+        createdAt: submission.createdAt,
+      };
     });
+
+    res.json(result);
   } catch (error) {
     console.error("Error fetching dorezim", error);
     res.status(500).json({ message: "Error fetching dorezim", error: String(error) });
