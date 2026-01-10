@@ -63,10 +63,7 @@ function App() {
 
           <Route path="/student/dorzimiProjektit" element={<DorzimiProjektit />} />
 
-
-        // ketu shtohen rruget e reja
-
-
+          {/* ketu shtohen rruget e reja */}
 
         </Routes>
       </div>

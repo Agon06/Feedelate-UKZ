@@ -12,6 +12,8 @@ import { Idete } from "../../entities/Student/Idete";
 import { DorezimiIdes } from "../../entities/Student/dorezimiIdes";
 import { Projekti } from "../../entities/Student/projekti";
 import { dorzimiProjektit } from "../../entities/Student/dorzimiProjektit";
+import { MenaxhimiAfateve } from "../../entities/Student/menaxhimiAfateve";
+
 
 
 
@@ -27,6 +29,7 @@ const ideaRepository = AppDataSource.getRepository(Idete);
 const dorezimRepository = AppDataSource.getRepository(DorezimiIdes);
 const projektiRepository = AppDataSource.getRepository(Projekti);
 const dorezimProjektitRepository = AppDataSource.getRepository(dorzimiProjektit);
+const menaxhimiAfateveRepository = AppDataSource.getRepository(MenaxhimiAfateve);
 //e thirr repositorin e testi
 
 
@@ -810,6 +813,55 @@ router.get("/:id/projekti/:lendaId/download", async (req: Request, res: Response
     return res.download(absolutePath, dorezim.fileName);
   } catch (error) {
     res.status(500).json({ message: "Error downloading projekt", error });
+  }
+});
+
+// GET afatet per nje lende te caktuar
+router.get("/:studentId/afatet/:lendaId", async (req: Request, res: Response) => {
+  try {
+    const { lendaId } = req.params;
+    const lendaIdNum = parseInt(lendaId, 10);
+
+    if (isNaN(lendaIdNum)) {
+      return res.status(400).json({ message: "Invalid lendaId" });
+    }
+
+    // Query me QueryBuilder për më shumë kontroll
+    const afatet = await menaxhimiAfateveRepository
+      .createQueryBuilder("afat")
+      .leftJoinAndSelect("afat.lenda", "lenda")
+      .where("lenda.id = :lendaId", { lendaId: lendaIdNum })
+      .orderBy("afat.dataFillimit", "DESC")
+      .getMany();
+
+    // Kontrollo nese afati eshte aktiv (data e sotme eshte mes dataFillimit dhe dataMbarimit)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const afetetMeStatus = afatet.map(afat => {
+      const dataFillimit = new Date(afat.dataFillimit);
+      const dataMbarimit = new Date(afat.dataMbarimit);
+      dataFillimit.setHours(0, 0, 0, 0);
+      dataMbarimit.setHours(23, 59, 59, 999);
+
+      const isActive = today >= dataFillimit && today <= dataMbarimit;
+
+      return {
+        id: afat.id,
+        tipi: afat.tipi,
+        dataFillimit: afat.dataFillimit,
+        dataMbarimit: afat.dataMbarimit,
+        tema: afat.tema,
+        formati: afat.formati,
+        komente: afat.komente,
+        isActive
+      };
+    });
+
+    res.json({ afatet: afetetMeStatus });
+  } catch (error) {
+    console.error("Error fetching afatet:", error);
+    res.status(500).json({ message: "Error fetching afatet", error });
   }
 });
 

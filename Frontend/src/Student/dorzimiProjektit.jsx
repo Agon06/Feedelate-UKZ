@@ -263,6 +263,12 @@ const DorzimiProjektit = () => {
                     >
                         Afati i dorzimit
                     </button>
+                    <button
+                        style={tabButtonStyle(activeTab === "instruksionet")}
+                        onClick={() => setActiveTab("instruksionet")}
+                    >
+                        Instruksionet
+                    </button>
                 </div>
 
                 <div style={rightPanelStyle}>
@@ -424,6 +430,56 @@ const DorzimiProjektit = () => {
                                                 : "--/--/----"}
                                         </p>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === "instruksionet" && (
+                        <div>
+                            <h2 style={sectionHeaderStyle}>Instruksionet e Projektit</h2>
+                            <div style={cardStyle}>
+                                <div style={{ 
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    padding: "4rem 2rem",
+                                    minHeight: "400px"
+                                }}>
+                                    <p style={{ 
+                                        fontSize: 18, 
+                                        fontWeight: 600,
+                                        color: "#c4f0da",
+                                        marginBottom: "2rem",
+                                        textAlign: "center",
+                                        opacity: 0.9
+                                    }}>
+                                        Nuk ka template për këtë lëndë
+                                    </p>
+                                    <button style={{
+                                        padding: "1rem 2rem",
+                                        background: "linear-gradient(135deg, #17c77a 0%, #14b56d 100%)",
+                                        border: "none",
+                                        borderRadius: 12,
+                                        color: "#0a1612",
+                                        fontSize: 15,
+                                        fontWeight: 700,
+                                        cursor: "pointer",
+                                        transition: "all 0.2s",
+                                        boxShadow: "0 4px 12px rgba(23,199,122,0.3)"
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.target.style.transform = "translateY(-2px)";
+                                        e.target.style.boxShadow = "0 6px 16px rgba(23,199,122,0.4)";
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.target.style.transform = "translateY(0)";
+                                        e.target.style.boxShadow = "0 4px 12px rgba(23,199,122,0.3)";
+                                    }}
+                                    >
+                                        ⬇ Shkarko Shabilonin
+                                    </button>
                                 </div>
                             </div>
                         </div>
