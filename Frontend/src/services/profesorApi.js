@@ -158,6 +158,29 @@ export const deleteProfesorProject = (profesorId, projectId) =>
     method: 'DELETE',
   });
 
+// Ngarko template për një lëndë
+export const uploadLendaTemplate = async (profesorId, lendaId, file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  const response = await fetch(`${API_BASE_URL}/profesoret/${profesorId}/lendet/${lendaId}/template`, {
+    method: 'POST',
+    body: formData,
+  });
+  
+  return handleResponse(response);
+};
+
+// Merr informacionin e template-it për një lëndë
+export const getLendaTemplateInfo = (profesorId, lendaId) =>
+  request(`/profesoret/${profesorId}/lendet/${lendaId}/template`);
+
+// Fshij template-in për një lëndë
+export const deleteLendaTemplate = (profesorId, lendaId) =>
+  request(`/profesoret/${profesorId}/lendet/${lendaId}/template`, {
+    method: 'DELETE',
+  });
+
 export default {
   getProfesorDashboard,
   getProfesorYearData,
@@ -173,4 +196,7 @@ export default {
   createProfesorProject,
   updateProfesorProject,
   deleteProfesorProject,
+  uploadLendaTemplate,
+  getLendaTemplateInfo,
+  deleteLendaTemplate,
 };

@@ -12,6 +12,7 @@ import { DorezimiIdesp } from "../../entities/Profesor/dorezimiIdesp";
 import { Projektip } from "../../entities/Profesor/projektip";
 import { DorezimiIdes } from "../../entities/Student/dorezimiIdes";
 import { Student } from "../../entities/Student/Student";
+import { Lendet } from "../../entities/Student/Lendet";
 
 const router = Router();
 const profesorRepository = AppDataSource.getRepository(Profesor);
@@ -21,6 +22,7 @@ const dorezimpRepository = AppDataSource.getRepository(DorezimiIdesp);
 const projektipRepository = AppDataSource.getRepository(Projektip);
 const dorezimiStudentRepository = AppDataSource.getRepository(DorezimiIdes);
 const studentRepository = AppDataSource.getRepository(Student);
+const lendetRepository = AppDataSource.getRepository(Lendet);
 
 // Multer config for file upload (disk storage)
 const uploadDir = path.resolve(process.cwd(), "uploads", "dorezime");
@@ -50,6 +52,31 @@ const upload = multer({
     }
   },
   limits: { fileSize: 10 * 1024 * 1024 }
+});
+
+// Multer config për template upload (PDF, DOC, DOCX, TXT)
+const uploadTemplate = multer({
+  storage,
+  fileFilter: (_req, file, cb) => {
+    const allowed = [
+      ".pdf",
+      ".doc",
+      ".docx",
+      ".txt",
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "text/plain"
+    ];
+    const ext = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf('.'));
+    const mime = file.mimetype;
+    if (allowed.includes(ext) || allowed.includes(mime)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Lejohen PDF, DOC, DOCX, TXT"));
+    }
+  },
+  limits: { fileSize: 20 * 1024 * 1024 } // 20MB
 });
 
 const formatProfesorSummary = (profesor: Profesor) => ({
@@ -586,6 +613,116 @@ router.delete("/:id", async (req: Request, res: Response) => {
     res.json({ message: "Profesor deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error deleting profesor", error });
+  }
+});
+
+// POST: Ngarko template për një lëndë (nga profesori)
+router.post("/:id/lendet/:lendaId/template", uploadTemplate.single("file"), async (req: Request, res: Response) => {
+  const profesorId = Number(req.params.id);
+  const lendaId = Number(req.params.lendaId);
+
+  if (Number.isNaN(profesorId) || Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "Invalid profesor or lenda ID" });
+  }
+
+  if (!req.file) {
+    return res.status(400).json({ message: "Nuk u ngarkua asnjë file" });
+  }
+
+  try {
+    const lenda = await lendetRepository.findOneBy({ id: lendaId });
+
+    if (!lenda) {
+      return res.status(404).json({ message: "Lenda not found" });
+    }
+
+    // Fshij template-in e vjetër nëse ekziston
+    if (lenda.templateFile) {
+      const oldPath = path.resolve(process.cwd(), lenda.templateFile);
+      if (fs.existsSync(oldPath)) {
+        fs.unlinkSync(oldPath);
+      }
+    }
+
+    // Ruaj path-in relativ
+    const relativePath = path.relative(process.cwd(), req.file.path);
+
+    // Përditëso lëndën me template-in e ri
+    lenda.templateFile = relativePath;
+    lenda.templateFileName = req.file.originalname;
+    await lendetRepository.save(lenda);
+
+    res.json({
+      message: "Template u ngarkua me sukses!",
+      fileName: lenda.templateFileName,
+      hasTemplate: true
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error uploading template", error });
+  }
+});
+
+// GET: Merr informacionin e template-it për një lëndë
+router.get("/:id/lendet/:lendaId/template", async (req: Request, res: Response) => {
+  const lendaId = Number(req.params.lendaId);
+
+  if (Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "Invalid lenda ID" });
+  }
+
+  try {
+    const lenda = await lendetRepository.findOneBy({ id: lendaId });
+
+    if (!lenda) {
+      return res.status(404).json({ message: "Lenda not found" });
+    }
+
+    if (!lenda.templateFile || !lenda.templateFileName) {
+      return res.json({ hasTemplate: false });
+    }
+
+    res.json({
+      hasTemplate: true,
+      fileName: lenda.templateFileName
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching template info", error });
+  }
+});
+
+// DELETE: Fshij template-in për një lëndë
+router.delete("/:id/lendet/:lendaId/template", async (req: Request, res: Response) => {
+  const lendaId = Number(req.params.lendaId);
+
+  if (Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "Invalid lenda ID" });
+  }
+
+  try {
+    const lenda = await lendetRepository.findOneBy({ id: lendaId });
+
+    if (!lenda) {
+      return res.status(404).json({ message: "Lenda not found" });
+    }
+
+    if (!lenda.templateFile) {
+      return res.status(404).json({ message: "Nuk ka template për këtë lëndë" });
+    }
+
+    // Fshij file-in
+    const filePath = path.resolve(process.cwd(), lenda.templateFile);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    // Pastro fushat në databazë
+    lenda.templateFile = undefined;
+    lenda.templateFileName = undefined;
+    await lendetRepository.save(lenda);
+
+    res.json({ message: "Template u fshi me sukses!" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting template", error });
   }
 });
 

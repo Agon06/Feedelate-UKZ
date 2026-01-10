@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getProfesorYearData } from '../services/profesorApi';
+import { getProfesorYearData, uploadLendaTemplate, getLendaTemplateInfo, deleteLendaTemplate } from '../services/profesorApi';
 
 const Lendetp = () => {
   const { yearId } = useParams();
@@ -13,6 +13,8 @@ const Lendetp = () => {
   const [activeModal, setActiveModal] = useState({ open: false, subject: null });
   const [yearData, setYearData] = useState(null);
   const [status, setStatus] = useState({ loading: true, error: null });
+  const [templateInfo, setTemplateInfo] = useState({ hasTemplate: false, fileName: '' });
+  const [uploadingTemplate, setUploadingTemplate] = useState(false);
 
   const baseSemesters = useMemo(() => {
     const parsed = Number(yearId);
@@ -240,10 +242,53 @@ const Lendetp = () => {
 
   const handleSubjectClick = (subject) => {
     setActiveModal({ open: true, subject });
+    loadTemplateInfo(subject.id);
+  };
+
+  const loadTemplateInfo = async (lendaId) => {
+    try {
+      const data = await getLendaTemplateInfo(PROFESOR_ID, lendaId);
+      setTemplateInfo(data.hasTemplate ? { hasTemplate: true, fileName: data.fileName } : { hasTemplate: false, fileName: '' });
+    } catch (error) {
+      console.error('Error loading template info:', error);
+      setTemplateInfo({ hasTemplate: false, fileName: '' });
+    }
+  };
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file || !activeModal.subject) return;
+
+    try {
+      setUploadingTemplate(true);
+      await uploadLendaTemplate(PROFESOR_ID, activeModal.subject.id, file);
+      await loadTemplateInfo(activeModal.subject.id);
+      alert('Template u ngarkua me sukses!');
+    } catch (error) {
+      alert('Error: ' + (error.message || 'Ngarkimi dështoi'));
+    } finally {
+      setUploadingTemplate(false);
+    }
+  };
+
+  const handleDeleteTemplate = async () => {
+    if (!activeModal.subject || !confirm('A jeni të sigurt që dëshironi të fshini template-in?')) return;
+
+    try {
+      setUploadingTemplate(true);
+      await deleteLendaTemplate(PROFESOR_ID, activeModal.subject.id);
+      setTemplateInfo({ hasTemplate: false, fileName: '' });
+      alert('Template u fshi me sukses!');
+    } catch (error) {
+      alert('Error: ' + (error.message || 'Fshirja dështoi'));
+    } finally {
+      setUploadingTemplate(false);
+    }
   };
 
   const handleCloseModal = () => {
     setActiveModal({ open: false, subject: null });
+    setTemplateInfo({ hasTemplate: false, fileName: '' });
   };
 
   const handleNavigateToIdea = () => {
@@ -351,6 +396,96 @@ const Lendetp = () => {
           >
             <h2 style={{ marginTop: 0 }}>{activeModal.subject?.name}</h2>
             <p style={{ opacity: 0.85 }}>Zgjidh veprimin për këtë lëndë:</p>
+            
+            {/* Template Section */}
+            <div style={{
+              background: 'rgba(23,199,122,0.08)',
+              border: '1px solid rgba(23,199,122,0.25)',
+              borderRadius: 12,
+              padding: '1rem',
+              marginTop: 16,
+              marginBottom: 16
+            }}>
+              <h3 style={{ margin: '0 0 0.75rem', fontSize: 16, color: '#1fdc8c' }}>📄 Template/Instruksionet</h3>
+              {templateInfo.hasTemplate ? (
+                <div>
+                  <p style={{ margin: '0 0 0.75rem', fontSize: 14, color: '#c4f0da' }}>
+                    <strong>File:</strong> {templateInfo.fileName}
+                  </p>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <label
+                      htmlFor="template-upload"
+                      style={{
+                        flex: 1,
+                        padding: '0.5rem',
+                        background: 'rgba(23,199,122,0.2)',
+                        border: '1px solid rgba(23,199,122,0.5)',
+                        borderRadius: 8,
+                        color: '#1fdc8c',
+                        fontWeight: 600,
+                        cursor: uploadingTemplate ? 'not-allowed' : 'pointer',
+                        textAlign: 'center',
+                        fontSize: 13,
+                        opacity: uploadingTemplate ? 0.5 : 1
+                      }}
+                    >
+                      {uploadingTemplate ? 'Duke ngarkuar...' : '🔄 Ndrysho'}
+                    </label>
+                    <button
+                      onClick={handleDeleteTemplate}
+                      disabled={uploadingTemplate}
+                      style={{
+                        flex: 1,
+                        padding: '0.5rem',
+                        background: 'rgba(255,82,82,0.2)',
+                        border: '1px solid rgba(255,82,82,0.5)',
+                        borderRadius: 8,
+                        color: '#ff5252',
+                        fontWeight: 600,
+                        cursor: uploadingTemplate ? 'not-allowed' : 'pointer',
+                        fontSize: 13,
+                        opacity: uploadingTemplate ? 0.5 : 1
+                      }}
+                    >
+                      🗑️ Fshi
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <p style={{ margin: '0 0 0.75rem', fontSize: 14, opacity: 0.7 }}>
+                    Nuk ka template të ngarkuar
+                  </p>
+                  <label
+                    htmlFor="template-upload"
+                    style={{
+                      display: 'block',
+                      padding: '0.6rem',
+                      background: 'linear-gradient(135deg, #17c77a 0%, #14b56d 100%)',
+                      border: 'none',
+                      borderRadius: 8,
+                      color: '#0a1612',
+                      fontWeight: 700,
+                      cursor: uploadingTemplate ? 'not-allowed' : 'pointer',
+                      textAlign: 'center',
+                      fontSize: 14,
+                      opacity: uploadingTemplate ? 0.5 : 1
+                    }}
+                  >
+                    {uploadingTemplate ? 'Duke ngarkuar...' : '📤 Ngarko Template'}
+                  </label>
+                </div>
+              )}
+              <input
+                id="template-upload"
+                type="file"
+                accept=".pdf,.doc,.docx,.txt"
+                onChange={handleFileUpload}
+                disabled={uploadingTemplate}
+                style={{ display: 'none' }}
+              />
+            </div>
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 24 }}>
               <button
                 style={{

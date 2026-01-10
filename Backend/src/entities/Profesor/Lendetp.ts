@@ -20,6 +20,13 @@ export class Lendetp {
     @Column({ type: "boolean", default: false })
     isZgjedhore: boolean;
 
+    // Template/Shabllon files per projektet
+    @Column({ nullable: true })
+    templateFile?: string;
+
+    @Column({ nullable: true })
+    templateFileName?: string;
+
     @OneToMany(() => Idetep, (idetep) => idetep.lenda)
     idetep: Idetep[];
 

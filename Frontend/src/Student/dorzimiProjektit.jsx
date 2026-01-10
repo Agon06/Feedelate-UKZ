@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { getProjektiDorezuar, dorezoProjektin, fshijProjektin, shkarkoProjektin } from "../services/projektiApi";
+import { getProjektiDorezuar, dorezoProjektin, fshijProjektin, shkarkoProjektin, getTemplateInfo, shkarkoTemplate } from "../services/projektiApi";
 
 const DorzimiProjektit = () => {
     const location = useLocation();
@@ -12,6 +12,8 @@ const DorzimiProjektit = () => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [dorezimData, setDorezimData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [hasTemplate, setHasTemplate] = useState(false);
+    const [templateFileName, setTemplateFileName] = useState("");
 
     const student = JSON.parse(localStorage.getItem('student') || '{}');
     if (!student.id) {
@@ -20,10 +22,11 @@ const DorzimiProjektit = () => {
     }
     const STUDENT_ID = student.id; // Mund ta marrësh nga auth context
 
-    // Fetch projektin e dorëzuar kur ngarkohet komponenti
+    // Fetch projektin e dorëzuar dhe template-in kur ngarkohet komponenti
     useEffect(() => {
         if (lendaId) {
             loadProjektiDorezuar();
+            loadTemplateInfo();
         }
     }, [lendaId]);
 
@@ -37,6 +40,30 @@ const DorzimiProjektit = () => {
             }
         } catch (error) {
             console.error("Error loading projekt:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const loadTemplateInfo = async () => {
+        try {
+            const data = await getTemplateInfo(STUDENT_ID, lendaId);
+            if (data.hasTemplate) {
+                setHasTemplate(true);
+                setTemplateFileName(data.fileName);
+            }
+        } catch (error) {
+            console.error("Error loading template info:", error);
+            setHasTemplate(false);
+        }
+    };
+
+    const handleShkarkoTemplate = async () => {
+        try {
+            setIsLoading(true);
+            await shkarkoTemplate(STUDENT_ID, lendaId, templateFileName);
+        } catch (error) {
+            alert("Error: " + (error.message || "Nuk u shkarkua template"));
         } finally {
             setIsLoading(false);
         }
@@ -447,39 +474,67 @@ const DorzimiProjektit = () => {
                                     padding: "4rem 2rem",
                                     minHeight: "400px"
                                 }}>
-                                    <p style={{ 
-                                        fontSize: 18, 
-                                        fontWeight: 600,
-                                        color: "#c4f0da",
-                                        marginBottom: "2rem",
-                                        textAlign: "center",
-                                        opacity: 0.9
-                                    }}>
-                                        Nuk ka template për këtë lëndë
-                                    </p>
-                                    <button style={{
-                                        padding: "1rem 2rem",
-                                        background: "linear-gradient(135deg, #17c77a 0%, #14b56d 100%)",
-                                        border: "none",
-                                        borderRadius: 12,
-                                        color: "#0a1612",
-                                        fontSize: 15,
-                                        fontWeight: 700,
-                                        cursor: "pointer",
-                                        transition: "all 0.2s",
-                                        boxShadow: "0 4px 12px rgba(23,199,122,0.3)"
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        e.target.style.transform = "translateY(-2px)";
-                                        e.target.style.boxShadow = "0 6px 16px rgba(23,199,122,0.4)";
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.target.style.transform = "translateY(0)";
-                                        e.target.style.boxShadow = "0 4px 12px rgba(23,199,122,0.3)";
-                                    }}
-                                    >
-                                        ⬇ Shkarko Shabilonin
-                                    </button>
+                                    {hasTemplate ? (
+                                        <>
+                                            <p style={{ 
+                                                fontSize: 18, 
+                                                fontWeight: 600,
+                                                color: "#1fdc8c",
+                                                marginBottom: "1rem",
+                                                textAlign: "center"
+                                            }}>
+                                                📄 {templateFileName}
+                                            </p>
+                                            <p style={{ 
+                                                fontSize: 14, 
+                                                color: "#c4f0da",
+                                                marginBottom: "2rem",
+                                                textAlign: "center",
+                                                opacity: 0.8
+                                            }}>
+                                                Template për lëndën {subject}
+                                            </p>
+                                            <button 
+                                                style={{
+                                                    padding: "1rem 2rem",
+                                                    background: "linear-gradient(135deg, #17c77a 0%, #14b56d 100%)",
+                                                    border: "none",
+                                                    borderRadius: 12,
+                                                    color: "#0a1612",
+                                                    fontSize: 15,
+                                                    fontWeight: 700,
+                                                    cursor: isLoading ? "not-allowed" : "pointer",
+                                                    transition: "all 0.2s",
+                                                    boxShadow: "0 4px 12px rgba(23,199,122,0.3)",
+                                                    opacity: isLoading ? 0.6 : 1
+                                                }}
+                                                onClick={handleShkarkoTemplate}
+                                                disabled={isLoading}
+                                                onMouseEnter={(e) => {
+                                                    if (!isLoading) {
+                                                        e.target.style.transform = "translateY(-2px)";
+                                                        e.target.style.boxShadow = "0 6px 16px rgba(23,199,122,0.4)";
+                                                    }
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.target.style.transform = "translateY(0)";
+                                                    e.target.style.boxShadow = "0 4px 12px rgba(23,199,122,0.3)";
+                                                }}
+                                            >
+                                                {isLoading ? "Duke shkarkuar..." : "⬇ Shkarko Shabilonin"}
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <p style={{ 
+                                            fontSize: 18, 
+                                            fontWeight: 600,
+                                            color: "#c4f0da",
+                                            textAlign: "center",
+                                            opacity: 0.7
+                                        }}>
+                                            Nuk ka template për këtë lëndë
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>

@@ -72,3 +72,38 @@ export const shkarkoProjektin = async (studentId, lendaId, fallbackName = "proje
   a.remove();
   window.URL.revokeObjectURL(url);
 };
+
+// Merr informacionin nëse ka template për një lëndë
+export const getTemplateInfo = async (studentId, lendaId) => {
+  const response = await fetch(`${API_BASE_URL}/studentet/${studentId}/projekti/${lendaId}/template`);
+  return handleResponse(response);
+};
+
+// Shkarko template-in për një lëndë
+export const shkarkoTemplate = async (studentId, lendaId, fallbackName = "template") => {
+  const response = await fetch(`${API_BASE_URL}/studentet/${studentId}/projekti/${lendaId}/template/download`);
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || 'Shkarkimi i template deshtoi');
+  }
+
+  // Merr emrin nga Content-Disposition
+  const disposition = response.headers.get('content-disposition');
+  let filename = fallbackName;
+  if (disposition && disposition.includes('filename=')) {
+    const match = disposition.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
+    filename = decodeURIComponent(match?.[1] || match?.[2] || fallbackName);
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+};
+

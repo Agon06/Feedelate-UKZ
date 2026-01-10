@@ -816,52 +816,60 @@ router.get("/:id/projekti/:lendaId/download", async (req: Request, res: Response
   }
 });
 
-// GET afatet per nje lende te caktuar
-router.get("/:studentId/afatet/:lendaId", async (req: Request, res: Response) => {
-  try {
-    const { lendaId } = req.params;
-    const lendaIdNum = parseInt(lendaId, 10);
+// GET: Merr template/instruksionet për një lëndë
+router.get("/:id/projekti/:lendaId/template", async (req: Request, res: Response) => {
+  const lendaId = Number(req.params.lendaId);
 
-    if (isNaN(lendaIdNum)) {
-      return res.status(400).json({ message: "Invalid lendaId" });
+  if (Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "Invalid lenda ID" });
+  }
+
+  try {
+    const lenda = await lendeRepository.findOneBy({ id: lendaId });
+
+    if (!lenda) {
+      return res.status(404).json({ message: "Lenda not found" });
     }
 
-    // Query me QueryBuilder për më shumë kontroll
-    const afatet = await menaxhimiAfateveRepository
-      .createQueryBuilder("afat")
-      .leftJoinAndSelect("afat.lenda", "lenda")
-      .where("lenda.id = :lendaId", { lendaId: lendaIdNum })
-      .orderBy("afat.dataFillimit", "DESC")
-      .getMany();
+    if (!lenda.templateFile || !lenda.templateFileName) {
+      return res.status(404).json({ 
+        message: "Nuk ka template për këtë lëndë",
+        hasTemplate: false 
+      });
+    }
 
-    // Kontrollo nese afati eshte aktiv (data e sotme eshte mes dataFillimit dhe dataMbarimit)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const afetetMeStatus = afatet.map(afat => {
-      const dataFillimit = new Date(afat.dataFillimit);
-      const dataMbarimit = new Date(afat.dataMbarimit);
-      dataFillimit.setHours(0, 0, 0, 0);
-      dataMbarimit.setHours(23, 59, 59, 999);
-
-      const isActive = today >= dataFillimit && today <= dataMbarimit;
-
-      return {
-        id: afat.id,
-        tipi: afat.tipi,
-        dataFillimit: afat.dataFillimit,
-        dataMbarimit: afat.dataMbarimit,
-        tema: afat.tema,
-        formati: afat.formati,
-        komente: afat.komente,
-        isActive
-      };
+    res.json({
+      hasTemplate: true,
+      fileName: lenda.templateFileName
     });
-
-    res.json({ afatet: afetetMeStatus });
   } catch (error) {
-    console.error("Error fetching afatet:", error);
-    res.status(500).json({ message: "Error fetching afatet", error });
+    res.status(500).json({ message: "Error fetching template info", error });
+  }
+});
+
+// DOWNLOAD: Shkarko template-in për një lëndë
+router.get("/:id/projekti/:lendaId/template/download", async (req: Request, res: Response) => {
+  const lendaId = Number(req.params.lendaId);
+
+  if (Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "Invalid lenda ID" });
+  }
+
+  try {
+    const lenda = await lendeRepository.findOneBy({ id: lendaId });
+
+    if (!lenda || !lenda.templateFile || !lenda.templateFileName) {
+      return res.status(404).json({ message: "Template not found" });
+    }
+
+    const absolutePath = path.resolve(process.cwd(), lenda.templateFile);
+    if (!fs.existsSync(absolutePath)) {
+      return res.status(404).json({ message: "Template file not found on disk" });
+    }
+
+    return res.download(absolutePath, lenda.templateFileName);
+  } catch (error) {
+    res.status(500).json({ message: "Error downloading template", error });
   }
 });
 
