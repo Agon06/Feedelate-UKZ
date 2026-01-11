@@ -137,10 +137,10 @@ const DorzimiProjektit = () => {
         border: `1px solid ${isActive ? "#17c77a" : "rgba(255,255,255,0.1)"}`,
         borderRadius: 12,
         color: isActive ? "#1fdc8c" : "#c4f0da",
-        fontSize: 15,
+        fontSize: 13,
         fontWeight: 600,
         cursor: "pointer",
-        marginBottom: "0.75rem",
+        marginBottom: "3rem",
         transition: "all 0.2s",
         textAlign: "left",
     });
@@ -182,7 +182,7 @@ const DorzimiProjektit = () => {
         fontSize: 13,
         fontWeight: 600,
         cursor: "pointer",
-        marginBottom: "1rem",
+        width: "100%",
     };
 
     const handleBack = () => {
@@ -244,7 +244,7 @@ const DorzimiProjektit = () => {
             alert("Error: " + error.message);
         } finally {
             setIsLoading(false);
-        }
+        }   
     };
 
     const statusBadgeStyle = (isDorzuar) => ({
@@ -273,6 +273,12 @@ const DorzimiProjektit = () => {
                 <div style={leftPanelStyle}>
                     <h2 style={subjectTitleStyle}>{subject || "Lënda"}</h2>
                     <button
+                        style={tabButtonStyle(activeTab === "instruksionet")}
+                        onClick={() => setActiveTab("instruksionet")}
+                    >
+                        Instruksionet
+                    </button>
+                    <button
                         style={tabButtonStyle(activeTab === "projekti")}
                         onClick={() => setActiveTab("projekti")}
                     >
@@ -288,26 +294,30 @@ const DorzimiProjektit = () => {
                         style={tabButtonStyle(activeTab === "afatet")}
                         onClick={() => setActiveTab("afatet")}
                     >
-                        Afati i dorzimit
+                        Afati i dorëzimit
                     </button>
-                    <button
-                        style={tabButtonStyle(activeTab === "instruksionet")}
-                        onClick={() => setActiveTab("instruksionet")}
-                    >
-                        Instruksionet
+
+                    {/* Kthehu Mbrapa në fund të sidebar - jashtë tab-ave */}
+                    <button style={backButtonStyle} onClick={handleBack}>
+                        ← Kthehu Mbrapa
                     </button>
                 </div>
 
                 <div style={rightPanelStyle}>
-                    <button style={backButtonStyle} onClick={handleBack}>
-                        ← Kthehu Mbrapa
-                    </button>
-
                     {activeTab === "projekti" && (
                         <div>
-                            <h2 style={sectionHeaderStyle}>Dorëzo Projektin</h2>
+                            <h2 style={{
+                                ...sectionHeaderStyle,
+                                textAlign: "center"
+                            }}>
+                                Dorëzo Projektin
+                            </h2>
                             <div style={cardStyle}>
-                                <p style={{ marginBottom: "1.5rem", opacity: 0.8 }}>
+                                <p style={{ 
+                                    marginBottom: "1.5rem", 
+                                    opacity: 0.8,
+                                    textAlign: "center"
+                                }}>
                                     Ngarko dokumentin e projektit për lëndën <strong>{subject}</strong>.
                                 </p>
                                 <input
@@ -324,7 +334,8 @@ const DorzimiProjektit = () => {
                                         color: "#c4f0da",
                                         width: "100%",
                                         opacity: isLoading ? 0.5 : 1,
-                                        cursor: isLoading ? "not-allowed" : "pointer"
+                                        cursor: isLoading ? "not-allowed" : "pointer",
+                                        textAlign: "center"
                                     }}
                                 />
                                 <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
@@ -393,7 +404,7 @@ const DorzimiProjektit = () => {
                                                 onClick={handleShkarko}
                                                 disabled={isLoading}
                                             >
-                                                ⬇️ Shkarko Projektin
+                                                 Shkarko Projektin
                                             </button>
                                             <button 
                                                 style={{
@@ -405,7 +416,7 @@ const DorzimiProjektit = () => {
                                                 onClick={handleFshij}
                                                 disabled={isLoading}
                                             >
-                                                🗑️ Fshij Projektin
+                                             Fshij Projektin
                                             </button>
                                         </div>
                                     </div>
@@ -459,6 +470,7 @@ const DorzimiProjektit = () => {
                                     </div>
                                 </div>
                             </div>
+                            {/* HIQE butonin prej këtu */}
                         </div>
                     )}
 

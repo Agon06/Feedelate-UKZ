@@ -34,6 +34,8 @@ const IdeaPage = () => {
   const [editingIdeaId, setEditingIdeaId] = useState(null);
   const [isDeletingId, setIsDeletingId] = useState(null);
 
+  const hasReachedIdeaLimit = ideas.length >= 1;
+
   const loadIdeas = useCallback(async () => {
     setListStatus({ loading: true, error: null });
     try {
@@ -313,8 +315,6 @@ const IdeaPage = () => {
     cursor: 'pointer',
     transition: 'all 0.3s ease'
   };
-
-  const hasReachedIdeaLimit = ideas.length >= 1;
 
   return (
     <div style={pageStyle}>
