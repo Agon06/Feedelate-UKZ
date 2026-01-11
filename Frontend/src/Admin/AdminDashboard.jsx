@@ -1,8 +1,29 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import UserMenu from '../components/UserMenu';
+import RoleSwitcher from '../components/RoleSwitcher';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
+    const [adminName, setAdminName] = useState('Admin');
+    const [avatarLetter, setAvatarLetter] = useState('A');
+
+    useEffect(() => {
+        // Load user data from localStorage
+        const student = localStorage.getItem('student');
+        if (student) {
+            try {
+                const userData = JSON.parse(student);
+                const firstName = userData.emri || 'Admin';
+                const lastName = userData.mbiemri || '';
+                const fullName = `${firstName} ${lastName}`.trim();
+                setAdminName(fullName);
+                setAvatarLetter((firstName.charAt(0) + lastName.charAt(0)).toUpperCase());
+            } catch (err) {
+                console.error('Failed to load user data:', err);
+            }
+        }
+    }, []);
 
     const [isMobile, setIsMobile] = useState(false);
     useEffect(() => {
@@ -12,20 +33,25 @@ const AdminDashboard = () => {
         return () => window.removeEventListener('resize', onResize);
     }, []);
 
-    const adminName = 'Admin';
-    const avatarLetter = 'A';
-
     const pageStyle = {
         color: '#fff',
         minHeight: '100vh',
-        background: 'linear-gradient(180deg, rgba(10,18,12,1) 0%, rgba(14,28,20,1) 50%, rgba(12,30,18,1) 100%)',
-        padding: 0,
+        background: 'radial-gradient(circle at 20% 20%, rgba(27,148,92,0.15), transparent 35%), radial-gradient(circle at 80% 0%, rgba(23,199,122,0.12), transparent 30%), linear-gradient(180deg, rgba(9,16,12,1) 0%, rgba(12,26,18,1) 50%, rgba(8,18,12,1) 100%)',
+        padding: '2rem',
         margin: 0,
         fontFamily: 'Inter, system-ui, Arial, sans-serif',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center'
     };
 
     const topBarStyle = {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -90,44 +116,61 @@ const AdminDashboard = () => {
     };
 
     const layoutContainer = {
-        position: 'relative',
-        minHeight: isMobile ? '90vh' : '70vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
         width: '100%',
-        display: 'block',
-        overflow: 'visible'
+        maxWidth: '900px'
     };
 
     const cardBase = {
-        position: 'absolute',
-        width: isMobile ? 160 : 260,
-        height: isMobile ? 160 : 260,
-        background: 'rgba(16, 24, 20, 0.85)',
+        width: '100%',
+        maxWidth: isMobile ? '300px' : '360px',
+        padding: isMobile ? '2rem 1.5rem' : '2.5rem 2rem',
+        background: 'rgba(16, 24, 20, 0.9)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255,255,255,0.06)',
+        borderRadius: 16,
+        boxShadow: '0 24px 60px rgba(0,0,0,0.55)',
         color: '#fff',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: 14,
-        boxShadow: '0 14px 30px rgba(0,0,0,0.6)',
-        fontSize: isMobile ? 16 : 22,
-        fontWeight: 800,
+        fontSize: isMobile ? '15px' : '16px',
+        fontWeight: 700,
         cursor: 'pointer',
-        transition: 'transform 180ms ease, box-shadow 180ms ease'
+        transition: 'all 300ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+        textAlign: 'center',
+        letterSpacing: '0.5px'
+    };
+
+    const cardsContainer = {
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '1.5rem' : '2rem',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%'
     };
 
     const cards = useMemo(() => ([
         { id: 'students', label: 'Menaxho Studentët', to: '/admin/menaxho-studentet' },
-        { id: 'professors', label: 'Menaxho Profesorët', to: '/admin/menaxho-profesoret' }
+        { id: 'professors', label: 'Menaxho Profesorët', to: '/admin/menaxho-profesoret' },
+        { id: 'courses', label: 'Regjistro Lendet', to: '/admin/regjistro-lendet' }
     ]), []);
 
     const positions = useMemo(() => (
         isMobile
             ? [
                 { left: '50%', top: '28%', transform: 'translateX(-50%)' },
-                { left: '50%', top: '58%', transform: 'translateX(-50%)' }
+                { left: '50%', top: '58%', transform: 'translateX(-50%)' },
+                { left: '50%', top: '88%', transform: 'translateX(-50%)' }
             ]
             : [
-                { left: '38%', top: '28%' },
-                { left: '62%', top: '28%' }
+                { left: '25%', top: '28%' },
+                { left: '50%', top: '28%', transform: 'translateX(-50%)' },
+                { left: '75%', top: '28%', transform: 'translateX(-100%)' }
             ]
     ), [isMobile]);
 
@@ -148,41 +191,50 @@ const AdminDashboard = () => {
                 <div style={brandStyle}>Feedelate</div>
                 <div style={{ flex: 1 }} />
                 <div style={actionsStyle}>
+                    <RoleSwitcher currentRole="admin" />
                     <div style={bellStyle} aria-label="notifications" role="img">
                         🔔
                     </div>
-                    <div style={adminBadge}>
-                        <div style={avatarStyle}>{avatarLetter}</div>
-                        <span>{adminName}</span>
-                    </div>
+                    <UserMenu userName={adminName} userType="admin" />
                 </div>
             </div>
 
-            <div style={{ width: '100%', boxSizing: 'border-box' }}>
-                <div style={titleStyle}>
-                    <h2 style={{ margin: 0 }}>Universiteti Publik Kadri Zeka</h2>
+            <main style={layoutContainer}>
+                <div style={{ marginBottom: isMobile ? '2.5rem' : '3rem', textAlign: 'center' }}>
+                    <h2 style={{ fontSize: isMobile ? '28px' : '32px', margin: '0 0 0.5rem 0', fontWeight: 800, letterSpacing: '-0.5px' }}>Paneli i Administrimit</h2>
+                    <p style={{ fontSize: isMobile ? '13px' : '14px', opacity: 0.65, margin: '0.5rem 0 0 0', letterSpacing: '0.3px' }}>Menaxho studentët dhe profesorët në platformën e universitetit</p>
                 </div>
-            </div>
 
-            <main style={{ ...layoutContainer, width: '100%', boxSizing: 'border-box' }}>
-                {cards.map(({ id, label, to }, idx) => {
-                    const pos = positions[idx % positions.length];
-                    const transformStyle = pos.transform ? { transform: pos.transform } : {};
-                    return (
-                        <div
-                            key={id}
-                            role="button"
-                            tabIndex={0}
-                            aria-label={label}
-                            onClick={() => handleNavigate(to)}
-                            onKeyDown={(event) => handleKeyDown(event, to)}
-                            style={{ ...cardBase, left: pos.left, top: pos.top, ...transformStyle }}
-                            className="admin-card"
-                        >
-                            {label}
-                        </div>
-                    );
-                })}
+                <div style={cardsContainer}>
+                    {cards.map(({ id, label, to }, idx) => {
+                        return (
+                            <div
+                                key={id}
+                                role="button"
+                                tabIndex={0}
+                                aria-label={label}
+                                onClick={() => handleNavigate(to)}
+                                onKeyDown={(event) => handleKeyDown(event, to)}
+                                style={cardBase}
+                                className="admin-card"
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.background = 'rgba(16, 24, 20, 0.95)';
+                                    e.currentTarget.style.borderColor = 'rgba(23, 199, 122, 0.2)';
+                                    e.currentTarget.style.boxShadow = '0 30px 80px rgba(23, 199, 122, 0.15)';
+                                    e.currentTarget.style.transform = 'translateY(-6px)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.background = 'rgba(16, 24, 20, 0.9)';
+                                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
+                                    e.currentTarget.style.boxShadow = '0 24px 60px rgba(0,0,0,0.55)';
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                }}
+                            >
+                                {label}
+                            </div>
+                        );
+                    })}
+                </div>
             </main>
         </div>
     );

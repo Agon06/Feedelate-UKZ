@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import UserMenu from '../components/UserMenu';
+import RoleSwitcher from '../components/RoleSwitcher';
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
@@ -153,13 +155,11 @@ const StudentDashboard = () => {
         <div style={brandStyle}>Feedelate</div>
         <div style={{flex: 1}} />
         <div style={actionsStyle}>
+          <RoleSwitcher currentRole="student" />
           <div style={bellStyle} aria-label="notifications" role="img">
             🔔
           </div>
-          <div style={studentBadge}>
-            <div style={avatarStyle}>{avatarLetter}</div>
-            <span>{studentName}</span>
-          </div>
+          <UserMenu userName={studentName} userType="student" />
         </div>
       </div>
 
