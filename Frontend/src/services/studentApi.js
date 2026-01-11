@@ -52,6 +52,20 @@ export const createStudentIdea = (studentId, payload) =>
     body: JSON.stringify(payload),
   });
 
+export const updateStudentIdea = (studentId, ideaId, payload) =>
+  request(`/studentet/${studentId}/idet/${ideaId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+export const deleteStudentIdea = (studentId, ideaId) =>
+  request(`/studentet/${studentId}/idet/${ideaId}`, {
+    method: 'DELETE',
+  });
+
 export const getStudentProfile = (studentId) =>
   request(`/studentet/${studentId}`);
 
@@ -113,6 +127,8 @@ export default {
   getStudentYearData,
   getStudentIdeas,
   createStudentIdea,
+  updateStudentIdea,
+  deleteStudentIdea,
   getStudentProfile,
   uploadStudentDorezim,
   getStudentIdeaSubmission,

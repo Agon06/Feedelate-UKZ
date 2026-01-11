@@ -342,6 +342,88 @@ router.post("/:id/idet", async (req: Request, res: Response) => {
   }
 });
 
+// Update an existing idea for a student
+router.put("/:id/idet/:ideaId", async (req: Request, res: Response) => {
+  const studentId = Number(req.params.id);
+  const ideaId = Number(req.params.ideaId);
+  const { lendaId, titulli, shkurtesa } = req.body;
+
+  if (Number.isNaN(studentId) || Number.isNaN(ideaId)) {
+    return res.status(400).json({ message: "Student id ose idea id eshte i pavlefshem" });
+  }
+
+  if (!lendaId || !titulli || !shkurtesa) {
+    return res.status(400).json({ message: "lendaId, titulli dhe shkurtesa jane te detyrueshme" });
+  }
+
+  const parsedLendaId = Number(lendaId);
+  if (Number.isNaN(parsedLendaId)) {
+    return res.status(400).json({ message: "lendaId duhet te jete numer" });
+  }
+
+  try {
+    const student = await studentRepository.findOneBy({ id: studentId });
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const idea = await ideaRepository.findOne({
+      where: { id: ideaId, student: { id: studentId } },
+      relations: ["lenda"],
+    });
+
+    if (!idea) {
+      return res.status(404).json({ message: "Idea nuk u gjet" });
+    }
+
+    const lenda = await lendeRepository.findOneBy({ id: parsedLendaId });
+    if (!lenda) {
+      return res.status(404).json({ message: "Lenda nuk u gjet" });
+    }
+
+    idea.titulli = titulli.trim();
+    idea.shkurtesa = shkurtesa.trim();
+    idea.lenda = lenda;
+
+    const saved = await ideaRepository.save(idea);
+
+    res.json({
+      id: saved.id,
+      title: saved.titulli,
+      shorthand: saved.shkurtesa,
+      subject: { id: lenda.id, name: lenda.emriLendes },
+      createdAt: saved.createdAt,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating idea", error });
+  }
+});
+
+// Delete an idea for a student
+router.delete("/:id/idet/:ideaId", async (req: Request, res: Response) => {
+  const studentId = Number(req.params.id);
+  const ideaId = Number(req.params.ideaId);
+
+  if (Number.isNaN(studentId) || Number.isNaN(ideaId)) {
+    return res.status(400).json({ message: "Student id ose idea id eshte i pavlefshem" });
+  }
+
+  try {
+    const idea = await ideaRepository.findOne({
+      where: { id: ideaId, student: { id: studentId } },
+    });
+
+    if (!idea) {
+      return res.status(404).json({ message: "Idea nuk u gjet" });
+    }
+
+    await ideaRepository.remove(idea);
+    return res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting idea", error });
+  }
+});
+
 // Upload dorezim (Word file saved to disk)
 router.post("/:id/dorezime", upload.single("file"), async (req: Request, res: Response) => {
   console.log("=== UPLOAD ENDPOINT HIT ===");

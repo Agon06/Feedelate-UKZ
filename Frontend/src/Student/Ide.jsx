@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getStudentIdeas, createStudentIdea } from '../services/studentApi';
+import { getStudentIdeas, createStudentIdea, updateStudentIdea, deleteStudentIdea } from '../services/studentApi';
 import './Ide.css';
 
 const IdeaPage = () => {
@@ -8,6 +8,12 @@ const IdeaPage = () => {
   const navigate = useNavigate();
   const subjectName = location.state?.subject ?? 'Lëndë e pa specifikuar';
   const lendaId = location.state?.lendaId ?? null;
+  const baseShkurtesa = subjectName
+    .split(' ')
+    .map((word) => word?.[0] ?? '')
+    .join('')
+    .slice(0, 4)
+    .toUpperCase();
 
   const student = JSON.parse(localStorage.getItem('student') || '{}');
   if (!student.id) {
@@ -21,15 +27,12 @@ const IdeaPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
     titulli: '',
-    shkurtesa: subjectName
-      .split(' ')
-      .map((word) => word?.[0] ?? '')
-      .join('')
-      .slice(0, 4)
-      .toUpperCase(),
+    shkurtesa: baseShkurtesa,
   });
   const [formFeedback, setFormFeedback] = useState({ type: null, message: null });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingIdeaId, setEditingIdeaId] = useState(null);
+  const [isDeletingId, setIsDeletingId] = useState(null);
 
   const loadIdeas = useCallback(async () => {
     setListStatus({ loading: true, error: null });
@@ -76,14 +79,54 @@ const IdeaPage = () => {
         titulli: formData.titulli.trim(),
         shkurtesa: formData.shkurtesa.trim().toUpperCase(),
       };
-      const created = await createStudentIdea(STUDENT_ID, payload);
-      setIdeas((prev) => [created, ...prev]);
-      setFormData({ titulli: '', shkurtesa: '' });
-      setFormFeedback({ type: 'success', message: 'Idea u ruajt me sukses.' });
+
+      if (editingIdeaId) {
+        const updated = await updateStudentIdea(STUDENT_ID, editingIdeaId, payload);
+        setIdeas((prev) => prev.map((idea) => (idea.id === editingIdeaId ? updated : idea)));
+        setFormFeedback({ type: 'success', message: 'Idea u përditësua.' });
+        setEditingIdeaId(null);
+      } else {
+        const created = await createStudentIdea(STUDENT_ID, payload);
+        setIdeas((prev) => [created, ...prev]);
+        setFormFeedback({ type: 'success', message: 'Idea u ruajt me sukses.' });
+      }
+
+      setFormData({ titulli: '', shkurtesa: baseShkurtesa });
     } catch (error) {
       setFormFeedback({ type: 'error', message: error?.message ?? 'Nuk u ruajt ideja.' });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleEdit = (idea) => {
+    setEditingIdeaId(idea.id);
+    setFormData({
+      titulli: idea.title ?? '',
+      shkurtesa: idea.shorthand ?? '',
+    });
+    setFormFeedback({ type: null, message: null });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingIdeaId(null);
+    setFormData({ titulli: '', shkurtesa: baseShkurtesa });
+    setFormFeedback({ type: null, message: null });
+  };
+
+  const handleDelete = async (ideaId) => {
+    if (!window.confirm('A je i sigurt që do ta fshish këtë ide?')) return;
+    setIsDeletingId(ideaId);
+    try {
+      await deleteStudentIdea(STUDENT_ID, ideaId);
+      setIdeas((prev) => prev.filter((idea) => idea.id !== ideaId));
+      if (editingIdeaId === ideaId) {
+        handleCancelEdit();
+      }
+    } catch (error) {
+      setFormFeedback({ type: 'error', message: error?.message ?? 'Fshirja dështoi.' });
+    } finally {
+      setIsDeletingId(null);
     }
   };
 
@@ -117,7 +160,7 @@ const IdeaPage = () => {
   };
 
   const modalStyle = {
-    width: 'min(900px, 100%)',
+    width: 'min(1050px, 100%)',
     background: 'rgba(6,13,9,0.95)',
     borderRadius: 28,
     border: '1px solid rgba(23,199,122,0.4)',
@@ -141,9 +184,10 @@ const IdeaPage = () => {
 
   const columnsStyle = {
     display: 'grid',
-    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gridTemplateColumns: 'repeat(2, 1fr)',
     gap: '1.5rem',
-    marginTop: '1rem'
+    marginTop: '1rem',
+    overflow: 'hidden'
   };
 
   const columnCard = {
@@ -151,7 +195,9 @@ const IdeaPage = () => {
     borderRadius: 20,
     border: '1px solid rgba(23,199,122,0.25)',
     padding: '1.25rem',
-    minHeight: 360
+    minHeight: 360,
+    minWidth: 0,
+    overflow: 'hidden'
   };
 
   const searchInput = {
@@ -177,7 +223,8 @@ const IdeaPage = () => {
   const ideaItem = {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    gap: '0.75rem',
     padding: '0.75rem 0.9rem',
     borderRadius: 14,
     background: 'rgba(5,12,8,0.8)',
@@ -212,6 +259,16 @@ const IdeaPage = () => {
     marginTop: '1.5rem',
     display: 'flex',
     justifyContent: 'space-between'
+  };
+
+  const actionButton = {
+    borderRadius: 8,
+    border: '1px solid rgba(255,255,255,0.12)',
+    background: 'rgba(255,255,255,0.06)',
+    color: '#e6f4ee',
+    fontSize: 12,
+    padding: '0.35rem 0.65rem',
+    cursor: 'pointer'
   };
 
   const primaryButton = {
@@ -280,16 +337,34 @@ const IdeaPage = () => {
                 idea.shorthand.toLowerCase().includes(searchTerm.toLowerCase())
               ).map((idea) => (
                 <div key={idea.id} style={ideaItem}>
-                  <div>
+                  <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 11, opacity: 0.6, marginBottom: '0.25rem' }}>Titulli:</div>
                     <strong>{idea.title}</strong>
                     {idea.subject?.name && (
                       <p style={{ margin: 0, fontSize: 12, opacity: 0.8 }}>{idea.subject.name}</p>
                     )}
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.35rem' }}>
                     <div style={{ fontSize: 11, opacity: 0.6 }}>Shkurtesa:</div>
                     <span style={tagStyle}>{idea.shorthand}</span>
+                    <div style={{ display: 'flex', gap: '0.4rem' }}>
+                      <button
+                        type="button"
+                        style={actionButton}
+                        onClick={() => handleEdit(idea)}
+                        disabled={isSubmitting && editingIdeaId === idea.id}
+                      >
+                        Modifiko
+                      </button>
+                      <button
+                        type="button"
+                        style={{ ...actionButton, borderColor: 'rgba(255,82,82,0.4)', color: '#ffc6c6' }}
+                        onClick={() => handleDelete(idea.id)}
+                        disabled={isDeletingId === idea.id}
+                      >
+                        {isDeletingId === idea.id ? 'Duke fshirë...' : 'Fshi'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -341,8 +416,18 @@ const IdeaPage = () => {
                 </div>
               )}
               <button style={{ ...primaryButton, width: '100%', marginTop: '1rem' }} type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Duke u ruajtur...' : 'Shto idenë'}
+                {isSubmitting ? 'Duke u ruajtur...' : (editingIdeaId ? 'Ruaj ndryshimet' : 'Shto idenë')}
               </button>
+              {editingIdeaId && (
+                <button
+                  type="button"
+                  style={{ ...secondaryButton, width: '100%', marginTop: '0.75rem' }}
+                  onClick={handleCancelEdit}
+                  disabled={isSubmitting}
+                >
+                  Anulo ndryshimet
+                </button>
+              )}
             </form>
           </div>
         </div>

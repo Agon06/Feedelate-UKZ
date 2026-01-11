@@ -146,7 +146,7 @@ const Feedback = () => {
                 ) : (
                   feedbackData.dorezime.map((dorezim) => (
                     <div key={dorezim.id} className="file-item" style={{ marginBottom: '1rem', padding: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                      <div className="file-icon">📄</div>
+                      <div className="file-icon" aria-hidden="true"></div>
                       <div className="file-info">
                         <p className="file-name">{dorezim.fileName}</p>
                         <p className="file-type">Word Document</p>
@@ -162,7 +162,7 @@ const Feedback = () => {
                             className="download-btn download-btn--small"
                             aria-label="Shkarko dokumentin"
                           >
-                            ⬇ Shkarko
+                            Shkarko
                           </a>
                           <button
                             onClick={() => handleDelete(dorezim.id)}
@@ -181,7 +181,7 @@ const Feedback = () => {
                               opacity: isDeleting ? 0.5 : 1
                             }}
                           >
-                            {isDeleting ? '🗑️ Duke fshirë...' : '🗑️ Fshi'}
+                            {isDeleting ? 'Duke fshirë...' : 'Fshi'}
                           </button>
                         </div>
                       )}
