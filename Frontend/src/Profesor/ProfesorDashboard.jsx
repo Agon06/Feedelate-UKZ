@@ -1,8 +1,29 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import UserMenu from '../components/UserMenu';
+import RoleSwitcher from '../components/RoleSwitcher';
 
 const ProfesorDashboard = () => {
   const navigate = useNavigate();
+  const [profesorName, setProfessorName] = useState('Profesor');
+  const [avatarLetter, setAvatarLetter] = useState('P');
+
+  useEffect(() => {
+    // Load user data from localStorage
+    const student = localStorage.getItem('student');
+    if (student) {
+      try {
+        const userData = JSON.parse(student);
+        const firstName = userData.emri || 'Profesor';
+        const lastName = userData.mbiemri || '';
+        const fullName = `${firstName} ${lastName}`.trim();
+        setProfessorName(fullName);
+        setAvatarLetter((firstName.charAt(0) + lastName.charAt(0)).toUpperCase());
+      } catch (err) {
+        console.error('Failed to load user data:', err);
+      }
+    }
+  }, []);
 
   const years = useMemo(() => ([
     { id: '1', label: 'Viti I' },
@@ -18,8 +39,6 @@ const ProfesorDashboard = () => {
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
-  const profesorName = 'Profesor';
-  const avatarLetter = 'P';
 
   const pageStyle = {
     color: '#fff',
@@ -152,13 +171,11 @@ const ProfesorDashboard = () => {
         <div style={brandStyle}>Feedelate</div>
         <div style={{flex: 1}} />
         <div style={actionsStyle}>
+          <RoleSwitcher currentRole="profesor" />
           <div style={bellStyle} aria-label="notifications" role="img">
             🔔
           </div>
-          <div style={profesorBadge}>
-            <div style={avatarStyle}>{avatarLetter}</div>
-            <span>{profesorName}</span>
-          </div>
+          <UserMenu userName={profesorName} userType="profesor" />
         </div>
       </div>
 

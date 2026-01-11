@@ -18,11 +18,22 @@ export class Student {
   @Column({ unique: true })
   email: string;
 
-  @Column()
-  password: string;
-
   @Column({ nullable: true, unique: true })
   nrIdCard: string;
+
+  // SSO fields
+  @Column({ nullable: true })
+  ssoProvider: string; // 'google', 'microsoft', etc.
+
+  @Column({ nullable: true })
+  ssoProviderId: string; // Unique ID from SSO provider
+
+  @Column({ nullable: true, type: 'text' })
+  profilePicture: string;
+
+  // Roles: can have multiple roles (e.g., "student", "student,admin")
+  @Column({ default: 'student', type: 'text' })
+  roles: string; // JSON stringified array of roles: ["student"] or ["student", "admin"]
 
   @OneToMany(() => Idete, (idete) => idete.student, { cascade: false })
   idete: Idete[];
@@ -39,3 +50,4 @@ export class Student {
   @UpdateDateColumn()
   updatedAt: Date;
 }
+

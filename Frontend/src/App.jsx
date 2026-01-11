@@ -1,7 +1,11 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 import Login from './Login/Login';
+import AuthCallback from './Login/AuthCallback';
 import AdminDashboard from './Admin/AdminDashboard';
+import AdminStudentManagement from './Admin/AdminStudentManagement';
+import AdminProfessorManagement from './Admin/AdminProfessorManagement';
+import AdminRegisterSubjects from './Admin/AdminRegisterSubjects';
 import ProfesorDashboard from './Profesor/ProfesorDashboard';
 import StudentDashboard from './Student/StudentDashboard';
 import Lendet from './Student/lendet';
@@ -39,7 +43,12 @@ function App() {
 
         <Routes>
           <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/menaxho-studentet" element={<AdminStudentManagement />} />
+          <Route path="/admin/menaxho-profesoret" element={<AdminProfessorManagement />} />
+          <Route path="/admin/regjistro-lendet" element={<AdminRegisterSubjects />} />
 
           {/* Profesor routes */}
           <Route path="/profesor" element={<ProfesorDashboard />} />

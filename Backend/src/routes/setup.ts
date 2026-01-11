@@ -33,10 +33,10 @@ router.post("/setup", async (req, res) => {
             emri: "Test",
             mbiemri: "Profesor",
             email: "test.profesor@uni-gjilan.net",
-            password: "testHashedPassword",
             departamenti: "Informatikë",
             grada: "Profesor i Asociuar",
             telefoni: "+383 44 123 456",
+            roles: JSON.stringify(["profesor"]),
           });
           profesor = await profesorRepository.save(profesor);
         }
@@ -120,8 +120,8 @@ router.post("/setup", async (req, res) => {
       emri: "Admin",
       mbiemri: "User",
       email: "admin@example.com",
-      password: "admin123",
       nrIdCard: "ID123456",
+      roles: JSON.stringify(["student"]),
     });
     await studentRepository.save(initialStudent);
     res.status(201).json({ message: "Initial data setup completed successfully." });

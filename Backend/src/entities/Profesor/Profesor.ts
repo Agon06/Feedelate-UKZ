@@ -16,9 +16,6 @@ export class Profesor {
   @Column({ unique: true })
   email: string;
 
-  @Column()
-  password: string;
-
   @Column({ nullable: true })
   departamenti: string;
 
@@ -27,6 +24,19 @@ export class Profesor {
 
   @Column({ nullable: true })
   telefoni: string;
+
+  @Column({ nullable: true, type: 'text' })
+  profilePicture: string;
+
+  @Column({ nullable: true })
+  ssoProvider: string;
+
+  @Column({ nullable: true })
+  ssoProviderId: string;
+
+  // Roles: can have multiple roles (e.g., "profesor", "profesor,admin")
+  @Column({ default: 'profesor', type: 'text' })
+  roles: string; // JSON stringified array of roles: ["profesor"] or ["profesor", "admin"]
 
   @OneToMany(() => Idetep, (idetep) => idetep.profesor, { cascade: false })
   idetep: Idetep[];
