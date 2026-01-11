@@ -170,7 +170,7 @@ const Feedback = () => {
                             className="delete-btn delete-btn--small"
                             aria-label="Fshi dorëzimin"
                             style={{
-                              padding: '0.5rem 1rem',
+                              padding: '0.6rem 1.1rem',
                               borderRadius: '8px',
                               border: '1px solid rgba(255,82,82,0.5)',
                               background: 'rgba(255,82,82,0.15)',

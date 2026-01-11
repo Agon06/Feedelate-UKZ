@@ -271,24 +271,15 @@ const IdeaPage = () => {
     cursor: 'pointer'
   };
 
-  const primaryButton = {
-    borderRadius: 12,
-    border: 'none',
-    background: '#19c776',
-    color: '#041407',
-    fontWeight: 700,
-    padding: '0.8rem 1.6rem',
-    cursor: 'pointer'
-  };
-
-  const secondaryButton = {
-    borderRadius: 12,
-    border: '1px solid rgba(23,199,122,0.35)',
-    background: 'transparent',
-    color: '#c8f5e8',
-    fontWeight: 600,
-    padding: '0.8rem 1.6rem',
-    cursor: 'pointer'
+  const deleteButton = {
+    borderRadius: 8,
+    border: '1px solid rgba(255,82,82,0.4)',
+    background: 'rgba(255,82,82,0.1)',
+    color: '#ffc6c6',
+    fontSize: 12,
+    padding: '0.5rem 0.9rem',
+    cursor: 'pointer',
+    fontWeight: 600
   };
 
   const bannerStyle = {
@@ -298,6 +289,32 @@ const IdeaPage = () => {
     textAlign: 'center',
     fontSize: 13,
   };
+
+  const primaryButton = {
+    borderRadius: 12,
+    border: 'none',
+    background: '#17c77a',
+    color: '#fff',
+    padding: '0.7rem 1.2rem',
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'background 0.3s ease'
+  };
+
+  const secondaryButton = {
+    borderRadius: 12,
+    border: '1px solid rgba(23,199,122,0.5)',
+    background: 'transparent',
+    color: '#17c77a',
+    padding: '0.7rem 1.2rem',
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.3s ease'
+  };
+
+  const hasReachedIdeaLimit = ideas.length >= 1;
 
   return (
     <div style={pageStyle}>
@@ -309,6 +326,7 @@ const IdeaPage = () => {
         </div>
 
         <div style={columnsStyle}>
+          {/* Left column - lista e ideve */}
           <div style={columnCard}>
             <input
               type="text"
@@ -358,7 +376,7 @@ const IdeaPage = () => {
                       </button>
                       <button
                         type="button"
-                        style={{ ...actionButton, borderColor: 'rgba(255,82,82,0.4)', color: '#ffc6c6' }}
+                        style={deleteButton}
                         onClick={() => handleDelete(idea.id)}
                         disabled={isDeletingId === idea.id}
                       >
@@ -378,11 +396,29 @@ const IdeaPage = () => {
             </button>
           </div>
 
+          {/* Right column - forma */}
           <div style={columnCard}>
             <div style={formField}>
               <label>Lënda</label>
               <input style={inputStyle} value={subjectName} disabled />
             </div>
+
+            {/* Info mesazh për limitin */}
+            {hasReachedIdeaLimit && !editingIdeaId && (
+              <div
+                style={{
+                  ...bannerStyle,
+                  background: 'rgba(33,150,243,0.15)',
+                  border: '1px solid rgba(33,150,243,0.3)',
+                  color: '#64b5f6',
+                  marginBottom: '1rem',
+                  marginTop: 0
+                }}
+              >
+                Mund të kesh vetëm 1 ide. Modifiko ose fshi idenë ekzistuese.
+              </div>
+            )}
+
             <form onSubmit={handleSubmit}>
               <div style={formField}>
                 <label>Titulli</label>
@@ -392,6 +428,7 @@ const IdeaPage = () => {
                   name="titulli"
                   value={formData.titulli}
                   onChange={handleInputChange}
+                  disabled={hasReachedIdeaLimit && !editingIdeaId}
                 />
               </div>
               <div style={formField}>
@@ -402,6 +439,7 @@ const IdeaPage = () => {
                   name="shkurtesa"
                   value={formData.shkurtesa}
                   onChange={handleInputChange}
+                  disabled={hasReachedIdeaLimit && !editingIdeaId}
                 />
               </div>
               {formFeedback.message && (
@@ -415,7 +453,17 @@ const IdeaPage = () => {
                   {formFeedback.message}
                 </div>
               )}
-              <button style={{ ...primaryButton, width: '100%', marginTop: '1rem' }} type="submit" disabled={isSubmitting}>
+              <button
+                style={{
+                  ...primaryButton,
+                  width: '100%',
+                  marginTop: '1rem',
+                  opacity: hasReachedIdeaLimit && !editingIdeaId ? 0.5 : 1,
+                  cursor: hasReachedIdeaLimit && !editingIdeaId ? 'not-allowed' : 'pointer'
+                }}
+                type="submit"
+                disabled={isSubmitting || (hasReachedIdeaLimit && !editingIdeaId)}
+              >
                 {isSubmitting ? 'Duke u ruajtur...' : (editingIdeaId ? 'Ruaj ndryshimet' : 'Shto idenë')}
               </button>
               {editingIdeaId && (
@@ -446,6 +494,7 @@ const IdeaPage = () => {
           </button>
           <button style={secondaryButton} onClick={handleFeedback}>Feedback</button>
         </div>
+
       </div>
     </div>
   );
