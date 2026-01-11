@@ -8,7 +8,7 @@ import fs from "fs";
 import { Student } from "../../entities/Student/Student";
 import { Lendet } from "../../entities/Student/Lendet";
 import { Idete } from "../../entities/Student/Idete";
-import { DorezimiIdes } from "../../entities/Student/dorezimiIdes";
+import { DorezimiIdes } from "../../entities/Student/dorezimiides";
 import { Projekti } from "../../entities/Student/projekti";
 import { dorzimiProjektit } from "../../entities/Student/dorzimiProjektit";
 import { MenaxhimiAfateve } from "../../entities/Student/menaxhimiAfateve";

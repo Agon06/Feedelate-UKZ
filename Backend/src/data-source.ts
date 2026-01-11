@@ -14,7 +14,7 @@ import { Projektip } from "./entities/Profesor/projektip";
 import { Student } from "./entities/Student/Student";
 import { Idete } from "./entities/Student/Idete";
 import { Lendet } from "./entities/Student/Lendet";
-import { DorezimiIdes } from "./entities/Student/dorezimiIdes";
+import { DorezimiIdes } from "./entities/Student/dorezimiides";
 import { Projekti } from "./entities/Student/projekti";
 import { dorzimiProjektit } from "./entities/Student/dorzimiProjektit";
 import { Test } from "./entities/test";

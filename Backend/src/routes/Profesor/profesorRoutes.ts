@@ -10,7 +10,7 @@ import { Lendetp } from "../../entities/Profesor/Lendetp";
 import { Idetep } from "../../entities/Profesor/Idetep";
 import { DorezimiIdesp } from "../../entities/Profesor/dorezimiIdesp";
 import { Projektip } from "../../entities/Profesor/projektip";
-import { DorezimiIdes } from "../../entities/Student/dorezimiIdes";
+import { DorezimiIdes } from "../../entities/Student/dorezimiides";
 import { Student } from "../../entities/Student/Student";
 import { Lendet } from "../../entities/Student/Lendet";
 
