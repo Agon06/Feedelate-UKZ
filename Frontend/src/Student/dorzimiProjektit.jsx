@@ -373,22 +373,44 @@ const DorzimiProjektit = () => {
                                             borderRadius: 8, 
                                             marginBottom: "0.7rem" 
                                         }}>
-                                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.4rem", fontSize: 14 }}>
-                                                <span style={{ opacity: 0.7 }}>Emri i File-it:</span>
-                                                <strong style={{ color: "#c4f0da" }}>{dorezimData.fileName}</strong>
+                                            {/* Rreshti 1: Emri i file-it (majtas) + Dorëzuar më (djathtas) */}
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: "1.25rem",
+                                                    flexWrap: "wrap",
+                                                    fontSize: 14,
+                                                    width: "100%"
+                                                }}
+                                            >
+                                                <div style={{ display: "inline-flex", alignItems: "center", gap: "0.45rem" }}>
+                                                    <span style={{ opacity: 0.7 }}>Emri i File-it:</span>
+                                                    <strong style={{ color: "#c4f0da" }}>{dorezimData.fileName}</strong>
+                                                </div>
+
+                                                {dorezimData.createdAt && (
+                                                    <div style={{ 
+                                                        display: "inline-flex", 
+                                                        alignItems: "center", 
+                                                        gap: "0.45rem",
+                                                        marginLeft: "auto",
+                                                        textAlign: "right",
+                                                        whiteSpace: "nowrap"
+                                                    }}>
+                                                        <span style={{ opacity: 0.7 }}>Dorëzuar më:</span>
+                                                        <strong style={{ color: "#c4f0da" }}>
+                                                            {new Date(dorezimData.createdAt).toLocaleString('sq-AL')}
+                                                        </strong>
+                                                    </div>
+                                                )}
                                             </div>
-                                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.4rem", fontSize: 14 }}>
-                                                <span style={{ opacity: 0.7 }}>Statusi:</span>
+
+                                            {/* Rreshti 2: Statusi */}
+                                            <div style={{ marginTop: "0.5rem", fontSize: 14 }}>
+                                                <span style={{ opacity: 0.7, marginRight: 6 }}>Statusi:</span>
                                                 <strong style={{ color: "#17c77a" }}>{dorezimData.statusi}</strong>
                                             </div>
-                                            {dorezimData.createdAt && (
-                                                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: 14 }}>
-                                                    <span style={{ opacity: 0.7 }}>Dorëzuar më:</span>
-                                                    <strong style={{ color: "#c4f0da" }}>
-                                                        {new Date(dorezimData.createdAt).toLocaleString('sq-AL')}
-                                                    </strong>
-                                                </div>
-                                            )}
                                         </div>
                                         <div style={{ 
                                             display: "flex", 
@@ -427,7 +449,12 @@ const DorzimiProjektit = () => {
 
                     {activeTab === "piket" && (
                         <div>
-                            <h2 style={sectionHeaderStyle}>Pikët</h2>
+                            <h2 style={{
+                                ...sectionHeaderStyle,
+                                textAlign: "center"
+                            }}>
+                                Pikët
+                            </h2>
                             <div style={cardStyle}>
                                 <p style={{ opacity: 0.7 }}>
                                     Informacion mbi pikët e projektit dhe vlerësimin.
@@ -450,7 +477,12 @@ const DorzimiProjektit = () => {
 
                     {activeTab === "afatet" && (
                         <div>
-                            <h2 style={sectionHeaderStyle}>Afati i Dorëzimit</h2>
+                            <h2 style={{
+                                ...sectionHeaderStyle,
+                                textAlign: "center"
+                            }}>
+                                Afati i Dorëzimit
+                            </h2>
                             <div style={cardStyle}>
                                 <p style={{ opacity: 0.7, marginBottom: "1rem" }}>
                                     Afatet e dorëzimit për projektin e lëndës <strong>{subject}</strong>.
@@ -476,7 +508,12 @@ const DorzimiProjektit = () => {
 
                     {activeTab === "instruksionet" && (
                         <div>
-                            <h2 style={sectionHeaderStyle}>Instruksionet e Projektit</h2>
+                            <h2 style={{
+                                ...sectionHeaderStyle,
+                                textAlign: "center"
+                            }}>
+                                Instruksionet e Projektit
+                            </h2>
                             <div style={cardStyle}>
                                 <div style={{ 
                                     display: "flex",

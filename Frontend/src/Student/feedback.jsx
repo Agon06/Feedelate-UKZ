@@ -114,6 +114,20 @@ const Feedback = () => {
   const officeHostNote = "";
   const officeViewUrl = null;
 
+  // Shto stile të reja para return statement
+  const backButtonStyle = {
+    background: "rgba(255,255,255,0.05)",
+    border: "1px solid rgba(255,255,255,0.15)",
+    borderRadius: 10,
+    padding: "0.6rem 1.2rem",
+    color: "#c4f0da",
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: "pointer",
+    width: "100%",
+    marginTop: "1.5rem"
+  };
+
   return (
     <div className="feedback-container">
       <header className="feedback-header">
@@ -197,7 +211,9 @@ const Feedback = () => {
             </div>
           </div>
 
-          <button type="button" onClick={handleBack} className="back-btn">← Kthehu mbrapa</button>
+          <button type="button" onClick={handleBack} style={backButtonStyle}>
+            ← Kthehu mbrapa
+          </button>
         </div>
       </div>
 
