@@ -13,7 +13,9 @@ const Idetep = () => {
   const [ideas, setIdeas] = useState([]);
   const [listStatus, setListStatus] = useState({ loading: true, error: null });
   const [searchTerm, setSearchTerm] = useState('');
-  // Forma per shtimin e ideve hiqet per profesorin; s'na duhen state-t
+  const [files, setFiles] = useState([]);
+  const [filesStatus, setFilesStatus] = useState({ loading: true, error: null });
+  const [fileSearchTerm, setFileSearchTerm] = useState('');
 
   const loadIdeas = useCallback(async () => {
     setListStatus({ loading: true, error: null });
@@ -29,28 +31,52 @@ const Idetep = () => {
     }
   }, [PROFESOR_ID, lendaId]);
 
+  const loadFiles = useCallback(async () => {
+    setFilesStatus({ loading: true, error: null });
+    try {
+      // Mock data për tani - në të ardhmen do të vijnë nga API
+      const mockFiles = [
+        { id: 1, fileName: 'Projekti_Final.docx', studentName: 'Agon Berisha', uploadDate: '2024-01-10', fileSize: '2.3 MB', ideaTitle: 'Sistema e Menaxhimit' },
+        { id: 2, fileName: 'Detyra_Semestri.docx', studentName: 'Arta Krasniqi', uploadDate: '2024-01-12', fileSize: '1.8 MB', ideaTitle: 'Aplikacioni Mobil' },
+        { id: 3, fileName: 'Raporti_Hulumtimi.docx', studentName: 'Blend Morina', uploadDate: '2024-01-09', fileSize: '3.1 MB', ideaTitle: 'Web Platform' },
+      ].sort((a, b) => a.studentName.localeCompare(b.studentName, 'sq'));
+      
+      setFiles(mockFiles);
+      setFilesStatus({ loading: false, error: null });
+    } catch (error) {
+      setFilesStatus({
+        loading: false,
+        error: error?.message ?? 'Nuk u lexuan file-t aktuale.',
+      });
+    }
+  }, []);
+
   useEffect(() => {
     loadIdeas();
-  }, [loadIdeas]);
-
-  // Nuk ka dorëzim/shtim idesh për profesorin
+    loadFiles();
+  }, [loadIdeas, loadFiles]);
 
   const handleFeedback = () => {
-    //nese ka feedback
-    const feedBackId = 1; //kete do e marim nga backendi ne te ardhmen
+    const feedBackId = 1;
     if (feedBackId === 1) {
-    navigate('/profesor/feedback', {
-      state: {
-        lendaId: lendaId,
-        subject: subjectName
-      }
-    });
-  }
-    else {
+      navigate('/profesor/feedback', {
+        state: {
+          lendaId: lendaId,
+          subject: subjectName
+        }
+      });
+    } else {
       alert('Nuk ka ende feedback të lidhur me këtë ide.');
     }
   };
 
+  const handleDownloadFile = (file) => {
+    alert(`Duke shkarkuar: ${file.fileName}`);
+  };
+
+  const handleDownloadAllFiles = () => {
+    alert('Duke shkarkuar të gjitha file-t në format .rar...');
+  };
 
   const pageStyle = {
     minHeight: '100vh',
@@ -65,7 +91,7 @@ const Idetep = () => {
   };
 
   const modalStyle = {
-    width: 'min(900px, 100%)',
+    width: 'min(1400px, 100%)',
     background: 'rgba(6,13,9,0.95)',
     borderRadius: 28,
     border: '1px solid rgba(23,199,122,0.4)',
@@ -84,12 +110,13 @@ const Idetep = () => {
     width: 38,
     height: 38,
     color: '#fff',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    transition: 'all 200ms ease'
   };
 
   const columnsStyle = {
     display: 'grid',
-    gridTemplateColumns: '1fr',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))',
     gap: '1.5rem',
     marginTop: '1rem'
   };
@@ -116,7 +143,7 @@ const Idetep = () => {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.8rem',
-    maxHeight: '220px',
+    maxHeight: '320px',
     overflowY: 'auto',
     overflowX: 'hidden',
     paddingRight: '0.5rem'
@@ -140,7 +167,20 @@ const Idetep = () => {
     fontSize: 12,
     padding: '0.35rem 0.6rem',
     cursor: 'pointer',
-    marginLeft: 8
+    marginLeft: 8,
+    transition: 'all 200ms ease'
+  };
+
+  const downloadButton = {
+    borderRadius: 10,
+    border: '1px solid rgba(100,149,237,0.35)',
+    background: 'transparent',
+    color: '#6495ed',
+    fontSize: 12,
+    padding: '0.35rem 0.6rem',
+    cursor: 'pointer',
+    marginLeft: 8,
+    transition: 'all 200ms ease'
   };
 
   const tagStyle = {
@@ -151,28 +191,6 @@ const Idetep = () => {
     color: '#d0f5e5'
   };
 
-  const formField = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 6,
-    marginBottom: '1rem'
-  };
-
-  const inputStyle = {
-    width: '100%',
-    borderRadius: 14,
-    border: '1px solid rgba(255,255,255,0.12)',
-    padding: '0.7rem 0.9rem',
-    background: 'rgba(4,10,6,0.6)',
-    color: '#fff'
-  };
-
-  const footerStyle = {
-    marginTop: '1.5rem',
-    display: 'flex',
-    justifyContent: 'space-between'
-  };
-
   const primaryButton = {
     borderRadius: 12,
     border: 'none',
@@ -180,7 +198,8 @@ const Idetep = () => {
     color: '#041407',
     fontWeight: 700,
     padding: '0.8rem 1.6rem',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    transition: 'all 200ms ease'
   };
 
   const secondaryButton = {
@@ -190,28 +209,46 @@ const Idetep = () => {
     color: '#c8f5e8',
     fontWeight: 600,
     padding: '0.8rem 1.6rem',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    transition: 'all 200ms ease'
   };
 
-  const bannerStyle = {
-    borderRadius: 12,
-    padding: '0.75rem 1rem',
-    marginTop: '0.5rem',
-    textAlign: 'center',
-    fontSize: 13,
+  const footerStyle = {
+    marginTop: '1.5rem',
+    display: 'flex',
+    justifyContent: 'space-between'
   };
 
   return (
     <div style={pageStyle}>
       <div style={modalStyle}>
-        <button style={closeButtonStyle} onClick={() => navigate(-1)} aria-label="Mbyll">✕</button>
-        <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
-          <h2 style={{ marginTop: 0, marginBottom: '0.35rem' }}>Ide për {subjectName}</h2>
-          <p style={{ margin: 0, opacity: 0.8 }}>Këtu mund të dorëzosh ide ose të shikosh ato ekzistuese.</p>
-        </div>
+        <button 
+          style={closeButtonStyle} 
+          onClick={() => navigate(-1)} 
+          aria-label="Mbyll"
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+          }}
+        >
+          ✕
+        </button>
+        
+        <h2 style={{ margin: '0 0 0.5rem', fontSize: 26, fontWeight: 800 }}>
+          {subjectName}
+        </h2>
+        <p style={{ margin: 0, opacity: 0.75, fontSize: 15 }}>
+          Idetë dhe file-t e dërguara nga studentët për këtë lëndë.
+        </p>
 
         <div style={columnsStyle}>
+          {/* Box për Ide */}
           <div style={columnCard}>
+            <h3 style={{ margin: '0 0 1rem', fontSize: 18, color: '#1fdc8c' }}>📋 Lista e Ideve</h3>
             <input 
               type="text" 
               placeholder="Kërko idenë..." 
@@ -226,18 +263,24 @@ const Idetep = () => {
               {listStatus.error && (
                 <div style={{ textAlign: 'center', color: '#f8b4b4' }}>{listStatus.error}</div>
               )}
-              {!listStatus.loading && !listStatus.error && ideas.filter(idea => 
-                idea.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                idea.shorthand.toLowerCase().includes(searchTerm.toLowerCase())
-              ).length === 0 && (
+              {!listStatus.loading && !listStatus.error && ideas
+                .filter(idea => 
+                  idea.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  idea.shorthand.toLowerCase().includes(searchTerm.toLowerCase())
+                )
+                .sort((a, b) => (a.student?.fullName || '').localeCompare(b.student?.fullName || '', 'sq'))
+                .length === 0 && (
                 <div style={{ textAlign: 'center', opacity: 0.8 }}>
                   {searchTerm ? 'Nuk u gjet asnjë ide me këtë kriter.' : 'Ende nuk ka ide për këtë lëndë.'}
                 </div>
               )}
-              {!listStatus.loading && !listStatus.error && ideas.filter(idea => 
-                idea.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                idea.shorthand.toLowerCase().includes(searchTerm.toLowerCase())
-              ).map((idea) => (
+              {!listStatus.loading && !listStatus.error && ideas
+                .filter(idea => 
+                  idea.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  idea.shorthand.toLowerCase().includes(searchTerm.toLowerCase())
+                )
+                .sort((a, b) => (a.student?.fullName || '').localeCompare(b.student?.fullName || '', 'sq'))
+                .map((idea) => (
                 <div key={idea.id} style={ideaItem}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 600, fontSize: 15 }}>{idea.title}</div>
@@ -256,6 +299,14 @@ const Idetep = () => {
                     <button
                       style={tinyButton}
                       onClick={() => navigate('/profesor/feedback', { state: { lendaId, subject: subjectName, ideaId: idea.id } })}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(23, 199, 122, 0.15)';
+                        e.currentTarget.style.borderColor = '#17c77a';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
+                      }}
                     >
                       Feedback
                     </button>
@@ -268,6 +319,14 @@ const Idetep = () => {
                 style={{ ...secondaryButton, flex: 1 }}
                 onClick={loadIdeas}
                 disabled={listStatus.loading}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(23, 199, 122, 0.1)';
+                  e.currentTarget.style.borderColor = '#17c77a';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
+                }}
               >
                 Rifresko listën
               </button>
@@ -292,8 +351,127 @@ const Idetep = () => {
                   document.body.removeChild(a);
                   URL.revokeObjectURL(url);
                 }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(25, 199, 118, 0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
               >
                 ⬇ Shkarko të gjitha
+              </button>
+            </div>
+          </div>
+
+          {/* Box për File-t Word */}
+          <div style={columnCard}>
+            <h3 style={{ margin: '0 0 1rem', fontSize: 18, color: '#6495ed' }}>📄 File-t e Dërguara</h3>
+            <input 
+              type="text" 
+              placeholder="Kërko file..." 
+              style={searchInput}
+              value={fileSearchTerm}
+              onChange={(e) => setFileSearchTerm(e.target.value)}
+            />
+            <div style={ideaList} className="idea-list-scroll">
+              {filesStatus.loading && (
+                <div style={{ textAlign: 'center', opacity: 0.8 }}>Duke u ngarkuar...</div>
+              )}
+              {filesStatus.error && (
+                <div style={{ textAlign: 'center', color: '#f8b4b4' }}>{filesStatus.error}</div>
+              )}
+              {!filesStatus.loading && !filesStatus.error && files
+                .filter(file => 
+                  file.fileName.toLowerCase().includes(fileSearchTerm.toLowerCase()) ||
+                  file.studentName.toLowerCase().includes(fileSearchTerm.toLowerCase())
+                )
+                .length === 0 && (
+                <div style={{ textAlign: 'center', opacity: 0.8 }}>
+                  {fileSearchTerm ? 'Nuk u gjet asnjë file me këtë kriter.' : 'Ende nuk ka file të dërguar.'}
+                </div>
+              )}
+              {!filesStatus.loading && !filesStatus.error && files
+                .filter(file => 
+                  file.fileName.toLowerCase().includes(fileSearchTerm.toLowerCase()) ||
+                  file.studentName.toLowerCase().includes(fileSearchTerm.toLowerCase())
+                )
+                .map((file) => (
+                <div key={file.id} style={ideaItem}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: 15 }}>📝 {file.fileName}</div>
+                    <div style={{ fontSize: 12, opacity: 0.8, marginTop: 4 }}>
+                      <span>{file.studentName}</span>
+                      <span style={{ margin: '0 0.5rem' }}>•</span>
+                      <span>{file.fileSize}</span>
+                      <span style={{ margin: '0 0.5rem' }}>•</span>
+                      <span>{file.uploadDate}</span>
+                    </div>
+                    {file.ideaTitle && (
+                      <div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>
+                        Ideja: {file.ideaTitle}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <button
+                      style={downloadButton}
+                      onClick={() => handleDownloadFile(file)}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(100, 149, 237, 0.15)';
+                        e.currentTarget.style.borderColor = '#6495ed';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.borderColor = 'rgba(100,149,237,0.35)';
+                      }}
+                    >
+                      ⬇ Shkarko
+                    </button>
+                    <button
+                      style={tinyButton}
+                      onClick={() => navigate('/profesor/feedback', { state: { lendaId, subject: subjectName, fileId: file.id } })}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(23, 199, 122, 0.15)';
+                        e.currentTarget.style.borderColor = '#17c77a';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
+                      }}
+                    >
+                      Feedback
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 12, marginTop: '1.5rem' }}>
+              <button
+                style={{ ...secondaryButton, flex: 1 }}
+                onClick={loadFiles}
+                disabled={filesStatus.loading}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(23, 199, 122, 0.1)';
+                  e.currentTarget.style.borderColor = '#17c77a';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
+                }}
+              >
+                Rifresko listën
+              </button>
+              <button
+                style={{ ...primaryButton, flex: 1 }}
+                onClick={handleDownloadAllFiles}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(25, 199, 118, 0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                📦 Shkarko të gjitha (.rar)
               </button>
             </div>
           </div>
@@ -301,7 +479,20 @@ const Idetep = () => {
         </div>
 
         <div style={footerStyle}>
-          <button style={secondaryButton} onClick={handleFeedback}>Feedback</button>
+          <button 
+            style={secondaryButton} 
+            onClick={handleFeedback}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(23, 199, 122, 0.1)';
+              e.currentTarget.style.borderColor = '#17c77a';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
+            }}
+          >
+            Feedback
+          </button>
         </div>
       </div> 
     </div>
