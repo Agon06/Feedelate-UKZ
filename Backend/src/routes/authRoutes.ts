@@ -3,20 +3,35 @@ import passport from "../config/passport";
 
 const router = Router();
 
+// Check if Google OAuth is configured
+const isGoogleConfigured = process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET;
+
 // Initiate Google OAuth (supports popup via state)
 router.get(
   "/google",
-  (req, res, next) =>
+  (req, res, next) => {
+    if (!isGoogleConfigured) {
+      return res.status(503).json({ 
+        error: "SSO_NOT_CONFIGURED",
+        message: "Google OAuth nuk është konfiguruar. Kontaktoni administratorin." 
+      });
+    }
     passport.authenticate("google", {
       scope: ["profile", "email"],
       state: req.query.popup === "1" ? "popup" : undefined,
-    })(req, res, next)
+    })(req, res, next);
+  }
 );
 
 // Google OAuth callback
 router.get(
   "/google/callback",
   (req: Request, res: Response, next) => {
+    if (!isGoogleConfigured) {
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+      return res.redirect(`${frontendUrl}/login?error=sso_not_configured`);
+    }
+    
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
     const isPopup = (req.query.state === "popup") || (req.query.popup === "1");
 

@@ -61,15 +61,16 @@ passport.deserializeUser(async (data: any, done) => {
   }
 });
 
-// Google OAuth Strategy
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-      callbackURL: process.env.GOOGLE_CALLBACK_URL || "http://localhost:5000/api/auth/google/callback",
-    },
-    async (_accessToken, _refreshToken, profile, done) => {
+// Google OAuth Strategy - only enable if credentials are provided
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  passport.use(
+    new GoogleStrategy(
+      {
+        clientID: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        callbackURL: process.env.GOOGLE_CALLBACK_URL || "http://localhost:5000/api/auth/google/callback",
+      },
+      async (_accessToken, _refreshToken, profile, done) => {
       try {
         const email = profile.emails?.[0]?.value;
         
@@ -171,6 +172,11 @@ passport.use(
       }
     }
   )
-);
+  );
+  console.log("✓ Google OAuth është aktivizuar");
+} else {
+  console.log("⚠ Google OAuth është çaktivizuar (GOOGLE_CLIENT_ID ose GOOGLE_CLIENT_SECRET mungon)");
+  console.log("  Për të aktivizuar SSO, shto kredencialet në .env file");
+}
 
 export default passport;

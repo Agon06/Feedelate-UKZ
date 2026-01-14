@@ -321,9 +321,9 @@ router.post("/:id/dorezime", upload.single("file"), async (req: Request, res: Re
   console.log("File:", req.file ? { name: req.file.originalname, size: req.file.size, path: req.file.path } : "NO FILE");
   
   const profesorId = Number(req.params.id);
-  const { lendaId } = req.body;
+  const { lendaId, isShabllon } = req.body;
 
-  console.log("Profesor ID:", profesorId, "Lenda ID:", lendaId);
+  console.log("Profesor ID:", profesorId, "Lenda ID:", lendaId, "Is Template:", isShabllon);
 
   if (Number.isNaN(profesorId)) {
     console.log("ERROR: Profesor id is invalid");
@@ -367,10 +367,10 @@ router.post("/:id/dorezime", upload.single("file"), async (req: Request, res: Re
       lenda,
       fileDorezimi: filePath,
       fileName: req.file.originalname,
-      isShabllon: false,
+      isShabllon: isShabllon === 'true' || isShabllon === true,
     });
 
-    console.log("Created record object");
+    console.log("Created record object", { isShabllon: record.isShabllon });
     const saved = await dorezimpRepository.save(record);
     console.log("SAVED TO DB:", saved);
 
@@ -621,6 +621,8 @@ router.post("/:id/lendet/:lendaId/template", uploadTemplate.single("file"), asyn
   const profesorId = Number(req.params.id);
   const lendaId = Number(req.params.lendaId);
 
+  console.log(`[Template Upload] Profesor ID: ${profesorId}, Lenda ID: ${lendaId}`);
+
   if (Number.isNaN(profesorId) || Number.isNaN(lendaId)) {
     return res.status(400).json({ message: "Invalid profesor or lenda ID" });
   }
@@ -630,7 +632,8 @@ router.post("/:id/lendet/:lendaId/template", uploadTemplate.single("file"), asyn
   }
 
   try {
-    const lenda = await lendetRepository.findOneBy({ id: lendaId });
+    const lenda = await lendetpRepository.findOneBy({ id: lendaId });
+    console.log(`[Template Upload] Lenda found:`, lenda ? `ID ${lenda.id} - ${lenda.emriLendes}` : 'NULL');
 
     if (!lenda) {
       return res.status(404).json({ message: "Lenda not found" });
@@ -650,7 +653,7 @@ router.post("/:id/lendet/:lendaId/template", uploadTemplate.single("file"), asyn
     // Përditëso lëndën me template-in e ri
     lenda.templateFile = relativePath;
     lenda.templateFileName = req.file.originalname;
-    await lendetRepository.save(lenda);
+    await lendetpRepository.save(lenda);
 
     res.json({
       message: "Template u ngarkua me sukses!",
@@ -671,11 +674,13 @@ router.get("/:id/lendet/:lendaId/template", async (req: Request, res: Response) 
   }
 
   try {
-    const lenda = await lendetRepository.findOneBy({ id: lendaId });
+    const lenda = await lendetpRepository.findOneBy({ id: lendaId });
 
     if (!lenda) {
       return res.status(404).json({ message: "Lenda not found" });
     }
+
+    console.log(`[Template Info] Lenda ID: ${lendaId}, templateFile: ${lenda.templateFile}, templateFileName: ${lenda.templateFileName}`);
 
     if (!lenda.templateFile || !lenda.templateFileName) {
       return res.json({ hasTemplate: false });
@@ -699,7 +704,7 @@ router.delete("/:id/lendet/:lendaId/template", async (req: Request, res: Respons
   }
 
   try {
-    const lenda = await lendetRepository.findOneBy({ id: lendaId });
+    const lenda = await lendetpRepository.findOneBy({ id: lendaId });
 
     if (!lenda) {
       return res.status(404).json({ message: "Lenda not found" });
@@ -716,9 +721,11 @@ router.delete("/:id/lendet/:lendaId/template", async (req: Request, res: Respons
     }
 
     // Pastro fushat në databazë
-    lenda.templateFile = undefined;
-    lenda.templateFileName = undefined;
-    await lendetRepository.save(lenda);
+    lenda.templateFile = null as any;
+    lenda.templateFileName = null as any;
+    await lendetpRepository.save(lenda);
+
+    console.log(`[Template Delete] Template u fshi për Lenda ID: ${lendaId}`);
 
     res.json({ message: "Template u fshi me sukses!" });
   } catch (error) {
