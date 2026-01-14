@@ -57,17 +57,13 @@ const Idetep = () => {
   }, [loadIdeas, loadFiles]);
 
   const handleFeedback = () => {
-    const feedBackId = 1;
-    if (feedBackId === 1) {
-      navigate('/profesor/feedback', {
-        state: {
-          lendaId: lendaId,
-          subject: subjectName
-        }
-      });
-    } else {
-      alert('Nuk ka ende feedback të lidhur me këtë ide.');
-    }
+    navigate('/profesor/feedback', {
+      state: {
+        lendaId: lendaId,
+        subject: subjectName,
+        feedbackType: 'ideas' // Dallojmë feedback-un e përgjithshëm për IDE
+      }
+    });
   };
 
   const handleDownloadFile = (file) => {
@@ -429,7 +425,18 @@ const Idetep = () => {
                     </button>
                     <button
                       style={tinyButton}
-                      onClick={() => navigate('/profesor/feedback', { state: { lendaId, subject: subjectName, fileId: file.id } })}
+                      onClick={() => navigate('/profesor/feedback', { 
+                        state: { 
+                          lendaId, 
+                          subject: subjectName, 
+                          fileId: file.id,
+                          studentName: file.studentName,
+                          fileName: file.fileName,
+                          uploadDate: file.uploadDate,
+                          ideaTitle: file.ideaTitle,
+                          feedbackType: 'idea-file'
+                        } 
+                      })}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.background = 'rgba(23, 199, 122, 0.15)';
                         e.currentTarget.style.borderColor = '#17c77a';

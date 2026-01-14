@@ -10,12 +10,29 @@ const Feedbackp = () => {
   const ideaId = location.state?.ideaId ?? null;
   const lendaId = location.state?.lendaId ?? null;
   const subjectName = location.state?.subject ?? 'Lëndë';
+  const studentId = location.state?.studentId ?? null;
+  const studentName = location.state?.studentName ?? null;
+  const submissionId = location.state?.submissionId ?? null;
+  const feedbackType = location.state?.feedbackType ?? null; // 'ideas', 'projects', 'idea-file'
+  const fileId = location.state?.fileId ?? null;
+  const fileName = location.state?.fileName ?? null;
+  const uploadDate = location.state?.uploadDate ?? null;
+  const ideaTitle = location.state?.ideaTitle ?? null;
 
   const storageKey = useMemo(() => ideaId ? `profesorIdeaFeedback:${PROFESOR_ID}:${ideaId}` : null, [ideaId]);
-  const storageKeyGeneral = useMemo(() => (!ideaId && lendaId) ? `profesorLendaFeedback:${PROFESOR_ID}:${lendaId}` : null, [ideaId, lendaId]);
+  const storageKeyGeneral = useMemo(() => {
+    if (ideaId || submissionId || fileId) return null;
+    if (feedbackType === 'ideas') return `profesorLendaFeedbackIdeas:${PROFESOR_ID}:${lendaId}`;
+    if (feedbackType === 'projects') return `profesorLendaFeedbackProjects:${PROFESOR_ID}:${lendaId}`;
+    return `profesorLendaFeedback:${PROFESOR_ID}:${lendaId}`; // fallback
+  }, [ideaId, submissionId, fileId, feedbackType, lendaId]);
+  const storageKeySubmission = useMemo(() => (!ideaId && submissionId) ? `profesorSubmissionFeedback:${PROFESOR_ID}:${submissionId}` : null, [ideaId, submissionId]);
+  const storageKeyIdeaFile = useMemo(() => (!ideaId && fileId) ? `profesorIdeaFileFeedback:${PROFESOR_ID}:${fileId}` : null, [ideaId, fileId]);
 
   const [status, setStatus] = useState({ loading: !!ideaId, error: null });
   const [idea, setIdea] = useState(null);
+  const [submission, setSubmission] = useState(null);
+  const [ideaFile, setIdeaFile] = useState(null);
   const [message, setMessage] = useState('');
   const [savedAt, setSavedAt] = useState(null);
 
@@ -40,9 +57,31 @@ const Feedbackp = () => {
     return () => { isMounted = false; };
   }, [PROFESOR_ID, ideaId, lendaId]);
 
-  // Load saved feedback from localStorage (per-idea or general per lëndë)
+  // Load submission details if we have submissionId (from individual feedback)
   useEffect(() => {
-    const effectiveKey = storageKey ?? storageKeyGeneral;
+    if (!submissionId || !studentName) return;
+    const fileName = location.state?.fileName ?? 'projekti.docx';
+    const createdAt = location.state?.createdAt ?? new Date().toISOString();
+    
+    setSubmission({
+      studentName: studentName,
+      createdAt: createdAt,
+      fileName: fileName
+    });
+  }, [submissionId, studentName, location.state]);
+  // Load idea file details if we have fileId
+  useEffect(() => {
+    if (!fileId || !studentName) return;
+    setIdeaFile({
+      studentName: studentName,
+      fileName: fileName,
+      uploadDate: uploadDate,
+      ideaTitle: ideaTitle
+    });
+  }, [fileId, studentName, fileName, uploadDate, ideaTitle]);
+  // Load saved feedback from localStorage (per-idea, per-submission, per-idea-file, or general per lëndë)
+  useEffect(() => {
+    const effectiveKey = storageKey ?? storageKeySubmission ?? storageKeyIdeaFile ?? storageKeyGeneral;
     if (!effectiveKey) return;
     try {
       const raw = localStorage.getItem(effectiveKey);
@@ -52,7 +91,7 @@ const Feedbackp = () => {
         setSavedAt(parsed.savedAt ?? null);
       }
     } catch (_) {}
-  }, [storageKey, storageKeyGeneral]);
+  }, [storageKey, storageKeySubmission, storageKeyIdeaFile, storageKeyGeneral]);
 
   const profesorName = 'Profesor';
   const avatarLetter = 'P';
@@ -98,12 +137,51 @@ const Feedbackp = () => {
     } catch (e) {}
   };
 
+  const handleSaveSubmission = () => {
+    if (!submissionId || ideaId) return;
+    try {
+      const payload = {
+        submissionId: Number(submissionId),
+        studentId: Number(studentId),
+        studentName: studentName,
+        lendaId: Number(lendaId),
+        subject: subjectName,
+        message: message.trim(),
+        savedAt: new Date().toISOString(),
+      };
+      if (storageKeySubmission) {
+        localStorage.setItem(storageKeySubmission, JSON.stringify(payload));
+      }
+      setSavedAt(payload.savedAt);
+    } catch (e) {}
+  };
+
+  const handleSaveIdeaFile = () => {
+    if (!fileId || ideaId || submissionId) return;
+    try {
+      const payload = {
+        fileId: Number(fileId),
+        studentName: studentName,
+        fileName: fileName,
+        lendaId: Number(lendaId),
+        subject: subjectName,
+        message: message.trim(),
+        savedAt: new Date().toISOString(),
+      };
+      if (storageKeyIdeaFile) {
+        localStorage.setItem(storageKeyIdeaFile, JSON.stringify(payload));
+      }
+      setSavedAt(payload.savedAt);
+    } catch (e) {}
+  };
+
   const handleSaveGeneral = () => {
-    if (!lendaId || ideaId) return;
+    if (!lendaId || ideaId || submissionId || fileId) return;
     try {
       const payload = {
         lendaId: Number(lendaId),
         subject: subjectName,
+        feedbackType: feedbackType,
         message: message.trim(),
         savedAt: new Date().toISOString(),
       };
@@ -152,10 +230,49 @@ const Feedbackp = () => {
             </>
           )}
 
-          {!ideaId && (
+          {!ideaId && submissionId && submission && (
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 18, color: '#1fdc8c' }}>{submission.studentName}</div>
+              <div style={{ opacity: 0.85, marginTop: 4, fontSize: 14 }}>
+                Dorëzuar: {new Date(submission.createdAt).toLocaleString('sq-AL')}
+              </div>
+              <div style={{ opacity: 0.7, marginTop: 4, fontSize: 14 }}>
+                {submission.fileName}
+              </div>
+              <div style={{ opacity: 0.85, marginTop: 8, fontSize: 14 }}>
+                Lënda: {subjectName}
+              </div>
+            </div>
+          )}
+
+          {!ideaId && !submissionId && fileId && ideaFile && (
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 18, color: '#1fdc8c' }}>{ideaFile.studentName}</div>
+              <div style={{ opacity: 0.85, marginTop: 4, fontSize: 14 }}>
+                File i ngarkuar: {ideaFile.uploadDate}
+              </div>
+              <div style={{ opacity: 0.7, marginTop: 4, fontSize: 14 }}>
+                📝 {ideaFile.fileName}
+              </div>
+              {ideaFile.ideaTitle && (
+                <div style={{ opacity: 0.6, marginTop: 4, fontSize: 13 }}>
+                  Ideja: {ideaFile.ideaTitle}
+                </div>
+              )}
+              <div style={{ opacity: 0.85, marginTop: 8, fontSize: 14 }}>
+                Lënda: {subjectName}
+              </div>
+            </div>
+          )}
+
+          {!ideaId && !submissionId && !fileId && (
             <div style={{ opacity: 0.85 }}>
               <div style={{ fontWeight: 700, fontSize: 16 }}>{subjectName}</div>
-              <div style={{ marginTop: 4, fontSize: 14 }}>Feedback i përgjithshëm për këtë lëndë.</div>
+              <div style={{ marginTop: 4, fontSize: 14 }}>
+                {feedbackType === 'ideas' && 'Feedback i përgjithshëm për idetë e këtij lënde.'}
+                {feedbackType === 'projects' && 'Feedback i përgjithshëm për projektet e këtij lënde.'}
+                {!feedbackType && 'Feedback i përgjithshëm për këtë lëndë.'}
+              </div>
             </div>
           )}
         </div>
@@ -175,7 +292,13 @@ const Feedbackp = () => {
             {ideaId && (
               <button style={primaryButton} onClick={handleSave}>Ruaj</button>
             )}
-            {!ideaId && lendaId && (
+            {!ideaId && submissionId && (
+              <button style={primaryButton} onClick={handleSaveSubmission}>Ruaj</button>
+            )}
+            {!ideaId && !submissionId && fileId && (
+              <button style={primaryButton} onClick={handleSaveIdeaFile}>Ruaj</button>
+            )}
+            {!ideaId && !submissionId && !fileId && lendaId && (
               <button style={primaryButton} onClick={handleSaveGeneral}>Ruaj</button>
             )}
             <button style={secondaryButton} onClick={() => navigate(-1)}>Anulo</button>

@@ -38,7 +38,7 @@ const DoreziметStudentesh = () => {
         if (!isMounted) return;
         setStatus({
           loading: false,
-          error: error?.message ?? 'Nuk u lexuan dorëzimet e studentëve.',
+          error: error?.message ?? 'Nuk u lexuan projektet e studentëve.',
         });
       }
     };
@@ -171,6 +171,20 @@ const DoreziметStudentesh = () => {
     display: 'inline-block'
   };
 
+  const feedbackButton = {
+    padding: '0.5rem 1rem',
+    background: 'transparent',
+    border: '1px solid rgba(23,199,122,0.35)',
+    borderRadius: 8,
+    color: '#c8f5e8',
+    fontWeight: 700,
+    cursor: 'pointer',
+    fontSize: 14,
+    textDecoration: 'none',
+    display: 'inline-block',
+    transition: 'all 200ms ease'
+  };
+
   const handleDownload = (fileUrl, fileName) => {
     const link = document.createElement('a');
     link.href = fileUrl;
@@ -193,7 +207,7 @@ const DoreziметStudentesh = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `dorezimet_${(subject || 'lenda').replace(/\s+/g, '_')}.csv`;
+    a.download = `projektet_${(subject || 'lenda').replace(/\s+/g, '_')}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -221,19 +235,35 @@ const DoreziметStudentesh = () => {
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, justifyContent: 'space-between' }}>
             <h2 style={{ margin: 0 }}>
-              Dorëzimet - {subject || 'Lënda'}
+              Projektet - {subject || 'Lënda'}
             </h2>
             {!status.loading && !status.error && submissions.length > 0 && (
-              <button style={downloadButton} onClick={handleBulkDownload}>
-                ⬇ Shkarko të gjitha
-              </button>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button 
+                  style={feedbackButton} 
+                  onClick={() => navigate('/profesor/feedback', { state: { lendaId, subject, feedbackType: 'projects' } })}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(23, 199, 122, 0.15)';
+                    e.currentTarget.style.borderColor = '#17c77a';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
+                  }}
+                >
+                  Feedback i Përgjithshëm
+                </button>
+                <button style={downloadButton} onClick={handleBulkDownload}>
+                  ⬇ Shkarko të gjitha
+                </button>
+              </div>
             )}
           </div>
         </div>
 
         {status.loading && (
           <div style={{ marginTop: 32, textAlign: 'center' }}>
-            Duke u ngarkuar dorëzimet...
+            Duke u ngarkuar projektet...
           </div>
         )}
 
@@ -245,7 +275,7 @@ const DoreziметStudentesh = () => {
 
         {!status.loading && !status.error && submissions.length === 0 && (
           <div style={{ ...bannerStyle, background: 'rgba(23, 199, 122, 0.1)' }}>
-            Nuk ka dorëzime për këtë lëndë ende.
+            Nuk ka projekte për këtë lëndë ende.
           </div>
         )}
 
@@ -264,12 +294,38 @@ const DoreziметStudentesh = () => {
                     {submission.fileName}
                   </div>
                 </div>
-                <button
-                  style={downloadButton}
-                  onClick={() => handleDownload(submission.fileUrl, submission.fileName)}
-                >
-                  ⬇ Shkarko
-                </button>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    style={downloadButton}
+                    onClick={() => handleDownload(submission.fileUrl, submission.fileName)}
+                  >
+                    ⬇ Shkarko
+                  </button>
+                  <button
+                    style={feedbackButton}
+                    onClick={() => navigate('/profesor/feedback', { 
+                      state: { 
+                        lendaId, 
+                        subject, 
+                        studentId: submission.student.id,
+                        studentName: submission.student.fullName,
+                        submissionId: submission.id,
+                        fileName: submission.fileName,
+                        createdAt: submission.createdAt
+                      } 
+                    })}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(23, 199, 122, 0.15)';
+                      e.currentTarget.style.borderColor = '#17c77a';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
+                    }}
+                  >
+                    Feedback
+                  </button>
+                </div>
               </div>
             ))}
           </div>

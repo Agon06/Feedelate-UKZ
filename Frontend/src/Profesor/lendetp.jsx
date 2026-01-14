@@ -632,7 +632,7 @@ const Lendetp = () => {
                 }}
                 onClick={handleNavigateToDorezim}
               >
-                Shko te Dorëzimet
+                Shko te Projektet
               </button>
               <button
                 style={{
