@@ -91,7 +91,7 @@ const Dorezimip = () => {
     }
 
     if (!formData.skedarName) {
-      setFormFeedback({ type: 'error', message: 'Duhet të ngarkosh fajllin e detyres.' });
+      setFormFeedback({ type: 'error', message: 'Duhet të ngarkosh file-in e template-it.' });
       return;
     }
 
@@ -100,19 +100,19 @@ const Dorezimip = () => {
     
     try {
       const PROFESOR_ID = 1;
-      console.log('Uploading file:', { lendaId, fileName: formData.skedarName, fileSize: formData.skedari?.size });
+      console.log('Uploading template:', { lendaId, fileName: formData.skedarName, fileSize: formData.skedari?.size });
       
-      const result = await uploadProfesorDorezim(PROFESOR_ID, { lendaId, file: formData.skedari });
+      const result = await uploadProfesorDorezim(PROFESOR_ID, { lendaId, file: formData.skedari, isShabllon: true });
       
       console.log('Upload success response:', result);
-      setFormFeedback({ type: 'success', message: 'Detyra u dorëzua me sukses!' });
+      setFormFeedback({ type: 'success', message: 'Template u ngarkua me sukses!' });
       setTimeout(() => {
         setFormData({ skedari: null, skedarName: '' });
         navigate(-1);
       }, 1200);
     } catch (error) {
       console.error('Upload error:', error);
-      setFormFeedback({ type: 'error', message: error?.message ?? 'Nuk u dorëzua detyra.' });
+      setFormFeedback({ type: 'error', message: error?.message ?? 'Nuk u ngarkua template.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -283,8 +283,8 @@ const Dorezimip = () => {
         </button>
         
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <h2 style={{ marginTop: 0, marginBottom: '0.35rem' }}>Dorëzo Detyren</h2>
-          <p style={{ margin: 0, opacity: 0.8 }}>Shkarko shabllonin, plotëso dhe dorëzo</p>
+          <h2 style={{ marginTop: 0, marginBottom: '0.35rem' }}>Ngarko Template për Detyren</h2>
+          <p style={{ margin: 0, opacity: 0.8 }}>Ngarko template që studentët do të shkarkojnë dhe plotësojnë</p>
         </div>
 
         <div style={columnsStyle}>
@@ -326,7 +326,7 @@ const Dorezimip = () => {
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: isMobile ? '16px' : '20px' }}>
               <div style={formField}>
-                <label style={labelStyle}>Ngarko Detyren (Word) *</label>
+                <label style={labelStyle}>Ngarko Template (Word) *</label>
                 <input
                   style={inputStyle}
                   type="file"
@@ -361,7 +361,7 @@ const Dorezimip = () => {
                 type="submit" 
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Duke u dorëzuar...' : 'Dorëzo'}
+                {isSubmitting ? 'Duke u ngarkuar...' : 'Ngarko Template'}
               </button>
             </form>
           </div>

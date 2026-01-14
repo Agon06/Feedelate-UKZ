@@ -91,10 +91,11 @@ export const createProfesorIdea = (profesorId, payload) =>
 export const getProfesorProfile = (profesorId) =>
   request(`/profesoret/${profesorId}`);
 
-export const uploadProfesorDorezim = async (profesorId, { lendaId, file }) => {
+export const uploadProfesorDorezim = async (profesorId, { lendaId, file, isShabllon = false }) => {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('lendaId', String(lendaId));
+  formData.append('isShabllon', String(isShabllon));
   
   const response = await fetch(`${API_BASE_URL}/profesoret/${profesorId}/dorezime`, {
     method: 'POST',
