@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import JSZip from 'jszip';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getProfesorIdeas } from '../services/profesorApi';
 import './idetep.css';
@@ -39,6 +40,8 @@ const Idetep = () => {
         { id: 1, fileName: 'Projekti_Final.docx', studentName: 'Agon Berisha', uploadDate: '2024-01-10', fileSize: '2.3 MB', ideaTitle: 'Sistema e Menaxhimit' },
         { id: 2, fileName: 'Detyra_Semestri.docx', studentName: 'Arta Krasniqi', uploadDate: '2024-01-12', fileSize: '1.8 MB', ideaTitle: 'Aplikacioni Mobil' },
         { id: 3, fileName: 'Raporti_Hulumtimi.docx', studentName: 'Blend Morina', uploadDate: '2024-01-09', fileSize: '3.1 MB', ideaTitle: 'Web Platform' },
+        { id: 4, fileName: 'Analiza_Sigurisë.docx', studentName: 'Diona Shabani', uploadDate: '2024-01-08', fileSize: '1.1 MB', ideaTitle: 'Siguria ne Cloud' },
+        { id: 5, fileName: 'Planifikimi_UI_UX.docx', studentName: 'Erblin Gashi', uploadDate: '2024-01-11', fileSize: '2.0 MB', ideaTitle: 'Dashboard Analitik' }
       ].sort((a, b) => a.studentName.localeCompare(b.studentName, 'sq'));
       
       setFiles(mockFiles);
@@ -66,12 +69,51 @@ const Idetep = () => {
     });
   };
 
-  const handleDownloadFile = (file) => {
-    alert(`Duke shkarkuar: ${file.fileName}`);
+  const triggerDownload = (blob, filename) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
-  const handleDownloadAllFiles = () => {
-    alert('Duke shkarkuar të gjitha file-t në format .rar...');
+  const buildMockFileContent = (file) => [
+    `Ky është një file testues për: ${file.fileName}`,
+    `Studenti: ${file.studentName}`,
+    `Ideja: ${file.ideaTitle ?? 'N/A'}`,
+    `Data e ngarkimit: ${file.uploadDate}`,
+    '',
+    'Ky përmbajtje është vetëm për testimin e shkarkimit (individuale dhe e përgjithshme).'
+  ].join('\n');
+
+  const createMockFileBlob = (file) => new Blob([buildMockFileContent(file)], { type: 'application/octet-stream' });
+
+  const handleDownloadFile = (file) => {
+    triggerDownload(createMockFileBlob(file), file.fileName);
+  };
+
+  const handleDownloadAllFiles = async () => {
+    if (!files.length) return;
+
+    setFilesStatus((prev) => ({ ...prev, loading: true, error: null }));
+
+    try {
+      const zip = new JSZip();
+      files.forEach((file) => {
+        const safeName = file.fileName.replace(/\s+/g, '_');
+        zip.file(safeName, buildMockFileContent(file));
+      });
+
+      const archiveBlob = await zip.generateAsync({ type: 'blob' });
+      const archiveName = `${subjectName.replace(/\s+/g, '_')}_idet_student.zip`;
+      triggerDownload(archiveBlob, archiveName);
+      setFilesStatus((prev) => ({ ...prev, loading: false }));
+    } catch (error) {
+      setFilesStatus({ loading: false, error: error?.message ?? 'Nuk u krijua arkivi.' });
+    }
   };
 
   const pageStyle = {
@@ -478,7 +520,7 @@ const Idetep = () => {
                   e.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                📦 Shkarko të gjitha (.rar)
+                📦 Shkarko të gjitha (.zip)
               </button>
             </div>
           </div>

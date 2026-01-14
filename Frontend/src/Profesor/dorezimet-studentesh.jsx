@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import JSZip from 'jszip';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getStudentSubmissions } from '../services/profesorApi';
 
@@ -11,6 +12,8 @@ const DoreziметStudentesh = () => {
   const [submissions, setSubmissions] = useState([]);
   const [status, setStatus] = useState({ loading: true, error: null });
   const [isMobile, setIsMobile] = useState(false);
+  const [bulkStatus, setBulkStatus] = useState({ loading: false, error: null });
+  const [mockUrls, setMockUrls] = useState([]); // track blob URLs to revoke later
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -32,7 +35,45 @@ const DoreziметStudentesh = () => {
       try {
         const data = await getStudentSubmissions(PROFESOR_ID, lendaId);
         if (!isMounted) return;
-        setSubmissions(data.submissions || []);
+
+        const fetched = data.submissions || [];
+
+        if (fetched.length === 0) {
+          // krijo disa projekte mock për testimin e shkarkimit
+          const mockData = [
+            { id: 1, student: { id: 101, fullName: 'Arta Krasniqi' }, fileName: 'Projekti_UI.docx' },
+            { id: 2, student: { id: 102, fullName: 'Blend Morina' }, fileName: 'Analiza_Sigurise.pdf' },
+            { id: 3, student: { id: 103, fullName: 'Diona Shabani' }, fileName: 'Platforma_Web.zip' },
+          ];
+
+          // krijojmë blob URL që fetch t’i lexojë për arkivin zip
+          const urls = mockData.map((item) => {
+            const content = [
+              `Ky është një file testues për projektin: ${item.fileName}`,
+              `Studenti: ${item.student.fullName}`,
+              `Lënda: ${subject || 'Lënda'}`,
+              '',
+              'Ky përmbajtje është vetëm për testimin e shkarkimit bulk (.zip).'
+            ].join('\n');
+            const blob = new Blob([content], { type: 'application/octet-stream' });
+            return URL.createObjectURL(blob);
+          });
+
+          const mockSubmissions = mockData.map((item, idx) => ({
+            ...item,
+            fileUrl: urls[idx],
+            createdAt: new Date(Date.now() - (idx + 1) * 3600_000).toISOString(),
+          }));
+
+          setMockUrls(urls);
+          setSubmissions(mockSubmissions);
+        } else {
+          setSubmissions(fetched);
+          // nëse kishim mock më parë, i pastrojmë
+          mockUrls.forEach((u) => URL.revokeObjectURL(u));
+          setMockUrls([]);
+        }
+
         setStatus({ loading: false, error: null });
       } catch (error) {
         if (!isMounted) return;
@@ -47,6 +88,7 @@ const DoreziметStudentesh = () => {
 
     return () => {
       isMounted = false;
+      mockUrls.forEach((u) => URL.revokeObjectURL(u));
     };
   }, [lendaId]);
 
@@ -194,24 +236,42 @@ const DoreziметStudentesh = () => {
     document.body.removeChild(link);
   };
 
-  const handleBulkDownload = () => {
-    const rows = submissions.map(s => ({
-      Student: s.student.fullName,
-      Skedari: s.fileName,
-      Dorezuar: new Date(s.createdAt).toLocaleString('sq-AL'),
-      URL: s.fileUrl
-    }));
-    const header = ['Student', 'Skedari', 'Dorezuar', 'URL'];
-    const csv = [header.join(','), ...rows.map(r => header.map(h => `"${String(r[h] ?? '').replace(/"/g, '""')}"`).join(','))].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const triggerDownload = (blob, filename) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `projektet_${(subject || 'lenda').replace(/\s+/g, '_')}.csv`;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const handleBulkDownload = async () => {
+    if (!submissions.length) return;
+
+    setBulkStatus({ loading: true, error: null });
+
+    try {
+      const zip = new JSZip();
+
+      for (const submission of submissions) {
+        const response = await fetch(submission.fileUrl);
+        if (!response.ok) throw new Error('Nuk u shkarkua një nga file-t e projektit.');
+
+        const blob = await response.blob();
+        const safeStudent = (submission.student.fullName || 'student').replace(/\s+/g, '_');
+        const safeFile = (submission.fileName || 'projekti').replace(/\s+/g, '_');
+        zip.file(`${safeStudent}_${safeFile}`, blob);
+      }
+
+      const archiveBlob = await zip.generateAsync({ type: 'blob' });
+      const archiveName = `${(subject || 'projekti').replace(/\s+/g, '_')}_projektet_student.zip`;
+      triggerDownload(archiveBlob, archiveName);
+      setBulkStatus({ loading: false, error: null });
+    } catch (error) {
+      setBulkStatus({ loading: false, error: error?.message ?? 'Nuk u krijua arkivi i projekteve.' });
+    }
   };
 
   return (
@@ -253,13 +313,19 @@ const DoreziметStudentesh = () => {
                 >
                   Feedback i Përgjithshëm
                 </button>
-                <button style={downloadButton} onClick={handleBulkDownload}>
-                  ⬇ Shkarko të gjitha
+                <button style={downloadButton} onClick={handleBulkDownload} disabled={bulkStatus.loading}>
+                  {bulkStatus.loading ? 'Duke paketuar...' : '⬇ Shkarko të gjitha (.zip)'}
                 </button>
               </div>
             )}
           </div>
         </div>
+
+        {bulkStatus.error && (
+          <div style={{ ...bannerStyle, background: 'rgba(255,82,82,0.2)', border: '1px solid rgba(255,82,82,0.5)' }}>
+            {bulkStatus.error}
+          </div>
+        )}
 
         {status.loading && (
           <div style={{ marginTop: 32, textAlign: 'center' }}>
