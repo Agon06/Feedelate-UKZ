@@ -5,8 +5,20 @@ import RoleSwitcher from '../components/RoleSwitcher';
 
 const ProfesorDashboard = () => {
   const navigate = useNavigate();
+  const [academicYear, setAcademicYear] = useState('');
   const [profesorName, setProfessorName] = useState('Profesor');
   const [avatarLetter, setAvatarLetter] = useState('P');
+
+  useEffect(() => {
+    // Lexo vitin akademik nga localStorage
+    const savedAcademicYear = localStorage.getItem('profesorAcademicYear');
+    if (savedAcademicYear) {
+      setAcademicYear(savedAcademicYear);
+    } else {
+      // Nëse nuk ka vit akademik të ruajtur, kthehu në faqen e zgjedhjes
+      navigate('/profesor');
+    }
+  }, [navigate]);
 
   useEffect(() => {
     // Load user data from localStorage
@@ -72,7 +84,24 @@ const ProfesorDashboard = () => {
     fontSize: isMobile ? 16 : 19,
     marginTop: isMobile ? 10 : 6,
     opacity: 0.95,
-    letterSpacing: 0.5
+    letterSpacing: 0.5,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '1rem'
+  };
+
+  const backButtonStyle = {
+    background: 'none',
+    border: 'none',
+    color: '#17c77a',
+    fontSize: isMobile ? 20 : 24,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '0.5rem',
+    transition: 'color 200ms ease'
   };
 
   const actionsStyle = {
@@ -136,7 +165,30 @@ const ProfesorDashboard = () => {
     fontSize: isMobile ? 16 : 22,
     fontWeight: 800,
     cursor: 'pointer',
-    transition: 'transform 180ms ease, box-shadow 180ms ease'
+    transition: 'all 200ms ease',
+    border: '1px solid rgba(23, 199, 122, 0.2)'
+  };
+
+  const cardHoverStyle = {
+    ...cardBase,
+    background: 'rgba(23, 199, 122, 0.08)',
+    borderColor: '#17c77a',
+    boxShadow: '0 20px 40px rgba(23, 199, 122, 0.2)',
+    transform: 'scale(1.05)'
+  };
+
+  const handleCardHover = (e, isHovering) => {
+    if (isHovering) {
+      e.currentTarget.style.background = cardHoverStyle.background;
+      e.currentTarget.style.borderColor = cardHoverStyle.borderColor;
+      e.currentTarget.style.boxShadow = cardHoverStyle.boxShadow;
+      e.currentTarget.style.transform = cardHoverStyle.transform;
+    } else {
+      e.currentTarget.style.background = cardBase.background;
+      e.currentTarget.style.borderColor = 'rgba(23, 199, 122, 0.2)';
+      e.currentTarget.style.boxShadow = cardBase.boxShadow;
+      e.currentTarget.style.transform = 'scale(1)';
+    }
   };
 
   const positions = useMemo(() => (
@@ -164,6 +216,12 @@ const ProfesorDashboard = () => {
     }
   }, [handleNavigate]);
 
+  const handleBackClick = useCallback(() => {
+    // Pastro vitin akademik të ruajtur
+    localStorage.removeItem('profesorAcademicYear');
+    navigate('/profesor');
+  }, [navigate]);
+
   return (
     <div className="profesor-dashboard" style={pageStyle}>
       {/* Top bar - uses full available width (no negative margins) */}
@@ -181,7 +239,18 @@ const ProfesorDashboard = () => {
 
       <div style={{width: '100%', boxSizing: 'border-box'}}>
         <div style={titleStyle}>
-          <h2 style={{margin: 0}}>Universiteti Publik Kadri Zeka</h2>
+          {academicYear && (
+            <button
+              onClick={handleBackClick}
+              style={backButtonStyle}
+              onMouseEnter={(e) => e.currentTarget.style.color = '#0e6b3d'}
+              onMouseLeave={(e) => e.currentTarget.style.color = '#17c77a'}
+              aria-label="Kthehu"
+            >
+              ←
+            </button>
+          )}
+          <h2 style={{margin: 0}}>Universiteti Publik Kadri Zeka {academicYear && `(${academicYear})`}</h2>
         </div>
       </div>
 
@@ -197,6 +266,8 @@ const ProfesorDashboard = () => {
               aria-label={`Hapet programi ${label}`}
               onClick={() => handleNavigate(id)}
               onKeyDown={(event) => handleKeyDown(event, id)}
+              onMouseEnter={(e) => handleCardHover(e, true)}
+              onMouseLeave={(e) => handleCardHover(e, false)}
               style={{ ...cardBase, left: pos.left, top: pos.top, ...transformStyle }}
               className="profesor-year-card"
             >

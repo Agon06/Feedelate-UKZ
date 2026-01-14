@@ -7,6 +7,7 @@ import AdminStudentManagement from './Admin/AdminStudentManagement';
 import AdminProfessorManagement from './Admin/AdminProfessorManagement';
 import AdminRegisterSubjects from './Admin/AdminRegisterSubjects';
 import ProfesorDashboard from './Profesor/ProfesorDashboard';
+import AcademicYearSelection from './Profesor/AcademicYearSelection';
 import StudentDashboard from './Student/StudentDashboard';
 import Lendet from './Student/lendet';
 import IdeaPage from './Student/Ide';
@@ -51,7 +52,7 @@ function App() {
           <Route path="/admin/regjistro-lendet" element={<AdminRegisterSubjects />} />
 
           {/* Profesor routes */}
-          <Route path="/profesor" element={<ProfesorDashboard />} />
+          <Route path="/profesor" element={<AcademicYearSelection />} />
           <Route path="/profesor/dashboard" element={<ProfesorDashboard />} />
           <Route path="/profesor/lendet/:yearId" element={<Lendetp />} />
           <Route path="/profesor/idete" element={<Idetep />} />

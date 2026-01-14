@@ -187,7 +187,15 @@ const Lendetp = () => {
     fontSize: 13,
     display: 'inline-flex',
     alignItems: 'center',
-    gap: 6
+    gap: 6,
+    transition: 'all 200ms ease'
+  };
+
+  const backButtonHover = {
+    ...backButton,
+    background: 'rgba(23, 199, 122, 0.1)',
+    borderColor: '#17c77a',
+    boxShadow: '0 6px 16px rgba(23, 199, 122, 0.15)'
   };
 
   const semesterGrid = {
@@ -237,7 +245,71 @@ const Lendetp = () => {
     textAlign: 'center',
     fontWeight: 600,
     fontSize: 15,
-    color: '#e1f8ed'
+    color: '#e1f8ed',
+    transition: 'all 200ms ease',
+    cursor: 'pointer'
+  };
+
+  const subjectItemHover = {
+    ...subjectItem,
+    background: 'rgba(23, 199, 122, 0.08)',
+    border: '1px solid rgba(23, 199, 122, 0.6)',
+    boxShadow: '0 10px 25px rgba(23, 199, 122, 0.15)',
+    transform: 'translateY(-2px)'
+  };
+
+  const handleSubjectHover = (e, isHovering) => {
+    if (isHovering) {
+      e.currentTarget.style.background = subjectItemHover.background;
+      e.currentTarget.style.border = subjectItemHover.border;
+      e.currentTarget.style.boxShadow = subjectItemHover.boxShadow;
+      e.currentTarget.style.transform = subjectItemHover.transform;
+    } else {
+      e.currentTarget.style.background = subjectItem.background;
+      e.currentTarget.style.border = subjectItem.border;
+      e.currentTarget.style.boxShadow = 'none';
+      e.currentTarget.style.transform = 'translateY(0)';
+    }
+  };
+
+  const primaryButtonStyle = {
+    padding: '0.75rem',
+    background: '#19c776',
+    border: 'none',
+    borderRadius: 12,
+    color: '#041407',
+    fontWeight: 700,
+    cursor: 'pointer',
+    transition: 'all 200ms ease'
+  };
+
+  const secondaryButtonStyle = {
+    padding: '0.75rem',
+    background: 'transparent',
+    border: '1px solid rgba(23,199,122,0.5)',
+    borderRadius: 12,
+    color: '#c8f5e8',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 200ms ease'
+  };
+
+  const closeButtonStyle = {
+    padding: '0.75rem',
+    background: 'transparent',
+    border: '1px solid rgba(255,255,255,0.2)',
+    borderRadius: 12,
+    color: '#fff',
+    cursor: 'pointer',
+    transition: 'all 200ms ease'
+  };
+
+  const handleButtonHover = (e, style, hoverStyle, isHovering) => {
+    if (isHovering) {
+      Object.assign(e.currentTarget.style, hoverStyle);
+    } else {
+      Object.assign(e.currentTarget.style, style);
+    }
   };
 
   const handleSubjectClick = (subject) => {
@@ -327,7 +399,20 @@ const Lendetp = () => {
 
       <div style={layoutStyle}>
         <div style={headerRow}>
-          <button style={backButton} onClick={() => navigate('/profesor/dashboard')}>
+          <button 
+            style={backButton} 
+            onClick={() => navigate('/profesor/dashboard')}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = backButtonHover.background;
+              e.currentTarget.style.borderColor = backButtonHover.borderColor;
+              e.currentTarget.style.boxShadow = backButtonHover.boxShadow;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = backButton.background;
+              e.currentTarget.style.borderColor = 'rgba(23, 199, 122, 0.5)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          >
             ← Kthehu
           </button>
           <h2 style={{ margin: isMobile ? '12px 0 0' : 0 }}>
@@ -357,6 +442,8 @@ const Lendetp = () => {
                           key={subject.id}
                           style={{ ...subjectItem, cursor: 'pointer' }}
                           onClick={() => handleSubjectClick(subject)}
+                          onMouseEnter={(e) => handleSubjectHover(e, true)}
+                          onMouseLeave={(e) => handleSubjectHover(e, false)}
                         >
                           {subject.name}
                         </div>
@@ -426,7 +513,22 @@ const Lendetp = () => {
                         cursor: uploadingTemplate ? 'not-allowed' : 'pointer',
                         textAlign: 'center',
                         fontSize: 13,
-                        opacity: uploadingTemplate ? 0.5 : 1
+                        opacity: uploadingTemplate ? 0.5 : 1,
+                        transition: 'all 200ms ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!uploadingTemplate) {
+                          e.currentTarget.style.background = 'rgba(23, 199, 122, 0.3)';
+                          e.currentTarget.style.borderColor = '#1fdc8c';
+                          e.currentTarget.style.boxShadow = '0 6px 16px rgba(23, 199, 122, 0.15)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!uploadingTemplate) {
+                          e.currentTarget.style.background = 'rgba(23, 199, 122, 0.2)';
+                          e.currentTarget.style.borderColor = 'rgba(23, 199, 122, 0.5)';
+                          e.currentTarget.style.boxShadow = 'none';
+                        }
                       }}
                     >
                       {uploadingTemplate ? 'Duke ngarkuar...' : '🔄 Ndrysho'}
@@ -444,7 +546,22 @@ const Lendetp = () => {
                         fontWeight: 600,
                         cursor: uploadingTemplate ? 'not-allowed' : 'pointer',
                         fontSize: 13,
-                        opacity: uploadingTemplate ? 0.5 : 1
+                        opacity: uploadingTemplate ? 0.5 : 1,
+                        transition: 'all 200ms ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!uploadingTemplate) {
+                          e.currentTarget.style.background = 'rgba(255, 82, 82, 0.3)';
+                          e.currentTarget.style.borderColor = '#ff5252';
+                          e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 82, 82, 0.15)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!uploadingTemplate) {
+                          e.currentTarget.style.background = 'rgba(255, 82, 82, 0.2)';
+                          e.currentTarget.style.borderColor = 'rgba(255, 82, 82, 0.5)';
+                          e.currentTarget.style.boxShadow = 'none';
+                        }
                       }}
                     >
                       🗑️ Fshi
@@ -489,27 +606,29 @@ const Lendetp = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 24 }}>
               <button
                 style={{
-                  padding: '0.75rem',
-                  background: '#19c776',
-                  border: 'none',
-                  borderRadius: 12,
-                  color: '#041407',
-                  fontWeight: 700,
-                  cursor: 'pointer',
+                  ...primaryButtonStyle,
+                  boxShadow: '0 4px 12px rgba(25, 199, 118, 0.2)'
                 }}
+                onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 8px 24px rgba(25, 199, 118, 0.4)'}
+                onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 4px 12px rgba(25, 199, 118, 0.2)'}
                 onClick={handleNavigateToIdea}
               >
                 Shko te Idetë
               </button>
               <button
                 style={{
-                  padding: '0.75rem',
-                  background: 'transparent',
-                  border: '1px solid rgba(23,199,122,0.5)',
-                  borderRadius: 12,
-                  color: '#c8f5e8',
-                  fontWeight: 600,
-                  cursor: 'pointer',
+                  ...secondaryButtonStyle,
+                  boxShadow: '0 4px 12px rgba(23, 199, 122, 0.1)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(23, 199, 122, 0.1)';
+                  e.currentTarget.style.borderColor = '#17c77a';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(23, 199, 122, 0.2)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.borderColor = 'rgba(23,199,122,0.5)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(23, 199, 122, 0.1)';
                 }}
                 onClick={handleNavigateToDorezim}
               >
@@ -517,12 +636,18 @@ const Lendetp = () => {
               </button>
               <button
                 style={{
-                  padding: '0.75rem',
-                  background: 'transparent',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  borderRadius: 12,
-                  color: '#fff',
-                  cursor: 'pointer',
+                  ...closeButtonStyle,
+                  boxShadow: '0 4px 12px rgba(255, 255, 255, 0.05)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(255, 255, 255, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 255, 255, 0.05)';
                 }}
                 onClick={handleCloseModal}
               >
