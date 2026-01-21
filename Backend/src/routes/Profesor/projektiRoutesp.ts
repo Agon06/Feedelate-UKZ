@@ -1,21 +1,26 @@
 import { Router, Request, Response } from "express";
 import { AppDataSource } from "../../data-source";
-import { Projektip } from "../../entities/Profesor/projektip";
+import { Projekti } from "../../entities/Student/projekti";
 import { Profesor } from "../../entities/Profesor/Profesor";
-import { Lendetp } from "../../entities/Profesor/Lendetp";
+import { Lendet } from "../../entities/Student/Lendet";
 
 const router = Router();
-const projektipRepository = AppDataSource.getRepository(Projektip);
+const projektiRepository = AppDataSource.getRepository(Projekti);
 const profesorRepository = AppDataSource.getRepository(Profesor);
-const lendetpRepository = AppDataSource.getRepository(Lendetp);
+const lendetRepository = AppDataSource.getRepository(Lendet);
 
-// Get all projects for a profesor
+// Get all projects for a profesor (through their subjects)
 router.get("/:profesorId", async (req: Request, res: Response) => {
   try {
     const profesorId = parseInt(req.params.profesorId, 10);
-    const projects = await projektipRepository.find({
-      where: { profesorId },
-      relations: ["profesor", "lenda"],
+    // Get projects through subjects assigned to this profesor
+    const projects = await projektiRepository.find({
+      relations: ["profesor", "lenda", "lenda.profesor"],
+      where: {
+        lenda: {
+          profesor: { id: profesorId }
+        }
+      }
     });
     res.json(projects);
   } catch (error) {
@@ -28,11 +33,11 @@ router.get("/:profesorId/:id", async (req: Request, res: Response) => {
   try {
     const profesorId = parseInt(req.params.profesorId, 10);
     const projectId = parseInt(req.params.id, 10);
-    const project = await projektipRepository.findOneBy({
-      id: projectId,
-      profesorId,
+    const project = await projektiRepository.findOne({
+      where: { id: projectId },
+      relations: ["professor", "lenda", "lenda.profesor"],
     });
-    if (!project) {
+    if (!project || project.lenda?.profesor?.id !== profesorId) {
       return res.status(404).json({ message: "Project not found" });
     }
     res.json(project);
@@ -45,27 +50,29 @@ router.get("/:profesorId/:id", async (req: Request, res: Response) => {
 router.post("/:profesorId", async (req: Request, res: Response) => {
   try {
     const profesorId = parseInt(req.params.profesorId, 10);
-    const { emriProjekti, pershkrimiProjekti, deaAdline, lendaId } = req.body;
+    const { emriProjekti, pershkrimiProjekti, deaAdline, lendaId, studentId } = req.body;
 
     const profesor = await profesorRepository.findOneBy({ id: profesorId });
     if (!profesor) {
       return res.status(404).json({ message: "Profesor not found" });
     }
 
-    const lenda = await lendetpRepository.findOneBy({ id: lendaId });
+    const lenda = await lendetRepository.findOne({
+      where: { id: lendaId, profesor: { id: profesorId } }
+    });
     if (!lenda) {
-      return res.status(404).json({ message: "Lenda not found" });
+      return res.status(404).json({ message: "Lenda not found for this profesor" });
     }
 
-    const project = projektipRepository.create({
+    const project = projektiRepository.create({
       emriProjekti,
       pershkrimiProjekti,
       deaAdline,
-      profesorId,
+      studentId,
       lendaId,
     });
 
-    const result = await projektipRepository.save(project);
+    const result = await projektiRepository.save(project);
     res.status(201).json(result);
   } catch (error) {
     res.status(500).json({ message: "Error creating project", error });
@@ -79,19 +86,21 @@ router.put("/:profesorId/:id", async (req: Request, res: Response) => {
     const projectId = parseInt(req.params.id, 10);
     const { emriProjekti, pershkrimiProjekti, deaAdline, lendaId } = req.body;
 
-    const project = await projektipRepository.findOneBy({
-      id: projectId,
-      profesorId,
+    const project = await projektiRepository.findOne({
+      where: { id: projectId },
+      relations: ["lenda", "lenda.profesor"]
     });
 
-    if (!project) {
+    if (!project || project.lenda?.profesor?.id !== profesorId) {
       return res.status(404).json({ message: "Project not found" });
     }
 
     if (lendaId) {
-      const lenda = await lendetpRepository.findOneBy({ id: lendaId });
+      const lenda = await lendetRepository.findOne({
+        where: { id: lendaId, profesor: { id: profesorId } }
+      });
       if (!lenda) {
-        return res.status(404).json({ message: "Lenda not found" });
+        return res.status(404).json({ message: "Lenda not found for this profesor" });
       }
       project.lendaId = lendaId;
     }
@@ -100,7 +109,7 @@ router.put("/:profesorId/:id", async (req: Request, res: Response) => {
     project.pershkrimiProjekti = pershkrimiProjekti || project.pershkrimiProjekti;
     project.deaAdline = deaAdline || project.deaAdline;
 
-    const result = await projektipRepository.save(project);
+    const result = await projektiRepository.save(project);
     res.json(result);
   } catch (error) {
     res.status(500).json({ message: "Error updating project", error });
@@ -113,10 +122,16 @@ router.delete("/:profesorId/:id", async (req: Request, res: Response) => {
     const profesorId = parseInt(req.params.profesorId, 10);
     const projectId = parseInt(req.params.id, 10);
 
-    const result = await projektipRepository.delete({
-      id: projectId,
-      profesorId,
+    const project = await projektiRepository.findOne({
+      where: { id: projectId },
+      relations: ["lenda", "lenda.profesor"]
     });
+
+    if (!project || project.lenda?.profesor?.id !== profesorId) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    const result = await projektiRepository.delete(projectId);
 
     if (result.affected === 0) {
       return res.status(404).json({ message: "Project not found" });

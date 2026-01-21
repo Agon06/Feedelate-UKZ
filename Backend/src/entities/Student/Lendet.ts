@@ -1,8 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne, JoinColumn } from "typeorm";
 import { Idete } from "./Idete";
 import { DorezimiIdes } from "./dorezimiides";
 import { dorzimiProjektit } from "./dorzimiProjektit";
-
+import { Profesor } from "../Profesor/Profesor";
 
 @Entity("lendet")
 export class Lendet {
@@ -27,6 +27,14 @@ export class Lendet {
 
     @Column({ nullable: true })
     templateFileName?: string;
+
+    // Relacioni me Profesorin - nje profesor mund te ketë shumë lëndë
+    @ManyToOne(() => Profesor, (profesor) => profesor.lendet, { onDelete: "SET NULL", nullable: true })
+    @JoinColumn({ name: "profesorId" })
+    profesor?: Profesor;
+
+    @Column({ nullable: true })
+    profesorId?: number;
 
     @OneToMany(() => Idete, (idete) => idete.lenda)
     idete: Idete[];

@@ -4,25 +4,19 @@ import { AppDataSource } from "../../data-source";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-//ketu thirren kejt tabelat qe ti ki me punu qofte me njo ose dy ose tri ose...
+// Import entities - tani përdorim vetëm tabelat e unifikuara pa duplikatat
 import { Profesor } from "../../entities/Profesor/Profesor";
-import { Lendetp } from "../../entities/Profesor/Lendetp";
-import { Idetep } from "../../entities/Profesor/Idetep";
-import { DorezimiIdesp } from "../../entities/Profesor/dorezimiIdesp";
-import { Projektip } from "../../entities/Profesor/projektip";
 import { DorezimiIdes } from "../../entities/Student/dorezimiides";
 import { Student } from "../../entities/Student/Student";
 import { Lendet } from "../../entities/Student/Lendet";
+import { Idete } from "../../entities/Student/Idete";
 
 const router = Router();
 const profesorRepository = AppDataSource.getRepository(Profesor);
-const lendetpRepository = AppDataSource.getRepository(Lendetp);
-const idetepRepository = AppDataSource.getRepository(Idetep);
-const dorezimpRepository = AppDataSource.getRepository(DorezimiIdesp);
-const projektipRepository = AppDataSource.getRepository(Projektip);
-const dorezimiStudentRepository = AppDataSource.getRepository(DorezimiIdes);
-const studentRepository = AppDataSource.getRepository(Student);
 const lendetRepository = AppDataSource.getRepository(Lendet);
+const ideteRepository = AppDataSource.getRepository(Idete);
+const dorezimiIdeeshRepository = AppDataSource.getRepository(DorezimiIdes);
+const studentRepository = AppDataSource.getRepository(Student);
 
 // Multer config for file upload (disk storage)
 const uploadDir = path.resolve(process.cwd(), "uploads", "dorezime");
@@ -93,6 +87,7 @@ const getYearLabel = (yearNumber: number) => {
 };
 
 // Dashboard snapshot for a profesor
+// ✅ ALIGNED WITH STUDENT: Uses same Lendet entity and structure
 router.get("/:id/dashboard", async (req: Request, res: Response) => {
   const profesorId = Number(req.params.id);
   if (Number.isNaN(profesorId)) {
@@ -105,7 +100,12 @@ router.get("/:id/dashboard", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Profesor not found" });
     }
 
-    const lendet = await lendetpRepository.find();
+    // ✅ UNIFIED: Query nga tabela e njëjtë Lendet, filtron me profesorId (Role-based)
+    const lendet = await lendetRepository.find({
+      where: { profesor: { id: profesorId } },
+      order: { viti: "ASC", semestri: "ASC" },
+    });
+    
     const yearMap = new Map<number, {
       id: string;
       label: string;
@@ -151,6 +151,7 @@ router.get("/:id/dashboard", async (req: Request, res: Response) => {
 });
 
 // Curriculum view per year
+// ✅ PERFECTLY ALIGNED WITH STUDENT: Same endpoint structure, same data format
 router.get("/:id/lendet/:yearId", async (req: Request, res: Response) => {
   const profesorId = Number(req.params.id);
   const yearParam = Number(req.params.yearId);
@@ -168,8 +169,11 @@ router.get("/:id/lendet/:yearId", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Profesor not found" });
     }
 
-    const lendet = await lendetpRepository.find({
-      where: { viti: yearParam },
+    // ✅ UNIFIED: Same query as Student - show all subjects for this year
+    const lendet = await lendetRepository.find({
+      where: { 
+        viti: yearParam
+      },
       order: { semestri: "ASC", emriLendes: "ASC" },
     });
 
@@ -190,8 +194,8 @@ router.get("/:id/lendet/:yearId", async (req: Request, res: Response) => {
 
       semesterMap.get(lenda.semestri)!.subjects.push({
         id: lenda.id,
-        name: lenda.emriLendes,
-        isElective: lenda.isZgjedhore,
+        name: lenda.emriLendes,  // ✅ Uses emriLendes (not emrip)
+        isElective: lenda.isZgjedhore,  // ✅ Uses isZgjedhore (not isElectivep)
       });
     });
 
@@ -218,6 +222,7 @@ router.get("/:id/lendet/:yearId", async (req: Request, res: Response) => {
 });
 
 // Idea listing per profesor (optional filter by lenda)
+// ✅ UNIFIED WITH STUDENT: Reads from same Idete table, shows all ideas (student + profesor)
 router.get("/:id/idet", async (req: Request, res: Response) => {
   const profesorId = Number(req.params.id);
   const lendaId = req.query.lendaId ? Number(req.query.lendaId) : undefined;
@@ -236,28 +241,31 @@ router.get("/:id/idet", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Profesor not found" });
     }
 
-    const where: FindOptionsWhere<Idetep> = {
-      profesor: { id: profesorId },
-      ...(lendaId ? { lenda: { id: lendaId } } : {}),
-    };
+    // ✅ UNIFIED: Query same Idete table with optional lenda filter
+    const whereCondition: FindOptionsWhere<Idete> = lendaId 
+      ? { lenda: { id: lendaId } }
+      : {};
 
-    const ideas = await idetepRepository.find({
-      where,
-      relations: ["lenda"],
+    const ideas = await ideteRepository.find({
+      where: whereCondition,
+      relations: ["lenda", "student", "profesor"],
       order: { createdAt: "DESC" },
     });
 
-    res.json(
-      ideas.map((idea) => ({
-        id: idea.id,
-        title: idea.titulli,
-        shorthand: idea.shkurtesa,
-        subject: idea.lenda
-          ? { id: idea.lenda.id, name: idea.lenda.emriLendes }
-          : null,
-        createdAt: idea.createdAt,
-      }))
-    );
+    // ✅ ALIGNED: Same response structure as Student, but includes type and studentName for profesor view
+    const ideasData = ideas.map((idea) => ({
+      id: idea.id,
+      title: idea.titulli,  // ✅ Uses titulli (not titullip)
+      shorthand: idea.shkurtesa,  // ✅ Uses shkurtesa (not shkurtesap)
+      subject: idea.lenda
+        ? { id: idea.lenda.id, name: idea.lenda.emriLendes }  // ✅ Uses emriLendes
+        : null,
+      createdAt: idea.createdAt,
+      type: idea.student ? "student" : "profesor",  // Extra info for profesor to distinguish
+      studentName: idea.student ? `${idea.student.emri} ${idea.student.mbiemri}` : null,
+    }));
+
+    res.json(ideasData);
   } catch (error) {
     res.status(500).json({ message: "Error fetching ideas", error });
   }
@@ -287,19 +295,20 @@ router.post("/:id/idet", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Profesor not found" });
     }
 
-    const lenda = await lendetpRepository.findOneBy({ id: parsedLendaId });
+    const lenda = await lendetRepository.findOneBy({ id: parsedLendaId });
     if (!lenda) {
       return res.status(404).json({ message: "Lenda nuk u gjet" });
     }
 
-    const idea = idetepRepository.create({
+    const idea = ideteRepository.create({
       titulli: titulli.trim(),
       shkurtesa: shkurtesa.trim(),
       profesor,
       lenda,
+      viti: lenda.viti,
     });
 
-    const savedIdea = await idetepRepository.save(idea);
+    const savedIdea = await ideteRepository.save(idea);
 
     res.status(201).json({
       id: savedIdea.id,
@@ -350,7 +359,7 @@ router.post("/:id/dorezime", upload.single("file"), async (req: Request, res: Re
     }
 
     console.log("Found profesor:", profesor.emri);
-    const lenda = await lendetpRepository.findOneBy({ id: parsedLendaId });
+    const lenda = await lendetRepository.findOneBy({ id: parsedLendaId });
     if (!lenda) {
       console.log("ERROR: Lenda not found");
       return res.status(404).json({ message: "Lenda nuk u gjet" });
@@ -362,7 +371,7 @@ router.post("/:id/dorezime", upload.single("file"), async (req: Request, res: Re
     const filePath = path.relative(process.cwd(), req.file.path).replace(/\\/g, "/");
     console.log("File path to save:", filePath);
 
-    const record = dorezimpRepository.create({
+    const record = dorezimiIdeeshRepository.create({
       profesor,
       lenda,
       fileDorezimi: filePath,
@@ -371,7 +380,7 @@ router.post("/:id/dorezime", upload.single("file"), async (req: Request, res: Re
     });
 
     console.log("Created record object", { isShabllon: record.isShabllon });
-    const saved = await dorezimpRepository.save(record);
+    const saved = await dorezimiIdeeshRepository.save(record);
     console.log("SAVED TO DB:", saved);
 
     res.status(201).json({
@@ -406,13 +415,13 @@ router.get("/:id/dorezime/shabllon", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Profesor not found" });
     }
 
-    const lenda = await lendetpRepository.findOneBy({ id: lendaId });
+    const lenda = await lendetRepository.findOneBy({ id: lendaId });
     if (!lenda) {
       return res.status(404).json({ message: "Lenda nuk u gjet" });
     }
 
     // Find template (isShabllon: true)
-    const template = await dorezimpRepository.findOne({
+    const template = await dorezimiIdeeshRepository.findOne({
       where: {
         lenda: { id: lendaId },
         isShabllon: true,
@@ -455,12 +464,12 @@ router.get("/:id/dorezime", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Profesor not found" });
     }
 
-    const lenda = await lendetpRepository.findOneBy({ id: lendaId });
+    const lenda = await lendetRepository.findOneBy({ id: lendaId });
     if (!lenda) {
       return res.status(404).json({ message: "Lenda nuk u gjet" });
     }
 
-    const submission = await dorezimpRepository.findOne({
+    const submission = await dorezimiIdeeshRepository.findOne({
       where: {
         profesor: { id: profesorId },
         lenda: { id: lendaId },
@@ -513,13 +522,13 @@ router.get("/:id/dorezime-studentesh/:lendaId", async (req: Request, res: Respon
       return res.status(404).json({ message: "Profesor not found" });
     }
 
-    const lenda = await lendetpRepository.findOneBy({ id: lendaId });
+    const lenda = await lendetRepository.findOneBy({ id: lendaId });
     if (!lenda) {
       return res.status(404).json({ message: "Lenda nuk u gjet" });
     }
 
     // Fetch all student submissions for this subject
-    const submissions = await dorezimiStudentRepository.find({
+    const submissions = await dorezimiIdeeshRepository.find({
       where: {
         lenda: { id: lendaId },
         isShabllon: false,
@@ -528,14 +537,17 @@ router.get("/:id/dorezime-studentesh/:lendaId", async (req: Request, res: Respon
       order: { createdAt: "DESC" },
     });
 
-    const submissionsData = submissions.map((sub) => ({
+    // Filter to get only student submissions (without profesor assigned)
+    const studentSubmissions = submissions.filter(sub => !sub.profesorId);
+
+    const submissionsData = studentSubmissions.map((sub) => ({
       id: sub.id,
-      student: {
+      student: sub.student ? {
         id: sub.student.id,
         emri: sub.student.emri,
         mbiemri: sub.student.mbiemri,
         fullName: `${sub.student.emri} ${sub.student.mbiemri}`.trim(),
-      },
+      } : null,
       fileName: sub.fileName,
       fileDorezimi: sub.fileDorezimi,
       fileUrl: sub.fileDorezimi.startsWith("uploads/")
@@ -632,7 +644,7 @@ router.post("/:id/lendet/:lendaId/template", uploadTemplate.single("file"), asyn
   }
 
   try {
-    const lenda = await lendetpRepository.findOneBy({ id: lendaId });
+    const lenda = await lendetRepository.findOneBy({ id: lendaId });
     console.log(`[Template Upload] Lenda found:`, lenda ? `ID ${lenda.id} - ${lenda.emriLendes}` : 'NULL');
 
     if (!lenda) {
@@ -653,7 +665,7 @@ router.post("/:id/lendet/:lendaId/template", uploadTemplate.single("file"), asyn
     // Përditëso lëndën me template-in e ri
     lenda.templateFile = relativePath;
     lenda.templateFileName = req.file.originalname;
-    await lendetpRepository.save(lenda);
+    await lendetRepository.save(lenda);
 
     res.json({
       message: "Template u ngarkua me sukses!",
@@ -674,7 +686,7 @@ router.get("/:id/lendet/:lendaId/template", async (req: Request, res: Response) 
   }
 
   try {
-    const lenda = await lendetpRepository.findOneBy({ id: lendaId });
+    const lenda = await lendetRepository.findOneBy({ id: lendaId });
 
     if (!lenda) {
       return res.status(404).json({ message: "Lenda not found" });
@@ -704,7 +716,7 @@ router.delete("/:id/lendet/:lendaId/template", async (req: Request, res: Respons
   }
 
   try {
-    const lenda = await lendetpRepository.findOneBy({ id: lendaId });
+    const lenda = await lendetRepository.findOneBy({ id: lendaId });
 
     if (!lenda) {
       return res.status(404).json({ message: "Lenda not found" });
@@ -723,7 +735,7 @@ router.delete("/:id/lendet/:lendaId/template", async (req: Request, res: Respons
     // Pastro fushat në databazë
     lenda.templateFile = null as any;
     lenda.templateFileName = null as any;
-    await lendetpRepository.save(lenda);
+    await lendetRepository.save(lenda);
 
     console.log(`[Template Delete] Template u fshi për Lenda ID: ${lendaId}`);
 

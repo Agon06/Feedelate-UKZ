@@ -15,6 +15,8 @@ const Lendetp = () => {
   const [status, setStatus] = useState({ loading: true, error: null });
   const [templateInfo, setTemplateInfo] = useState({ hasTemplate: false, fileName: '' });
   const [uploadingTemplate, setUploadingTemplate] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
+  const [debugInfo, setDebugInfo] = useState(null);
 
   const baseSemesters = useMemo(() => {
     const parsed = Number(yearId);
@@ -65,6 +67,18 @@ const Lendetp = () => {
       try {
         const data = await getProfesorYearData(PROFESOR_ID, yearId);
         if (!isMounted) return;
+        
+        // Debug: Log response
+        console.log('API Response:', data);
+        setDebugInfo({
+          success: true,
+          profesorId: PROFESOR_ID,
+          yearId: yearId,
+          semesterCount: data?.semesters?.length || 0,
+          subjectCount: data?.semesters?.reduce((sum, s) => sum + (s.subjects?.length || 0), 0) || 0,
+          rawData: data
+        });
+        
         setYearData(data);
         const stored = localStorage.getItem(electiveStorageKey);
         let initialElectives = Array.isArray(data?.selectedElectives) ? data.selectedElectives : [];
@@ -82,6 +96,14 @@ const Lendetp = () => {
         setStatus({ loading: false, error: null });
       } catch (error) {
         if (!isMounted) return;
+        console.error('API Error:', error);
+        setDebugInfo({
+          success: false,
+          profesorId: PROFESOR_ID,
+          yearId: yearId,
+          error: error?.message || error?.toString(),
+          errorDetails: error
+        });
         setStatus({
           loading: false,
           error: error?.message ?? 'Nuk u lexuan lendet per kete vit.',
@@ -422,9 +444,63 @@ const Lendetp = () => {
 
         {status.loading && <div style={{ marginTop: 32, textAlign: 'center' }}>Duke u ngarkuar...</div>}
         {status.error && (
-          <div style={{ ...bannerStyle, background: 'rgba(255,82,82,0.2)', border: '1px solid rgba(255,82,82,0.5)' }}>
-            {status.error}
-          </div>
+          <>
+            <div style={{ ...bannerStyle, background: 'rgba(255,82,82,0.2)', border: '1px solid rgba(255,82,82,0.5)' }}>
+              {status.error}
+            </div>
+            <button
+              onClick={() => setShowDebug(!showDebug)}
+              style={{
+                marginTop: 12,
+                padding: '0.5rem 1rem',
+                background: 'rgba(251,211,141,0.2)',
+                border: '1px solid rgba(251,211,141,0.5)',
+                borderRadius: 8,
+                color: '#fbd38d',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontSize: 13
+              }}
+            >
+              {showDebug ? '🔽 Fshih Debug Info' : '🔍 Shfaq Debug Info'}
+            </button>
+            {showDebug && debugInfo && (
+              <div style={{
+                ...bannerStyle,
+                background: 'rgba(251,211,141,0.1)',
+                border: '1px solid rgba(251,211,141,0.3)',
+                textAlign: 'left',
+                fontSize: 12,
+                fontFamily: 'monospace',
+                whiteSpace: 'pre-wrap',
+                marginTop: 8
+              }}>
+                <strong>Debug Information:</strong><br/>
+                Profesor ID: {debugInfo.profesorId}<br/>
+                Year ID: {debugInfo.yearId}<br/>
+                Status: {debugInfo.success ? '✅ Success' : '❌ Failed'}<br/>
+                {debugInfo.success ? (
+                  <>
+                    Semesters: {debugInfo.semesterCount}<br/>
+                    Total Subjects: {debugInfo.subjectCount}<br/>
+                    <br/>
+                    <strong>Raw Response:</strong><br/>
+                    {JSON.stringify(debugInfo.rawData, null, 2)}
+                  </>
+                ) : (
+                  <>
+                    Error: {debugInfo.error}<br/>
+                    <br/>
+                    <strong>Zgjidhjet e mundshme:</strong><br/>
+                    1. Kontrollo që Backend është duke u ekzekutuar (http://localhost:5000)<br/>
+                    2. Ekzekuto SQL: Backend/insert_test_lendet_for_profesor.sql<br/>
+                    3. Verifikoni që profesorId=1 ekziston në 'profesoret' table<br/>
+                    4. Verifikoni që ka lëndë me profesorId=1 në 'lendet' table
+                  </>
+                )}
+              </div>
+            )}
+          </>
         )}
 
         {!status.loading && !status.error && (

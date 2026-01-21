@@ -35,16 +35,12 @@ const Idetep = () => {
   const loadFiles = useCallback(async () => {
     setFilesStatus({ loading: true, error: null });
     try {
-      // Mock data për tani - në të ardhmen do të vijnë nga API
-      const mockFiles = [
-        { id: 1, fileName: 'Projekti_Final.docx', studentName: 'Agon Berisha', uploadDate: '2024-01-10', fileSize: '2.3 MB', ideaTitle: 'Sistema e Menaxhimit' },
-        { id: 2, fileName: 'Detyra_Semestri.docx', studentName: 'Arta Krasniqi', uploadDate: '2024-01-12', fileSize: '1.8 MB', ideaTitle: 'Aplikacioni Mobil' },
-        { id: 3, fileName: 'Raporti_Hulumtimi.docx', studentName: 'Blend Morina', uploadDate: '2024-01-09', fileSize: '3.1 MB', ideaTitle: 'Web Platform' },
-        { id: 4, fileName: 'Analiza_Sigurisë.docx', studentName: 'Diona Shabani', uploadDate: '2024-01-08', fileSize: '1.1 MB', ideaTitle: 'Siguria ne Cloud' },
-        { id: 5, fileName: 'Planifikimi_UI_UX.docx', studentName: 'Erblin Gashi', uploadDate: '2024-01-11', fileSize: '2.0 MB', ideaTitle: 'Dashboard Analitik' }
-      ].sort((a, b) => a.studentName.localeCompare(b.studentName, 'sq'));
+      // TODO: Replace with real API call when backend endpoint is ready
+      // const response = await getProfesorSubmittedFiles(PROFESOR_ID, lendaId);
+      // setFiles(response);
       
-      setFiles(mockFiles);
+      // For now, show empty state
+      setFiles([]);
       setFilesStatus({ loading: false, error: null });
     } catch (error) {
       setFilesStatus({
@@ -304,9 +300,19 @@ const Idetep = () => {
               {!listStatus.loading && !listStatus.error && ideas
                 .filter(idea => 
                   idea.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  idea.shorthand.toLowerCase().includes(searchTerm.toLowerCase())
+                  idea.shorthand.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  (idea.studentName && idea.studentName.toLowerCase().includes(searchTerm.toLowerCase()))
                 )
-                .sort((a, b) => (a.student?.fullName || '').localeCompare(b.student?.fullName || '', 'sq'))
+                .sort((a, b) => {
+                  // Rendit studentët para, pastaj profesorin
+                  if (a.type === 'student' && b.type === 'profesor') return -1;
+                  if (a.type === 'profesor' && b.type === 'student') return 1;
+                  // Nëse të dy janë të njëjtit tip, rendit alfabetikisht
+                  if (a.type === 'student' && b.type === 'student') {
+                    return (a.studentName || '').localeCompare(b.studentName || '', 'sq');
+                  }
+                  return 0;
+                })
                 .length === 0 && (
                 <div style={{ textAlign: 'center', opacity: 0.8 }}>
                   {searchTerm ? 'Nuk u gjet asnjë ide me këtë kriter.' : 'Ende nuk ka ide për këtë lëndë.'}
@@ -315,19 +321,44 @@ const Idetep = () => {
               {!listStatus.loading && !listStatus.error && ideas
                 .filter(idea => 
                   idea.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  idea.shorthand.toLowerCase().includes(searchTerm.toLowerCase())
+                  idea.shorthand.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  (idea.studentName && idea.studentName.toLowerCase().includes(searchTerm.toLowerCase()))
                 )
-                .sort((a, b) => (a.student?.fullName || '').localeCompare(b.student?.fullName || '', 'sq'))
+                .sort((a, b) => {
+                  // Rendit studentët para, pastaj profesorin
+                  if (a.type === 'student' && b.type === 'profesor') return -1;
+                  if (a.type === 'profesor' && b.type === 'student') return 1;
+                  // Nëse të dy janë të njëjtit tip, rendit alfabetikisht
+                  if (a.type === 'student' && b.type === 'student') {
+                    return (a.studentName || '').localeCompare(b.studentName || '', 'sq');
+                  }
+                  return 0;
+                })
                 .map((idea) => (
-                <div key={idea.id} style={ideaItem}>
+                <div key={`${idea.type}-${idea.id}`} style={ideaItem}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, fontSize: 15 }}>{idea.title}</div>
+                    <div style={{ fontWeight: 600, fontSize: 15 }}>
+                      {idea.title}
+                      {idea.type === 'student' && (
+                        <span style={{ 
+                          marginLeft: 8, 
+                          fontSize: 11, 
+                          padding: '2px 6px', 
+                          borderRadius: 4, 
+                          background: 'rgba(100, 200, 255, 0.15)',
+                          color: '#64c8ff',
+                          border: '1px solid rgba(100, 200, 255, 0.3)'
+                        }}>
+                          Student
+                        </span>
+                      )}
+                    </div>
                     <div style={{ fontSize: 12, opacity: 0.8, marginTop: 4 }}>
                       {idea.subject?.name && <span>{idea.subject.name}</span>}
-                      {idea.student?.fullName && (
+                      {idea.studentName && (
                         <span>
                           {idea.subject?.name ? ' • ' : ''}
-                          {idea.student.fullName}
+                          {idea.studentName}
                         </span>
                       )}
                     </div>
@@ -375,9 +406,10 @@ const Idetep = () => {
                     Titulli: i.title,
                     Shkurtesa: i.shorthand,
                     Lenda: i.subject?.name ?? '',
-                    Student: i.student?.fullName ?? ''
+                    Student: i.studentName ?? 'Profesor',
+                    Tipi: i.type === 'student' ? 'Student' : 'Profesor'
                   }));
-                  const header = ['Titulli','Shkurtesa','Lenda','Student'];
+                  const header = ['Titulli','Shkurtesa','Lenda','Student','Tipi'];
                   const csv = [header.join(','), ...rows.map(r => header.map(h => `"${String(r[h] ?? '').replace(/"/g,'""')}"`).join(','))].join('\n');
                   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                   const url = URL.createObjectURL(blob);

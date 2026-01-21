@@ -7,10 +7,6 @@ import { Admin } from "./entities/Admin/Admin";
 import { Admin2 } from "./entities/Admin/admin2";
 import { Profesor } from "./entities/Profesor/Profesor";
 import { Profesor22 } from "./entities/Profesor/prof";
-import { Lendetp } from "./entities/Profesor/Lendetp";
-import { Idetep } from "./entities/Profesor/Idetep";
-import { DorezimiIdesp } from "./entities/Profesor/dorezimiIdesp";
-import { Projektip } from "./entities/Profesor/projektip";
 import { Student } from "./entities/Student/Student";
 import { Idete } from "./entities/Student/Idete";
 import { Lendet } from "./entities/Student/Lendet";
@@ -20,7 +16,6 @@ import { dorzimiProjektit } from "./entities/Student/dorzimiProjektit";
 import { Test } from "./entities/test";
 
 dotenv.config();
-//e lidh bc me db,  i k
 
 export const AppDataSource = new DataSource({
   type: "mysql",
@@ -37,10 +32,6 @@ export const AppDataSource = new DataSource({
     Admin2,
     Profesor,
     Profesor22,
-    Lendetp,
-    Idetep,
-    DorezimiIdesp,
-    Projektip,
     Student,
     Idete,
     Lendet,

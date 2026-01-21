@@ -4,7 +4,6 @@ import { AppDataSource } from "../data-source";
 import { Lendet } from "../entities/Student/Lendet";
 import { Student } from "../entities/Student/Student";
 import { Profesor } from "../entities/Profesor/Profesor";
-import { Lendetp } from "../entities/Profesor/Lendetp";
 
 const router = Router();
 // Route to setup initial data
@@ -16,7 +15,7 @@ router.post("/setup", async (req, res) => {
 
     const lendetRepository = AppDataSource.getRepository(Lendet);
 
-    // Seed Profesor + Lendetp (professor curriculum subjects)
+    // Seed Profesor + Lendet (professor curriculum subjects - unified)
     router.post("/setup/profesor", async (req, res) => {
       try {
         if (!AppDataSource.isInitialized) {
@@ -24,7 +23,7 @@ router.post("/setup", async (req, res) => {
         }
 
         const profesorRepository = AppDataSource.getRepository(Profesor);
-        const lendetpRepository = AppDataSource.getRepository(Lendetp);
+        const lendetRepository = AppDataSource.getRepository(Lendet);
 
         // Ensure a test profesor exists (id auto-generated)
         let profesor = await profesorRepository.findOne({ where: { email: "test.profesor@uni-gjilan.net" } });
@@ -43,13 +42,16 @@ router.post("/setup", async (req, res) => {
 
         // Seed missing years 1, 2, and 3
         const seedYear = async (year: number, subjects: any[]) => {
-          const existing = await lendetpRepository.find({ where: { viti: year } });
+          const existing = await lendetRepository.find({ where: { viti: year } });
           if (existing.length > 0) {
             return false; // already seeded
           }
           for (const lendaData of subjects) {
-            const lenda = lendetpRepository.create(lendaData);
-            await lendetpRepository.save(lenda);
+            const lenda = lendetRepository.create({
+              ...lendaData,
+              profesor // Lidh lëndën me profesorin
+            });
+            await lendetRepository.save(lenda);
           }
           return true;
         };

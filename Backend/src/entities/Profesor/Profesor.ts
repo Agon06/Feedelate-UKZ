@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from "typeorm";
-import { Idetep } from "./Idetep";
-import { DorezimiIdesp } from "./dorezimiIdesp";
+import { Idete } from "../Student/Idete";
+import { DorezimiIdes } from "../Student/dorezimiides";
+import { Lendet } from "../Student/Lendet";
 
 @Entity("profesoret")
 export class Profesor {
@@ -38,11 +39,17 @@ export class Profesor {
   @Column({ default: 'profesor', type: 'text' })
   roles: string; // JSON stringified array of roles: ["profesor"] or ["profesor", "admin"]
 
-  @OneToMany(() => Idetep, (idetep) => idetep.profesor, { cascade: false })
-  idetep: Idetep[];
+  // Relacioni me Lendet - nje profesor mund te ketë shumë lëndë
+  @OneToMany(() => Lendet, (lenda) => lenda.profesor, { cascade: false })
+  lendet: Lendet[];
 
-  @OneToMany(() => DorezimiIdesp, (dorezim) => dorezim.profesor, { cascade: false })
-  dorezime: DorezimiIdesp[];
+  // Relacioni me Idete - nje profesor mund te shikoje/vlerësojë shumë idetë
+  @OneToMany(() => Idete, (idete) => idete.profesor, { cascade: false })
+  idete: Idete[];
+
+  // Relacioni me Dorezimìdesheet - profesor pranon dorezime
+  @OneToMany(() => DorezimiIdes, (dorezim) => dorezim.profesor, { cascade: false })
+  dorezimeIdeesh: DorezimiIdes[];
 
   @CreateDateColumn()
   createdAt: Date;

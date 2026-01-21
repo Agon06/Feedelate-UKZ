@@ -31,52 +31,16 @@ const request = async (path, options = {}) => {
 export const getProfesorDashboard = (profesorId) =>
   request(`/profesoret/${profesorId}/dashboard`);
 
-export const getProfesorYearData = async (profesorId, yearId) => {
-  try {
-    return await request(`/profesoret/${profesorId}/lendet/${yearId}`);
-  } catch (error) {
-    // Fallback to local mock data in dev when backend is unavailable
-    try {
-      const mockUrl = `/mock/profesor_lendet_${yearId}.json`;
-      const response = await fetch(mockUrl, { headers: { Accept: 'application/json' } });
-      if (response.ok) {
-        const payload = await response.json();
-        return payload;
-      }
-    } catch (_) {
-      // ignore, will rethrow original error
-    }
-    throw error;
-  }
-};
+export const getProfesorYearData = (profesorId, yearId) =>
+  request(`/profesoret/${profesorId}/lendet/${yearId}`);
 
-export const getProfesorIdeas = async (profesorId, lendaId) => {
+export const getProfesorIdeas = (profesorId, lendaId) => {
   const params = new URLSearchParams();
   if (lendaId) {
     params.set('lendaId', lendaId);
   }
   const query = params.toString();
-  try {
-    return await request(`/profesoret/${profesorId}/idet${query ? `?${query}` : ''}`);
-  } catch (error) {
-    // Fallback to local mock data in dev when backend is unavailable
-    try {
-      const mockUrl = `/mock/profesor_idet.json`;
-      const response = await fetch(mockUrl, { headers: { Accept: 'application/json' } });
-      if (response.ok) {
-        const payload = await response.json();
-        // If lendaId is specified, filter the mock data
-        if (lendaId) {
-          const filtered = payload.filter(idea => idea.subject?.id === Number(lendaId));
-          return filtered;
-        }
-        return payload;
-      }
-    } catch (_) {
-      // ignore, will rethrow original error
-    }
-    throw error;
-  }
+  return request(`/profesoret/${profesorId}/idet${query ? `?${query}` : ''}`);
 };
 
 export const createProfesorIdea = (profesorId, payload) =>
@@ -111,24 +75,8 @@ export const getProfesorIdeaSubmission = (profesorId, lendaId) =>
 export const getProfesorTemplate = (profesorId, lendaId) =>
   request(`/profesoret/${profesorId}/dorezime/shabllon?lendaId=${lendaId}`);
 
-export const getStudentSubmissions = async (profesorId, lendaId) => {
-  try {
-    return await request(`/profesoret/${profesorId}/dorezime-studentesh/${lendaId}`);
-  } catch (error) {
-    // Fallback to local mock data in dev when backend is unavailable
-    try {
-      const mockUrl = `/mock/profesor_dorezime_studentesh.json`;
-      const response = await fetch(mockUrl, { headers: { Accept: 'application/json' } });
-      if (response.ok) {
-        const payload = await response.json();
-        return payload;
-      }
-    } catch (_) {
-      // ignore, will rethrow original error
-    }
-    throw error;
-  }
-};
+export const getStudentSubmissions = (profesorId, lendaId) =>
+  request(`/profesoret/${profesorId}/dorezime-studentesh/${lendaId}`);
 
 export const getProfesorProjects = (profesorId) =>
   request(`/projektip/${profesorId}`);

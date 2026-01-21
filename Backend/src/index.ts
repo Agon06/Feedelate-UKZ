@@ -6,6 +6,7 @@ import passport from "./config/passport";
 import { AppDataSource } from "./data-source";
 import userRoutes from "./routes/userRoutes";
 import profesorRoutes from "./routes/Profesor/profesorRoutes";
+import projektiRoutesp from "./routes/Profesor/projektiRoutesp";  // ✅ ADD: Mount projekt routes
 import studentRoutes from "./routes/Student/studentRoutes";
 import adminRoutes from "./routes/Admin/adminRoutes";
 import setupRoutes from "./routes/setup";
@@ -57,6 +58,7 @@ app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/profesoret", profesorRoutes);
+app.use("/api/projektip", projektiRoutesp);  // ✅ FIX: Mount projekt routes (was causing 404)
 app.use("/api/studentet", studentRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api", setupRoutes);

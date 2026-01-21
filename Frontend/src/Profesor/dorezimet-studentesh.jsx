@@ -13,7 +13,6 @@ const DoreziметStudentesh = () => {
   const [status, setStatus] = useState({ loading: true, error: null });
   const [isMobile, setIsMobile] = useState(false);
   const [bulkStatus, setBulkStatus] = useState({ loading: false, error: null });
-  const [mockUrls, setMockUrls] = useState([]); // track blob URLs to revoke later
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -88,7 +87,6 @@ const DoreziметStudentesh = () => {
 
     return () => {
       isMounted = false;
-      mockUrls.forEach((u) => URL.revokeObjectURL(u));
     };
   }, [lendaId]);
 
