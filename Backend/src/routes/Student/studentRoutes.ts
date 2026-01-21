@@ -467,14 +467,25 @@ router.post("/:id/dorezime", upload.single("file"), async (req: Request, res: Re
     }
 
     console.log("Found lenda:", lenda.emriLendes);
+    console.log("Lenda details:", { id: lenda.id, name: lenda.emriLendes, profesorId: lenda.profesorId });
 
     // Get relative path from uploads folder
     const filePath = path.relative(process.cwd(), req.file.path).replace(/\\/g, "/");
     console.log("File path to save:", filePath);
 
+    // Gjej profesorin e lëndës automatikisht
+    let profesorId: number | undefined = undefined;
+    if (lenda.profesorId) {
+      profesorId = lenda.profesorId;
+      console.log("✓ Automatikisht u lidh me profesorin ID:", profesorId);
+    } else {
+      console.log("⚠ PROBLEM: Lënda nuk ka profesorId të vendosur!");
+    }
+
     const record = dorezimRepository.create({
       student,
       lenda,
+      profesorId: profesorId, // Vendos profesorId automatikisht
       fileDorezimi: filePath,
       fileName: req.file.originalname,
       isShabllon: false,
@@ -594,9 +605,10 @@ router.get("/:id/dorezime", async (req: Request, res: Response) => {
         fileName: submission.fileName,
         fileDorezimi: submission.fileDorezimi,
         fileUrl,
-        status: null,
-        vleresimi: null,
-        feedbackText: null,
+        status: submission.feedbackText ? "Vlerësuar" : "Në pritje",
+        vleresimi: submission.vleresimi || null,
+        feedbackText: submission.feedbackText || null,
+        feedbackDate: submission.feedbackDate || null,
         createdAt: submission.createdAt,
       };
     });
@@ -913,9 +925,9 @@ router.get("/:id/projekti/:lendaId/template", async (req: Request, res: Response
     }
 
     if (!lenda.templateFile || !lenda.templateFileName) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         message: "Nuk ka template për këtë lëndë",
-        hasTemplate: false 
+        hasTemplate: false
       });
     }
 

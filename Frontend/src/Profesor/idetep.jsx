@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import JSZip from 'jszip';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getProfesorIdeas } from '../services/profesorApi';
+import { getProfesorIdeas, getStudentSubmissions } from '../services/profesorApi';
 import './idetep.css';
 
 const Idetep = () => {
@@ -33,14 +33,25 @@ const Idetep = () => {
   }, [PROFESOR_ID, lendaId]);
 
   const loadFiles = useCallback(async () => {
+    if (!lendaId) {
+      setFilesStatus({ loading: false, error: null });
+      setFiles([]);
+      return;
+    }
+
     setFilesStatus({ loading: true, error: null });
     try {
-      // TODO: Replace with real API call when backend endpoint is ready
-      // const response = await getProfesorSubmittedFiles(PROFESOR_ID, lendaId);
-      // setFiles(response);
-      
-      // For now, show empty state
-      setFiles([]);
+      const response = await getStudentSubmissions(PROFESOR_ID, lendaId);
+      const filesData = (response.submissions || []).map(file => ({
+        id: file.id,
+        fileName: file.fileName,
+        studentName: file.student?.fullName || 'N/A',
+        fileSize: 'N/A', // Backend nuk e kthen madhësinë, mund të shtohet më vonë
+        uploadDate: new Date(file.createdAt).toLocaleDateString('sq-AL'),
+        fileUrl: file.fileUrl,
+        ideaTitle: null, // Mund të lidhet me idetë nëse nevojitet
+      }));
+      setFiles(filesData);
       setFilesStatus({ loading: false, error: null });
     } catch (error) {
       setFilesStatus({
@@ -48,7 +59,7 @@ const Idetep = () => {
         error: error?.message ?? 'Nuk u lexuan file-t aktuale.',
       });
     }
-  }, []);
+  }, [PROFESOR_ID, lendaId]);
 
   useEffect(() => {
     loadIdeas();
@@ -76,19 +87,18 @@ const Idetep = () => {
     URL.revokeObjectURL(url);
   };
 
-  const buildMockFileContent = (file) => [
-    `Ky është një file testues për: ${file.fileName}`,
-    `Studenti: ${file.studentName}`,
-    `Ideja: ${file.ideaTitle ?? 'N/A'}`,
-    `Data e ngarkimit: ${file.uploadDate}`,
-    '',
-    'Ky përmbajtje është vetëm për testimin e shkarkimit (individuale dhe e përgjithshme).'
-  ].join('\n');
-
-  const createMockFileBlob = (file) => new Blob([buildMockFileContent(file)], { type: 'application/octet-stream' });
-
   const handleDownloadFile = (file) => {
-    triggerDownload(createMockFileBlob(file), file.fileName);
+    const API_BASE_URL = (import.meta.env?.VITE_API_URL ?? 'http://localhost:5000/api').replace(/\/$/, '');
+    const baseUrl = API_BASE_URL.replace('/api', '');
+    const downloadUrl = `${baseUrl}${file.fileUrl}`;
+
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = file.fileName;
+    link.setAttribute('download', file.fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleDownloadAllFiles = async () => {
@@ -97,11 +107,22 @@ const Idetep = () => {
     setFilesStatus((prev) => ({ ...prev, loading: true, error: null }));
 
     try {
+      const API_BASE_URL = (import.meta.env?.VITE_API_URL ?? 'http://localhost:5000/api').replace(/\/$/, '');
+      const baseUrl = API_BASE_URL.replace('/api', '');
       const zip = new JSZip();
-      files.forEach((file) => {
-        const safeName = file.fileName.replace(/\s+/g, '_');
-        zip.file(safeName, buildMockFileContent(file));
-      });
+
+      // Download all files and add to zip
+      for (const file of files) {
+        try {
+          const downloadUrl = `${baseUrl}${file.fileUrl}`;
+          const response = await fetch(downloadUrl);
+          const blob = await response.blob();
+          const safeName = file.fileName.replace(/\s+/g, '_');
+          zip.file(safeName, blob);
+        } catch (err) {
+          console.error('Error downloading file:', file.fileName, err);
+        }
+      }
 
       const archiveBlob = await zip.generateAsync({ type: 'blob' });
       const archiveName = `${subjectName.replace(/\s+/g, '_')}_idet_student.zip`;
@@ -256,9 +277,9 @@ const Idetep = () => {
   return (
     <div style={pageStyle}>
       <div style={modalStyle}>
-        <button 
-          style={closeButtonStyle} 
-          onClick={() => navigate(-1)} 
+        <button
+          style={closeButtonStyle}
+          onClick={() => navigate(-1)}
           aria-label="Mbyll"
           onMouseEnter={(e) => {
             e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
@@ -271,7 +292,7 @@ const Idetep = () => {
         >
           ✕
         </button>
-        
+
         <h2 style={{ margin: '0 0 0.5rem', fontSize: 26, fontWeight: 800 }}>
           {subjectName}
         </h2>
@@ -283,9 +304,9 @@ const Idetep = () => {
           {/* Box për Ide */}
           <div style={columnCard}>
             <h3 style={{ margin: '0 0 1rem', fontSize: 18, color: '#1fdc8c' }}>📋 Lista e Ideve</h3>
-            <input 
-              type="text" 
-              placeholder="Kërko idenë..." 
+            <input
+              type="text"
+              placeholder="Kërko idenë..."
               style={searchInput}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -298,7 +319,7 @@ const Idetep = () => {
                 <div style={{ textAlign: 'center', color: '#f8b4b4' }}>{listStatus.error}</div>
               )}
               {!listStatus.loading && !listStatus.error && ideas
-                .filter(idea => 
+                .filter(idea =>
                   idea.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                   idea.shorthand.toLowerCase().includes(searchTerm.toLowerCase()) ||
                   (idea.studentName && idea.studentName.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -314,12 +335,12 @@ const Idetep = () => {
                   return 0;
                 })
                 .length === 0 && (
-                <div style={{ textAlign: 'center', opacity: 0.8 }}>
-                  {searchTerm ? 'Nuk u gjet asnjë ide me këtë kriter.' : 'Ende nuk ka ide për këtë lëndë.'}
-                </div>
-              )}
+                  <div style={{ textAlign: 'center', opacity: 0.8 }}>
+                    {searchTerm ? 'Nuk u gjet asnjë ide me këtë kriter.' : 'Ende nuk ka ide për këtë lëndë.'}
+                  </div>
+                )}
               {!listStatus.loading && !listStatus.error && ideas
-                .filter(idea => 
+                .filter(idea =>
                   idea.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                   idea.shorthand.toLowerCase().includes(searchTerm.toLowerCase()) ||
                   (idea.studentName && idea.studentName.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -335,53 +356,53 @@ const Idetep = () => {
                   return 0;
                 })
                 .map((idea) => (
-                <div key={`${idea.type}-${idea.id}`} style={ideaItem}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, fontSize: 15 }}>
-                      {idea.title}
-                      {idea.type === 'student' && (
-                        <span style={{ 
-                          marginLeft: 8, 
-                          fontSize: 11, 
-                          padding: '2px 6px', 
-                          borderRadius: 4, 
-                          background: 'rgba(100, 200, 255, 0.15)',
-                          color: '#64c8ff',
-                          border: '1px solid rgba(100, 200, 255, 0.3)'
-                        }}>
-                          Student
-                        </span>
-                      )}
+                  <div key={`${idea.type}-${idea.id}`} style={ideaItem}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, fontSize: 15 }}>
+                        {idea.title}
+                        {idea.type === 'student' && (
+                          <span style={{
+                            marginLeft: 8,
+                            fontSize: 11,
+                            padding: '2px 6px',
+                            borderRadius: 4,
+                            background: 'rgba(100, 200, 255, 0.15)',
+                            color: '#64c8ff',
+                            border: '1px solid rgba(100, 200, 255, 0.3)'
+                          }}>
+                            Student
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 12, opacity: 0.8, marginTop: 4 }}>
+                        {idea.subject?.name && <span>{idea.subject.name}</span>}
+                        {idea.studentName && (
+                          <span>
+                            {idea.subject?.name ? ' • ' : ''}
+                            {idea.studentName}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div style={{ fontSize: 12, opacity: 0.8, marginTop: 4 }}>
-                      {idea.subject?.name && <span>{idea.subject.name}</span>}
-                      {idea.studentName && (
-                        <span>
-                          {idea.subject?.name ? ' • ' : ''}
-                          {idea.studentName}
-                        </span>
-                      )}
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <span style={tagStyle}>{idea.shorthand}</span>
+                      <button
+                        style={tinyButton}
+                        onClick={() => navigate('/profesor/feedback', { state: { lendaId, subject: subjectName, ideaId: idea.id } })}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(23, 199, 122, 0.15)';
+                          e.currentTarget.style.borderColor = '#17c77a';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
+                        }}
+                      >
+                        Feedback
+                      </button>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <span style={tagStyle}>{idea.shorthand}</span>
-                    <button
-                      style={tinyButton}
-                      onClick={() => navigate('/profesor/feedback', { state: { lendaId, subject: subjectName, ideaId: idea.id } })}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(23, 199, 122, 0.15)';
-                        e.currentTarget.style.borderColor = '#17c77a';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                        e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
-                      }}
-                    >
-                      Feedback
-                    </button>
-                  </div>
-                </div>
-              ))}
+                ))}
             </div>
             <div style={{ display: 'flex', gap: 12, marginTop: '1.5rem' }}>
               <button
@@ -409,13 +430,13 @@ const Idetep = () => {
                     Student: i.studentName ?? 'Profesor',
                     Tipi: i.type === 'student' ? 'Student' : 'Profesor'
                   }));
-                  const header = ['Titulli','Shkurtesa','Lenda','Student','Tipi'];
-                  const csv = [header.join(','), ...rows.map(r => header.map(h => `"${String(r[h] ?? '').replace(/"/g,'""')}"`).join(','))].join('\n');
+                  const header = ['Titulli', 'Shkurtesa', 'Lenda', 'Student', 'Tipi'];
+                  const csv = [header.join(','), ...rows.map(r => header.map(h => `"${String(r[h] ?? '').replace(/"/g, '""')}"`).join(','))].join('\n');
                   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement('a');
                   a.href = url;
-                  a.download = `idet_${subjectName.replace(/\s+/g,'_')}.csv`;
+                  a.download = `idet_${subjectName.replace(/\s+/g, '_')}.csv`;
                   document.body.appendChild(a);
                   a.click();
                   document.body.removeChild(a);
@@ -436,9 +457,9 @@ const Idetep = () => {
           {/* Box për File-t Word */}
           <div style={columnCard}>
             <h3 style={{ margin: '0 0 1rem', fontSize: 18, color: '#6495ed' }}>📄 File-t e Dërguara</h3>
-            <input 
-              type="text" 
-              placeholder="Kërko file..." 
+            <input
+              type="text"
+              placeholder="Kërko file..."
               style={searchInput}
               value={fileSearchTerm}
               onChange={(e) => setFileSearchTerm(e.target.value)}
@@ -451,80 +472,80 @@ const Idetep = () => {
                 <div style={{ textAlign: 'center', color: '#f8b4b4' }}>{filesStatus.error}</div>
               )}
               {!filesStatus.loading && !filesStatus.error && files
-                .filter(file => 
+                .filter(file =>
                   file.fileName.toLowerCase().includes(fileSearchTerm.toLowerCase()) ||
                   file.studentName.toLowerCase().includes(fileSearchTerm.toLowerCase())
                 )
                 .length === 0 && (
-                <div style={{ textAlign: 'center', opacity: 0.8 }}>
-                  {fileSearchTerm ? 'Nuk u gjet asnjë file me këtë kriter.' : 'Ende nuk ka file të dërguar.'}
-                </div>
-              )}
+                  <div style={{ textAlign: 'center', opacity: 0.8 }}>
+                    {fileSearchTerm ? 'Nuk u gjet asnjë file me këtë kriter.' : 'Ende nuk ka file të dërguar.'}
+                  </div>
+                )}
               {!filesStatus.loading && !filesStatus.error && files
-                .filter(file => 
+                .filter(file =>
                   file.fileName.toLowerCase().includes(fileSearchTerm.toLowerCase()) ||
                   file.studentName.toLowerCase().includes(fileSearchTerm.toLowerCase())
                 )
                 .map((file) => (
-                <div key={file.id} style={ideaItem}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, fontSize: 15 }}>📝 {file.fileName}</div>
-                    <div style={{ fontSize: 12, opacity: 0.8, marginTop: 4 }}>
-                      <span>{file.studentName}</span>
-                      <span style={{ margin: '0 0.5rem' }}>•</span>
-                      <span>{file.fileSize}</span>
-                      <span style={{ margin: '0 0.5rem' }}>•</span>
-                      <span>{file.uploadDate}</span>
-                    </div>
-                    {file.ideaTitle && (
-                      <div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>
-                        Ideja: {file.ideaTitle}
+                  <div key={file.id} style={ideaItem}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, fontSize: 15 }}>📝 {file.fileName}</div>
+                      <div style={{ fontSize: 12, opacity: 0.8, marginTop: 4 }}>
+                        <span>{file.studentName}</span>
+                        <span style={{ margin: '0 0.5rem' }}>•</span>
+                        <span>{file.fileSize}</span>
+                        <span style={{ margin: '0 0.5rem' }}>•</span>
+                        <span>{file.uploadDate}</span>
                       </div>
-                    )}
+                      {file.ideaTitle && (
+                        <div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>
+                          Ideja: {file.ideaTitle}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <button
+                        style={downloadButton}
+                        onClick={() => handleDownloadFile(file)}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(100, 149, 237, 0.15)';
+                          e.currentTarget.style.borderColor = '#6495ed';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.borderColor = 'rgba(100,149,237,0.35)';
+                        }}
+                      >
+                        ⬇ Shkarko
+                      </button>
+                      <button
+                        style={tinyButton}
+                        onClick={() => navigate('/profesor/feedback', {
+                          state: {
+                            lendaId,
+                            subject: subjectName,
+                            fileId: file.id,
+                            studentName: file.studentName,
+                            fileName: file.fileName,
+                            uploadDate: file.uploadDate,
+                            ideaTitle: file.ideaTitle,
+                            feedbackType: 'idea-file'
+                          }
+                        })}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(23, 199, 122, 0.15)';
+                          e.currentTarget.style.borderColor = '#17c77a';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
+                        }}
+                      >
+                        Feedback
+                      </button>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <button
-                      style={downloadButton}
-                      onClick={() => handleDownloadFile(file)}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(100, 149, 237, 0.15)';
-                        e.currentTarget.style.borderColor = '#6495ed';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                        e.currentTarget.style.borderColor = 'rgba(100,149,237,0.35)';
-                      }}
-                    >
-                      ⬇ Shkarko
-                    </button>
-                    <button
-                      style={tinyButton}
-                      onClick={() => navigate('/profesor/feedback', { 
-                        state: { 
-                          lendaId, 
-                          subject: subjectName, 
-                          fileId: file.id,
-                          studentName: file.studentName,
-                          fileName: file.fileName,
-                          uploadDate: file.uploadDate,
-                          ideaTitle: file.ideaTitle,
-                          feedbackType: 'idea-file'
-                        } 
-                      })}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(23, 199, 122, 0.15)';
-                        e.currentTarget.style.borderColor = '#17c77a';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                        e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
-                      }}
-                    >
-                      Feedback
-                    </button>
-                  </div>
-                </div>
-              ))}
+                ))}
             </div>
             <div style={{ display: 'flex', gap: 12, marginTop: '1.5rem' }}>
               <button
@@ -559,23 +580,7 @@ const Idetep = () => {
 
         </div>
 
-        <div style={footerStyle}>
-          <button 
-            style={secondaryButton} 
-            onClick={handleFeedback}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(23, 199, 122, 0.1)';
-              e.currentTarget.style.borderColor = '#17c77a';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
-            }}
-          >
-            Feedback
-          </button>
-        </div>
-      </div> 
+      </div>
     </div>
   );
 };

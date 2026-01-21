@@ -105,7 +105,7 @@ router.get("/:id/dashboard", async (req: Request, res: Response) => {
       where: { profesor: { id: profesorId } },
       order: { viti: "ASC", semestri: "ASC" },
     });
-    
+
     const yearMap = new Map<number, {
       id: string;
       label: string;
@@ -171,7 +171,7 @@ router.get("/:id/lendet/:yearId", async (req: Request, res: Response) => {
 
     // ✅ UNIFIED: Same query as Student - show all subjects for this year
     const lendet = await lendetRepository.find({
-      where: { 
+      where: {
         viti: yearParam
       },
       order: { semestri: "ASC", emriLendes: "ASC" },
@@ -242,7 +242,7 @@ router.get("/:id/idet", async (req: Request, res: Response) => {
     }
 
     // ✅ UNIFIED: Query same Idete table with optional lenda filter
-    const whereCondition: FindOptionsWhere<Idete> = lendaId 
+    const whereCondition: FindOptionsWhere<Idete> = lendaId
       ? { lenda: { id: lendaId } }
       : {};
 
@@ -328,7 +328,7 @@ router.post("/:id/dorezime", upload.single("file"), async (req: Request, res: Re
   console.log("Params:", req.params);
   console.log("Body:", req.body);
   console.log("File:", req.file ? { name: req.file.originalname, size: req.file.size, path: req.file.path } : "NO FILE");
-  
+
   const profesorId = Number(req.params.id);
   const { lendaId, isShabllon } = req.body;
 
@@ -527,18 +527,28 @@ router.get("/:id/dorezime-studentesh/:lendaId", async (req: Request, res: Respon
       return res.status(404).json({ message: "Lenda nuk u gjet" });
     }
 
-    // Fetch all student submissions for this subject
+    console.log("=== FETCHING SUBMISSIONS ===");
+    console.log("Profesor ID:", profesorId);
+    console.log("Lenda ID:", lendaId);
+
+    // Fetch all student submissions for this subject that belong to this profesor
     const submissions = await dorezimiIdeeshRepository.find({
       where: {
         lenda: { id: lendaId },
+        profesorId: profesorId,
         isShabllon: false,
       },
       relations: ["student", "lenda"],
       order: { createdAt: "DESC" },
     });
 
-    // Filter to get only student submissions (without profesor assigned)
-    const studentSubmissions = submissions.filter(sub => !sub.profesorId);
+    console.log("Found submissions:", submissions.length);
+    submissions.forEach(sub => {
+      console.log(` - File: ${sub.fileName}, Student: ${sub.student?.emri}, ProfesorId: ${sub.profesorId}`);
+    });
+
+    // All submissions already belong to this profesor
+    const studentSubmissions = submissions;
 
     const submissionsData = studentSubmissions.map((sub) => ({
       id: sub.id,
@@ -566,6 +576,56 @@ router.get("/:id/dorezime-studentesh/:lendaId", async (req: Request, res: Respon
   }
 });
 
+// Add feedback to a student submission
+router.post("/:id/dorezime/:dorezimId/feedback", async (req: Request, res: Response) => {
+  const profesorId = Number(req.params.id);
+  const dorezimId = Number(req.params.dorezimId);
+  const { feedbackText, vleresimi } = req.body;
+
+  if (Number.isNaN(profesorId) || Number.isNaN(dorezimId)) {
+    return res.status(400).json({ message: "Invalid IDs" });
+  }
+
+  if (!feedbackText || typeof feedbackText !== 'string' || feedbackText.trim().length === 0) {
+    return res.status(400).json({ message: "Feedback text is required" });
+  }
+
+  try {
+    const dorezim = await dorezimiIdeeshRepository.findOne({
+      where: { id: dorezimId, profesorId: profesorId },
+      relations: ["student", "lenda"],
+    });
+
+    if (!dorezim) {
+      return res.status(404).json({ message: "Dorëzimi nuk u gjet ose nuk i përket këtij profesori" });
+    }
+
+    // Update feedback
+    dorezim.feedbackText = feedbackText.trim();
+    dorezim.feedbackDate = new Date();
+    if (vleresimi) {
+      dorezim.vleresimi = vleresimi;
+    }
+
+    await dorezimiIdeeshRepository.save(dorezim);
+
+    console.log(`✓ Feedback added to submission ${dorezimId} by profesor ${profesorId}`);
+
+    res.json({
+      message: "Feedback u ruajt me sukses",
+      feedback: {
+        id: dorezim.id,
+        feedbackText: dorezim.feedbackText,
+        feedbackDate: dorezim.feedbackDate,
+        vleresimi: dorezim.vleresimi,
+      }
+    });
+  } catch (error) {
+    console.error("Error adding feedback:", error);
+    res.status(500).json({ message: "Error adding feedback", error: String(error) });
+  }
+});
+
 // Get all profesoret
 router.get("/", async (req: Request, res: Response) => {
   try {
@@ -587,7 +647,7 @@ router.get("/:id", async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ message: "Error fetching profesor", error });
   }
-});  
+});
 
 // Create profesor
 router.post("/", async (req: Request, res: Response) => {

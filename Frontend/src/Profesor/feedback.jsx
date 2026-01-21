@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getProfesorIdeas } from '../services/profesorApi';
+import { getProfesorIdeas, addFeedbackToSubmission } from '../services/profesorApi';
 
 const Feedbackp = () => {
   const navigate = useNavigate();
@@ -62,7 +62,7 @@ const Feedbackp = () => {
     if (!submissionId || !studentName) return;
     const fileName = location.state?.fileName ?? 'projekti.docx';
     const createdAt = location.state?.createdAt ?? new Date().toISOString();
-    
+
     setSubmission({
       studentName: studentName,
       createdAt: createdAt,
@@ -90,7 +90,7 @@ const Feedbackp = () => {
         setMessage(parsed.message ?? '');
         setSavedAt(parsed.savedAt ?? null);
       }
-    } catch (_) {}
+    } catch (_) { }
   }, [storageKey, storageKeySubmission, storageKeyIdeaFile, storageKeyGeneral]);
 
   const profesorName = 'Profesor';
@@ -134,7 +134,7 @@ const Feedbackp = () => {
       };
       localStorage.setItem(storageKey, JSON.stringify(payload));
       setSavedAt(payload.savedAt);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const handleSaveSubmission = () => {
@@ -153,12 +153,20 @@ const Feedbackp = () => {
         localStorage.setItem(storageKeySubmission, JSON.stringify(payload));
       }
       setSavedAt(payload.savedAt);
-    } catch (e) {}
+    } catch (e) { }
   };
 
-  const handleSaveIdeaFile = () => {
+  const handleSaveIdeaFile = async () => {
     if (!fileId || ideaId || submissionId) return;
+
     try {
+      // Dërgo feedback në server
+      await addFeedbackToSubmission(PROFESOR_ID, fileId, {
+        feedbackText: message.trim(),
+        vleresimi: null, // Mund të shtosh vlerësim nëse duhet
+      });
+
+      // Ruaj edhe në localStorage për backup
       const payload = {
         fileId: Number(fileId),
         studentName: studentName,
@@ -172,7 +180,13 @@ const Feedbackp = () => {
         localStorage.setItem(storageKeyIdeaFile, JSON.stringify(payload));
       }
       setSavedAt(payload.savedAt);
-    } catch (e) {}
+
+      // Shfaq mesazh suksesi
+      alert('Feedback u ruajt me sukses!');
+    } catch (error) {
+      console.error('Error saving feedback:', error);
+      alert('Gabim në ruajtjen e feedback-ut: ' + (error.message || 'Unknown error'));
+    }
   };
 
   const handleSaveGeneral = () => {
@@ -189,7 +203,7 @@ const Feedbackp = () => {
         localStorage.setItem(storageKeyGeneral, JSON.stringify(payload));
       }
       setSavedAt(payload.savedAt);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   return (

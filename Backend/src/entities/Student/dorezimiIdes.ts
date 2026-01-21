@@ -39,6 +39,16 @@ export class DorezimiIdes {
     @Column()
     isShabllon: boolean;
 
+    // Feedback nga profesori
+    @Column({ type: "text", nullable: true })
+    feedbackText?: string;
+
+    @Column({ type: "datetime", nullable: true })
+    feedbackDate?: Date;
+
+    @Column({ type: "varchar", length: 50, nullable: true })
+    vleresimi?: string; // p.sh. "Shumë mirë", "Mirë", "Mesatarisht", etj.
+
     @CreateDateColumn()
     createdAt: Date;
 }

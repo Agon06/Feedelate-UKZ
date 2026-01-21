@@ -60,12 +60,12 @@ export const uploadProfesorDorezim = async (profesorId, { lendaId, file, isShabl
   formData.append('file', file);
   formData.append('lendaId', String(lendaId));
   formData.append('isShabllon', String(isShabllon));
-  
+
   const response = await fetch(`${API_BASE_URL}/profesoret/${profesorId}/dorezime`, {
     method: 'POST',
     body: formData,
   });
-  
+
   return handleResponse(response);
 };
 
@@ -111,12 +111,12 @@ export const deleteProfesorProject = (profesorId, projectId) =>
 export const uploadLendaTemplate = async (profesorId, lendaId, file) => {
   const formData = new FormData();
   formData.append('file', file);
-  
+
   const response = await fetch(`${API_BASE_URL}/profesoret/${profesorId}/lendet/${lendaId}/template`, {
     method: 'POST',
     body: formData,
   });
-  
+
   return handleResponse(response);
 };
 
@@ -128,6 +128,16 @@ export const getLendaTemplateInfo = (profesorId, lendaId) =>
 export const deleteLendaTemplate = (profesorId, lendaId) =>
   request(`/profesoret/${profesorId}/lendet/${lendaId}/template`, {
     method: 'DELETE',
+  });
+
+// Shto feedback për një dorëzim studenti
+export const addFeedbackToSubmission = (profesorId, dorezimId, feedbackData) =>
+  request(`/profesoret/${profesorId}/dorezime/${dorezimId}/feedback`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(feedbackData),
   });
 
 export default {
@@ -148,4 +158,5 @@ export default {
   uploadLendaTemplate,
   getLendaTemplateInfo,
   deleteLendaTemplate,
+  addFeedbackToSubmission,
 };
