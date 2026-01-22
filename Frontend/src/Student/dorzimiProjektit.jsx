@@ -17,6 +17,8 @@ const DorzimiProjektit = () => {
     const [projectMaxPoints, setProjectMaxPoints] = useState(100);
     const [projectStartDisplay, setProjectStartDisplay] = useState(null);
     const [projectDeadlineDisplay, setProjectDeadlineDisplay] = useState(null);
+    const [projectStartIso, setProjectStartIso] = useState(null);
+    const [projectDeadlineIso, setProjectDeadlineIso] = useState(null);
 
     const student = JSON.parse(localStorage.getItem('student') || '{}');
     if (!student.id) {
@@ -60,6 +62,8 @@ const DorzimiProjektit = () => {
             setProjectMaxPoints(data?.projectMaxPoints ?? 100);
 
             // Parse dates preserving the exact clock values saved by profesori (no timezone shift)
+            setProjectStartIso(data?.projectStartDate ?? null);
+            setProjectDeadlineIso(data?.projectDeadline ?? null);
             setProjectStartDisplay(formatIsoClockLocal(data?.projectStartDate));
             setProjectDeadlineDisplay(formatIsoClockLocal(data?.projectDeadline));
 
@@ -218,11 +222,17 @@ const DorzimiProjektit = () => {
         navigate(-1);
     };
 
+    const isDeadlinePassed = projectDeadlineIso ? new Date(projectDeadlineIso).getTime() < Date.now() : false;
+
     const handleFileChange = (e) => {
         setSelectedFile(e.target.files[0]);
     };
 
     const handleDorzoProjektin = async () => {
+        if (isDeadlinePassed) {
+            alert("Na vjen keq, afati i dorëzimit ka kaluar.");
+            return;
+        }
         if (!selectedFile) {
             alert("Ju lutem zgjidhni një file!");
             return;
@@ -349,10 +359,24 @@ const DorzimiProjektit = () => {
                                 }}>
                                     Ngarko dokumentin e projektit për lëndën <strong>{subject}</strong>.
                                 </p>
+                                {isDeadlinePassed && (
+                                    <div style={{
+                                        marginBottom: "1rem",
+                                        padding: "0.9rem 1rem",
+                                        borderRadius: 10,
+                                        background: "rgba(255, 99, 71, 0.1)",
+                                        border: "1px solid rgba(255, 99, 71, 0.4)",
+                                        color: "#ff9f8d",
+                                        textAlign: "center",
+                                        fontWeight: 600
+                                    }}>
+                                        Na vjen keq, afati i dorëzimit ka kaluar.
+                                    </div>
+                                )}
                                 <input
                                     type="file"
                                     onChange={handleFileChange}
-                                    disabled={isLoading}
+                                    disabled={isLoading || isDeadlinePassed}
                                     style={{
                                         display: "block",
                                         marginBottom: "1rem",
@@ -362,16 +386,16 @@ const DorzimiProjektit = () => {
                                         borderRadius: 8,
                                         color: "#c4f0da",
                                         width: "100%",
-                                        opacity: isLoading ? 0.5 : 1,
-                                        cursor: isLoading ? "not-allowed" : "pointer",
+                                        opacity: (isLoading || isDeadlinePassed) ? 0.5 : 1,
+                                        cursor: (isLoading || isDeadlinePassed) ? "not-allowed" : "pointer",
                                         textAlign: "center"
                                     }}
                                 />
                                 <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
                                     <button
-                                        style={{ ...buttonStyle, flex: 1, opacity: isLoading ? 0.5 : 1 }}
+                                        style={{ ...buttonStyle, flex: 1, opacity: (isLoading || isDeadlinePassed) ? 0.5 : 1 }}
                                         onClick={handleDorzoProjektin}
-                                        disabled={isLoading}
+                                        disabled={isLoading || isDeadlinePassed}
                                     >
                                         {isLoading ? "Duke procesuar..." : "Dorëzo Projektin"}
                                     </button>
