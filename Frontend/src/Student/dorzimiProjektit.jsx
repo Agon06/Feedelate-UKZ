@@ -6,7 +6,7 @@ const DorzimiProjektit = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { subject, lendaId, yearId } = location.state || {};
-    
+
     const [activeTab, setActiveTab] = useState("projekti");
     const [isDorzuar, setIsDorzuar] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
@@ -14,11 +14,14 @@ const DorzimiProjektit = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [hasTemplate, setHasTemplate] = useState(false);
     const [templateFileName, setTemplateFileName] = useState("");
+    const [projectMaxPoints, setProjectMaxPoints] = useState(100);
+    const [projectStartDisplay, setProjectStartDisplay] = useState(null);
+    const [projectDeadlineDisplay, setProjectDeadlineDisplay] = useState(null);
 
     const student = JSON.parse(localStorage.getItem('student') || '{}');
     if (!student.id) {
-      navigate('/');
-      return null;
+        navigate('/');
+        return null;
     }
     const STUDENT_ID = student.id; // Mund ta marrësh nga auth context
 
@@ -30,10 +33,36 @@ const DorzimiProjektit = () => {
         }
     }, [lendaId]);
 
+    // Auto-refresh project deadline data every 5 seconds to detect changes from profesor
+    useEffect(() => {
+        if (!lendaId) return;
+
+        const interval = setInterval(() => {
+            loadProjektiDorezuar();
+        }, 5000); // Refresh every 5 seconds
+
+        return () => clearInterval(interval);
+    }, [lendaId]);
+
+    const formatIsoClockLocal = (isoString) => {
+        if (!isoString) return null;
+        const match = isoString.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/);
+        if (!match) return null;
+        const [, yyyy, mm, dd, hh, min, ss] = match;
+        const sec = ss ?? '00';
+        return `${dd}/${mm}/${yyyy}, ${hh}:${min}:${sec}`;
+    };
+
     const loadProjektiDorezuar = async () => {
         try {
             setIsLoading(true);
             const data = await getProjektiDorezuar(STUDENT_ID, lendaId);
+            setProjectMaxPoints(data?.projectMaxPoints ?? 100);
+
+            // Parse dates preserving the exact clock values saved by profesori (no timezone shift)
+            setProjectStartDisplay(formatIsoClockLocal(data?.projectStartDate));
+            setProjectDeadlineDisplay(formatIsoClockLocal(data?.projectDeadline));
+
             if (data.isDorzuar) {
                 setIsDorzuar(true);
                 setDorezimData(data);
@@ -244,7 +273,7 @@ const DorzimiProjektit = () => {
             alert("Error: " + error.message);
         } finally {
             setIsLoading(false);
-        }   
+        }
     };
 
     const statusBadgeStyle = (isDorzuar) => ({
@@ -253,8 +282,8 @@ const DorzimiProjektit = () => {
         borderRadius: 10,
         fontSize: 15,
         fontWeight: 700,
-        background: isDorzuar 
-            ? "linear-gradient(135deg, #17c77a 0%, #14b56d 100%)" 
+        background: isDorzuar
+            ? "linear-gradient(135deg, #17c77a 0%, #14b56d 100%)"
             : "linear-gradient(135deg, #ff5252 0%, #e04545 100%)",
         color: isDorzuar ? "#0a1612" : "#ffffff",
         border: "none",
@@ -313,8 +342,8 @@ const DorzimiProjektit = () => {
                                 Dorëzo Projektin
                             </h2>
                             <div style={cardStyle}>
-                                <p style={{ 
-                                    marginBottom: "1.5rem", 
+                                <p style={{
+                                    marginBottom: "1.5rem",
                                     opacity: 0.8,
                                     textAlign: "center"
                                 }}>
@@ -339,7 +368,7 @@ const DorzimiProjektit = () => {
                                     }}
                                 />
                                 <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-                                    <button 
+                                    <button
                                         style={{ ...buttonStyle, flex: 1, opacity: isLoading ? 0.5 : 1 }}
                                         onClick={handleDorzoProjektin}
                                         disabled={isLoading}
@@ -350,28 +379,28 @@ const DorzimiProjektit = () => {
                                         {isDorzuar ? "✓ Dorzuar" : "⏳ Pa dorzuar"}
                                     </div>
                                 </div>
-                                
+
                                 {isDorzuar && dorezimData && (
-                                    <div style={{ 
-                                        marginTop: "1rem", 
-                                        padding: "1rem", 
-                                        background: "rgba(23,199,122,0.08)", 
-                                        border: "1px solid rgba(23,199,122,0.25)", 
-                                        borderRadius: 12 
+                                    <div style={{
+                                        marginTop: "1rem",
+                                        padding: "1rem",
+                                        background: "rgba(23,199,122,0.08)",
+                                        border: "1px solid rgba(23,199,122,0.25)",
+                                        borderRadius: 12
                                     }}>
-                                        <h3 style={{ 
-                                            color: "#1fdc8c", 
-                                            fontSize: 16, 
-                                            fontWeight: 700, 
-                                            marginBottom: "0.7rem" 
+                                        <h3 style={{
+                                            color: "#1fdc8c",
+                                            fontSize: 16,
+                                            fontWeight: 700,
+                                            marginBottom: "0.7rem"
                                         }}>
                                             Projekti i Dorëzuar
                                         </h3>
-                                        <div style={{ 
-                                            padding: "0.7rem", 
-                                            background: "rgba(5,12,8,0.5)", 
-                                            borderRadius: 8, 
-                                            marginBottom: "0.7rem" 
+                                        <div style={{
+                                            padding: "0.7rem",
+                                            background: "rgba(5,12,8,0.5)",
+                                            borderRadius: 8,
+                                            marginBottom: "0.7rem"
                                         }}>
                                             {/* Rreshti 1: Emri i file-it (majtas) + Dorëzuar më (djathtas) */}
                                             <div
@@ -390,9 +419,9 @@ const DorzimiProjektit = () => {
                                                 </div>
 
                                                 {dorezimData.createdAt && (
-                                                    <div style={{ 
-                                                        display: "inline-flex", 
-                                                        alignItems: "center", 
+                                                    <div style={{
+                                                        display: "inline-flex",
+                                                        alignItems: "center",
                                                         gap: "0.45rem",
                                                         marginLeft: "auto",
                                                         textAlign: "right",
@@ -412,12 +441,12 @@ const DorzimiProjektit = () => {
                                                 <strong style={{ color: "#17c77a" }}>{dorezimData.statusi}</strong>
                                             </div>
                                         </div>
-                                        <div style={{ 
-                                            display: "flex", 
+                                        <div style={{
+                                            display: "flex",
                                             flexDirection: window.innerWidth < 768 ? "column" : "row",
-                                            gap: "1rem" 
+                                            gap: "1rem"
                                         }}>
-                                            <button 
+                                            <button
                                                 style={{
                                                     ...buttonStyle,
                                                     flex: window.innerWidth < 768 ? "none" : 1,
@@ -426,9 +455,9 @@ const DorzimiProjektit = () => {
                                                 onClick={handleShkarko}
                                                 disabled={isLoading}
                                             >
-                                                 Shkarko Projektin
+                                                Shkarko Projektin
                                             </button>
-                                            <button 
+                                            <button
                                                 style={{
                                                     ...buttonStyle,
                                                     flex: window.innerWidth < 768 ? "none" : 1,
@@ -438,7 +467,7 @@ const DorzimiProjektit = () => {
                                                 onClick={handleFshij}
                                                 disabled={isLoading}
                                             >
-                                             Fshij Projektin
+                                                Fshij Projektin
                                             </button>
                                         </div>
                                     </div>
@@ -462,7 +491,7 @@ const DorzimiProjektit = () => {
                                 <div style={{ marginTop: "1.5rem" }}>
                                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.75rem" }}>
                                         <span>Pikët Totale:</span>
-                                        <strong style={{ color: "#1fdc8c" }}>30</strong>
+                                        <strong style={{ color: "#1fdc8c" }}>{projectMaxPoints}</strong>
                                     </div>
                                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                                         <span>Pikët e Fituara:</span>
@@ -490,14 +519,14 @@ const DorzimiProjektit = () => {
                                 <div style={{ marginTop: "1.5rem" }}>
                                     <div style={{ padding: "1rem", background: "rgba(255,255,255,0.03)", borderRadius: 8, marginBottom: "0.75rem" }}>
                                         <strong style={{ color: "#1fdc8c" }}>Data e Fillimit:</strong>
-                                        <p style={{ margin: "0.5rem 0 0", opacity: 0.8 }}>--/--/----</p>
+                                        <p style={{ margin: "0.5rem 0 0", opacity: 0.8 }}>
+                                            {projectStartDisplay || "--/--/----"}
+                                        </p>
                                     </div>
                                     <div style={{ padding: "1rem", background: "rgba(255,255,255,0.03)", borderRadius: 8 }}>
                                         <strong style={{ color: "#ff5252" }}>Afati i Dorëzimit:</strong>
                                         <p style={{ margin: "0.5rem 0 0", opacity: 0.8 }}>
-                                            {dorezimData && dorezimData.afatiDorezimit 
-                                                ? new Date(dorezimData.afatiDorezimit).toLocaleDateString('sq-AL')
-                                                : "--/--/----"}
+                                            {projectDeadlineDisplay || "--/--/----"}
                                         </p>
                                     </div>
                                 </div>
@@ -515,7 +544,7 @@ const DorzimiProjektit = () => {
                                 Instruksionet e Projektit
                             </h2>
                             <div style={cardStyle}>
-                                <div style={{ 
+                                <div style={{
                                     display: "flex",
                                     flexDirection: "column",
                                     alignItems: "center",
@@ -525,8 +554,8 @@ const DorzimiProjektit = () => {
                                 }}>
                                     {hasTemplate ? (
                                         <>
-                                            <p style={{ 
-                                                fontSize: 18, 
+                                            <p style={{
+                                                fontSize: 18,
                                                 fontWeight: 600,
                                                 color: "#1fdc8c",
                                                 marginBottom: "1rem",
@@ -534,8 +563,8 @@ const DorzimiProjektit = () => {
                                             }}>
                                                 📄 {templateFileName}
                                             </p>
-                                            <p style={{ 
-                                                fontSize: 14, 
+                                            <p style={{
+                                                fontSize: 14,
                                                 color: "#c4f0da",
                                                 marginBottom: "2rem",
                                                 textAlign: "center",
@@ -543,7 +572,7 @@ const DorzimiProjektit = () => {
                                             }}>
                                                 Template për lëndën {subject}
                                             </p>
-                                            <button 
+                                            <button
                                                 style={{
                                                     padding: "1rem 2rem",
                                                     background: "linear-gradient(135deg, #17c77a 0%, #14b56d 100%)",
@@ -574,8 +603,8 @@ const DorzimiProjektit = () => {
                                             </button>
                                         </>
                                     ) : (
-                                        <p style={{ 
-                                            fontSize: 18, 
+                                        <p style={{
+                                            fontSize: 18,
                                             fontWeight: 600,
                                             color: "#c4f0da",
                                             textAlign: "center",

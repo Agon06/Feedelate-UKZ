@@ -10,6 +10,7 @@ import { DorezimiIdes } from "../../entities/Student/dorezimiides";
 import { Student } from "../../entities/Student/Student";
 import { Lendet } from "../../entities/Student/Lendet";
 import { Idete } from "../../entities/Student/Idete";
+import { dorzimiProjektit } from "../../entities/Student/dorzimiProjektit";
 
 const router = Router();
 const profesorRepository = AppDataSource.getRepository(Profesor);
@@ -17,6 +18,7 @@ const lendetRepository = AppDataSource.getRepository(Lendet);
 const ideteRepository = AppDataSource.getRepository(Idete);
 const dorezimiIdeeshRepository = AppDataSource.getRepository(DorezimiIdes);
 const studentRepository = AppDataSource.getRepository(Student);
+const dorezimProjektitRepository = AppDataSource.getRepository(dorzimiProjektit);
 
 // Multer config for file upload (disk storage)
 const uploadDir = path.resolve(process.cwd(), "uploads", "dorezime");
@@ -531,8 +533,8 @@ router.get("/:id/dorezime-studentesh/:lendaId", async (req: Request, res: Respon
     console.log("Profesor ID:", profesorId);
     console.log("Lenda ID:", lendaId);
 
-    // Fetch all student submissions for this subject that belong to this profesor
-    const submissions = await dorezimiIdeeshRepository.find({
+    // Fetch all idea submissions for this subject that belong to this profesor
+    const ideaSubmissions = await dorezimiIdeeshRepository.find({
       where: {
         lenda: { id: lendaId },
         profesorId: profesorId,
@@ -542,15 +544,12 @@ router.get("/:id/dorezime-studentesh/:lendaId", async (req: Request, res: Respon
       order: { createdAt: "DESC" },
     });
 
-    console.log("Found submissions:", submissions.length);
-    submissions.forEach(sub => {
-      console.log(` - File: ${sub.fileName}, Student: ${sub.student?.emri}, ProfesorId: ${sub.profesorId}`);
+    console.log("Found idea submissions:", ideaSubmissions.length);
+    ideaSubmissions.forEach(sub => {
+      console.log(` - Idea: ${sub.fileName}, Student: ${sub.student?.emri}, ProfesorId: ${sub.profesorId}`);
     });
 
-    // All submissions already belong to this profesor
-    const studentSubmissions = submissions;
-
-    const submissionsData = studentSubmissions.map((sub) => ({
+    const submissionsData = ideaSubmissions.map((sub) => ({
       id: sub.id,
       student: sub.student ? {
         id: sub.student.id,
@@ -573,6 +572,238 @@ router.get("/:id/dorezime-studentesh/:lendaId", async (req: Request, res: Respon
   } catch (error) {
     console.error("Error fetching student submissions:", error);
     res.status(500).json({ message: "Error fetching student submissions", error: String(error) });
+  }
+});
+
+// Get all student project submissions for a specific subject (for profesor to review)
+router.get("/:id/projekte-studentesh/:lendaId", async (req: Request, res: Response) => {
+  const profesorId = Number(req.params.id);
+  const lendaId = Number(req.params.lendaId);
+
+  if (Number.isNaN(profesorId)) {
+    return res.status(400).json({ message: "Profesor id is invalid" });
+  }
+
+  if (Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "lendaId is invalid" });
+  }
+
+  try {
+    const profesor = await profesorRepository.findOneBy({ id: profesorId });
+    if (!profesor) {
+      return res.status(404).json({ message: "Profesor not found" });
+    }
+
+    const lenda = await lendetRepository.findOneBy({ id: lendaId });
+    if (!lenda) {
+      return res.status(404).json({ message: "Lenda nuk u gjet" });
+    }
+
+    const submissions = await dorezimProjektitRepository.find({
+      where: { lenda: { id: lendaId } },
+      relations: ["student", "lenda"],
+      order: { createdAt: "DESC" },
+    });
+
+    const submissionsData = submissions.map((sub) => ({
+      id: sub.id,
+      student: sub.student ? {
+        id: sub.student.id,
+        emri: sub.student.emri,
+        mbiemri: sub.student.mbiemri,
+        fullName: `${sub.student.emri} ${sub.student.mbiemri}`.trim(),
+      } : null,
+      fileName: sub.fileName,
+      fileDorezimi: sub.fileDorezimi,
+      fileUrl: sub.fileDorezimi.startsWith("uploads/") ? `/${sub.fileDorezimi}` : `/uploads/${sub.fileDorezimi}`,
+      piket: sub.piket,
+      createdAt: sub.createdAt,
+    }));
+
+    // Format dates as local strings (YYYY-MM-DDTHH:MM:SS)
+    const formatLocalDate = (date: Date | undefined): string | null => {
+      if (!date) return null;
+      const pad = (n: number) => String(n).padStart(2, '0');
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    };
+
+    res.json({
+      lenda: {
+        id: lenda.id,
+        name: lenda.emriLendes,
+        projectMaxPoints: lenda.projectMaxPoints ?? 100,
+        projectStartDate: formatLocalDate(lenda.projectStartDate),
+        projectDeadline: formatLocalDate(lenda.projectDeadline),
+      },
+      submissions: submissionsData,
+    });
+  } catch (error) {
+    console.error("Error fetching student project submissions:", error);
+    res.status(500).json({ message: "Error fetching student project submissions", error: String(error) });
+  }
+});
+
+// Cakto pikët totale të projektit për një lëndë
+router.put("/:id/lendet/:lendaId/project-max", async (req: Request, res: Response) => {
+  const profesorId = Number(req.params.id);
+  const lendaId = Number(req.params.lendaId);
+  const { projectMaxPoints } = req.body;
+
+  if (Number.isNaN(profesorId) || Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "Invalid IDs" });
+  }
+
+  if (projectMaxPoints === undefined || projectMaxPoints === null || typeof projectMaxPoints !== "number") {
+    return res.status(400).json({ message: "Piket totale janë të detyrueshme dhe duhet të jenë numër" });
+  }
+
+  if (projectMaxPoints < 0 || projectMaxPoints > 100) {
+    return res.status(400).json({ message: "Piket totale duhet të jenë ndërmjet 0 dhe 100" });
+  }
+
+  try {
+    const lenda = await lendetRepository.findOne({ where: { id: lendaId } });
+
+    if (!lenda) {
+      return res.status(404).json({ message: "Lënda nuk u gjet" });
+    }
+
+    lenda.projectMaxPoints = projectMaxPoints;
+    await lendetRepository.save(lenda);
+
+    console.log(`✓ Project max points set for lenda ${lendaId} by profesor ${profesorId}: ${projectMaxPoints}`);
+
+    res.json({
+      message: "Piket totale u përditësuan",
+      lenda: {
+        id: lenda.id,
+        name: lenda.emriLendes,
+        projectMaxPoints: lenda.projectMaxPoints,
+      },
+    });
+  } catch (error) {
+    console.error("Error setting project max points:", error);
+    res.status(500).json({ message: "Error setting project max points", error: String(error) });
+  }
+});
+
+// Cakto afatet e projektit për një lëndë
+router.put("/:id/lendet/:lendaId/project-deadline", async (req: Request, res: Response) => {
+  const profesorId = Number(req.params.id);
+  const lendaId = Number(req.params.lendaId);
+  const { projectStartDate, projectDeadline } = req.body;
+
+  if (Number.isNaN(profesorId) || Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "Invalid IDs" });
+  }
+
+  // Parse dates as local timestamps (avoid timezone conversion)
+  // Expected format: YYYY-MM-DDTHH:MM:SS
+  const parseLocalDate = (dateStr: string | null): Date | null => {
+    if (!dateStr) return null;
+    // Extract parts from YYYY-MM-DDTHH:MM:SS format
+    const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})$/);
+    if (!match) return null;
+    const [, year, month, day, hour, minute, second] = match;
+    return new Date(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second));
+  };
+
+  const start = parseLocalDate(projectStartDate);
+  const end = parseLocalDate(projectDeadline);
+
+  if (projectStartDate && !start) {
+    return res.status(400).json({ message: "Data e fillimit nuk është e vlefshme" });
+  }
+
+  if (projectDeadline && !end) {
+    return res.status(400).json({ message: "Afati i dorëzimit nuk është i vlefshëm" });
+  }
+
+  if (start && end && start > end) {
+    return res.status(400).json({ message: "Data e fillimit duhet të jetë para afatit" });
+  }
+
+  try {
+    const lenda = await lendetRepository.findOne({ where: { id: lendaId } });
+
+    if (!lenda) {
+      return res.status(404).json({ message: "Lënda nuk u gjet" });
+    }
+
+    lenda.projectStartDate = start ?? undefined;
+    lenda.projectDeadline = end ?? undefined;
+
+    await lendetRepository.save(lenda);
+
+    console.log(`✓ Project deadline set for lenda ${lendaId} by profesor ${profesorId}: start=${start?.toISOString() ?? 'null'} end=${end?.toISOString() ?? 'null'}`);
+
+    // Format dates as local strings for response (YYYY-MM-DDTHH:MM:SS)
+    const formatLocalDate = (date: Date | undefined): string | null => {
+      if (!date) return null;
+      const pad = (n: number) => String(n).padStart(2, '0');
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    };
+
+    res.json({
+      message: "Afatet u përditësuan",
+      lenda: {
+        id: lenda.id,
+        name: lenda.emriLendes,
+        projectStartDate: formatLocalDate(lenda.projectStartDate),
+        projectDeadline: formatLocalDate(lenda.projectDeadline),
+      },
+    });
+  } catch (error) {
+    console.error("Error setting project deadline:", error);
+    res.status(500).json({ message: "Error setting project deadline", error: String(error) });
+  }
+});
+
+// Update project grade (piket)
+router.put("/:id/projekte/:projectId/piket", async (req: Request, res: Response) => {
+  const profesorId = Number(req.params.id);
+  const projectId = Number(req.params.projectId);
+  const { piket } = req.body;
+
+  if (Number.isNaN(profesorId) || Number.isNaN(projectId)) {
+    return res.status(400).json({ message: "Invalid IDs" });
+  }
+
+  if (piket === undefined || piket === null || typeof piket !== 'number') {
+    return res.status(400).json({ message: "Piket është e detyrueshme dhe duhet të jetë numër" });
+  }
+
+  try {
+    const project = await dorezimProjektitRepository.findOne({
+      where: { id: projectId },
+      relations: ["student", "lenda"],
+    });
+
+    if (!project) {
+      return res.status(404).json({ message: "Projekti nuk u gjet" });
+    }
+
+    const maxPoints = project.lenda?.projectMaxPoints ?? 100;
+
+    if (piket < 0 || piket > maxPoints) {
+      return res.status(400).json({ message: `Piket duhet të jenë ndërmjet 0 dhe ${maxPoints}` });
+    }
+
+    project.piket = piket;
+    await dorezimProjektitRepository.save(project);
+
+    console.log(`✓ Piket updated for project ${projectId} by profesor ${profesorId}: ${piket}`);
+
+    res.json({
+      message: "Piket u ruajtën me sukses",
+      project: {
+        id: project.id,
+        piket: project.piket,
+      }
+    });
+  } catch (error) {
+    console.error("Error updating piket:", error);
+    res.status(500).json({ message: "Error updating piket", error: String(error) });
   }
 });
 

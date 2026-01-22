@@ -360,19 +360,28 @@ const Lendet = () => {
   };
 
   const optionGridStyle = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+    display: 'flex',
+    justifyContent: 'center',
     gap: 12
   };
 
   const modalOptionStyle = {
     borderRadius: 12,
-    border: '1px solid rgba(23,199,122,0.35)',
-    background: 'rgba(9,18,12,0.85)',
-    color: '#e1f8ed',
-    fontWeight: 600,
-    padding: '0.9rem 0',
-    cursor: 'pointer'
+    border: '2px solid rgba(23,199,122,0.5)',
+    background: 'linear-gradient(135deg, rgba(23,199,122,0.15) 0%, rgba(23,199,122,0.05) 100%)',
+    color: '#17c77a',
+    fontWeight: 700,
+    padding: '1.2rem 2.5rem',
+    cursor: 'pointer',
+    fontSize: '1rem',
+    transition: 'all 0.3s ease',
+    minWidth: '150px',
+    textAlign: 'center',
+    '&:hover': {
+      background: 'linear-gradient(135deg, rgba(23,199,122,0.25) 0%, rgba(23,199,122,0.15) 100%)',
+      boxShadow: '0 0 15px rgba(23,199,122,0.3)',
+      transform: 'translateY(-2px)'
+    }
   };
 
   const handleElectiveToggle = useCallback((course) => {
@@ -607,9 +616,6 @@ const Lendet = () => {
               </button>
               <button style={modalOptionStyle} onClick={() => handleModalChoice('project')}>
                 Projekti
-              </button>
-              <button style={modalOptionStyle} onClick={() => handleModalChoice('deadline')}>
-                Afatet
               </button>
             </div>
           </div>

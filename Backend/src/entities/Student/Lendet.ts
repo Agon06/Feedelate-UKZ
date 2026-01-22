@@ -21,6 +21,17 @@ export class Lendet {
     @Column({ type: "boolean", default: false })
     isZgjedhore: boolean;
 
+    // Maksimumi i pikëve për projektin, i vendosur nga profesori
+    @Column({ type: "int", default: 100 })
+    projectMaxPoints: number;
+
+    // Afati i projektit (fillimi dhe mbyllja), opsionale
+    @Column({ type: "datetime", nullable: true })
+    projectStartDate?: Date;
+
+    @Column({ type: "datetime", nullable: true })
+    projectDeadline?: Date;
+
     // Template/Shabllon files per projektet
     @Column({ nullable: true })
     templateFile?: string;

@@ -78,6 +78,36 @@ export const getProfesorTemplate = (profesorId, lendaId) =>
 export const getStudentSubmissions = (profesorId, lendaId) =>
   request(`/profesoret/${profesorId}/dorezime-studentesh/${lendaId}`);
 
+export const getStudentProjectSubmissions = (profesorId, lendaId) =>
+  request(`/profesoret/${profesorId}/projekte-studentesh/${lendaId}`);
+
+export const updateProjectGrade = (profesorId, projectId, piket) =>
+  request(`/profesoret/${profesorId}/projekte/${projectId}/piket`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ piket }),
+  });
+
+export const updateProjectMaxPoints = (profesorId, lendaId, projectMaxPoints) =>
+  request(`/profesoret/${profesorId}/lendet/${lendaId}/project-max`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ projectMaxPoints }),
+  });
+
+export const updateProjectDeadline = (profesorId, lendaId, payload) =>
+  request(`/profesoret/${profesorId}/lendet/${lendaId}/project-deadline`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
 export const getProfesorProjects = (profesorId) =>
   request(`/projektip/${profesorId}`);
 
@@ -150,6 +180,10 @@ export default {
   getProfesorIdeaSubmission,
   getProfesorTemplate,
   getStudentSubmissions,
+  getStudentProjectSubmissions,
+  updateProjectGrade,
+  updateProjectMaxPoints,
+  updateProjectDeadline,
   getProfesorProjects,
   getProfesorProject,
   createProfesorProject,

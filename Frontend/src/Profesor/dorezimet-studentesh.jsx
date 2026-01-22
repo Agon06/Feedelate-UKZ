@@ -1,18 +1,67 @@
 import React, { useState, useEffect } from 'react';
 import JSZip from 'jszip';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { getStudentSubmissions } from '../services/profesorApi';
+import { getStudentProjectSubmissions, updateProjectGrade, updateProjectMaxPoints, updateProjectDeadline } from '../services/profesorApi';
 
 const DoreziметStudentesh = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { subject, lendaId } = location.state || {};
-  
+
   const PROFESOR_ID = 1;
   const [submissions, setSubmissions] = useState([]);
   const [status, setStatus] = useState({ loading: true, error: null });
   const [isMobile, setIsMobile] = useState(false);
   const [bulkStatus, setBulkStatus] = useState({ loading: false, error: null });
+  const [editingGrade, setEditingGrade] = useState(null);
+  const [gradeValues, setGradeValues] = useState({});
+  const [showBulkGrade, setShowBulkGrade] = useState(false);
+  const [bulkGradeValue, setBulkGradeValue] = useState('');
+  const [projectMaxPoints, setProjectMaxPoints] = useState(100);
+  const [showDeadline, setShowDeadline] = useState(false);
+  const [deadlineStartDate, setDeadlineStartDate] = useState('');
+  const [deadlineStartHour, setDeadlineStartHour] = useState('');
+  const [deadlineStartMinute, setDeadlineStartMinute] = useState('');
+  const [deadlineStartSecond, setDeadlineStartSecond] = useState('');
+
+  const [deadlineEndDate, setDeadlineEndDate] = useState('');
+  const [deadlineEndHour, setDeadlineEndHour] = useState('');
+  const [deadlineEndMinute, setDeadlineEndMinute] = useState('');
+  const [deadlineEndSecond, setDeadlineEndSecond] = useState('');
+
+  const pad2 = (num) => String(num).padStart(2, '0');
+  const formatDateDisplay = (isoString) => {
+    if (!isoString) return '';
+    const d = new Date(isoString);
+    if (Number.isNaN(d.getTime())) return '';
+    return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`;
+  };
+
+  const splitTimeParts = (isoString) => {
+    if (!isoString) return { h: '', m: '', s: '' };
+    const d = new Date(isoString);
+    if (Number.isNaN(d.getTime())) return { h: '', m: '', s: '' };
+    return { h: pad2(d.getHours()), m: pad2(d.getMinutes()), s: pad2(d.getSeconds()) };
+  };
+
+  const parseDateParts = (dateStr, hStr, mStr, sStr) => {
+    const match = (dateStr || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (!match) return null;
+    const [, dd, mm, yyyy] = match;
+    const h = Number(hStr);
+    const m = Number(mStr);
+    const s = Number(sStr);
+    if ([dd, mm, yyyy].some((v) => Number.isNaN(Number(v)))) return null;
+    if ([h, m, s].some((v) => Number.isNaN(v))) return null;
+    if (h < 0 || h > 23 || m < 0 || m > 59 || s < 0 || s > 59) return null;
+    const parsed = new Date(Number(yyyy), Number(mm) - 1, Number(dd), h, m, s);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  };
+
+  const toLocalTimestamp = (dateObj) => {
+    if (!dateObj || Number.isNaN(dateObj.getTime())) return null;
+    return `${dateObj.getFullYear()}-${pad2(dateObj.getMonth() + 1)}-${pad2(dateObj.getDate())}T${pad2(dateObj.getHours())}:${pad2(dateObj.getMinutes())}:${pad2(dateObj.getSeconds())}`;
+  };
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -32,46 +81,27 @@ const DoreziметStudentesh = () => {
 
     const fetchSubmissions = async () => {
       try {
-        const data = await getStudentSubmissions(PROFESOR_ID, lendaId);
+        const data = await getStudentProjectSubmissions(PROFESOR_ID, lendaId);
         if (!isMounted) return;
 
         const fetched = data.submissions || [];
+        setSubmissions(fetched);
+        setProjectMaxPoints(data?.lenda?.projectMaxPoints ?? 100);
+        const startDateIso = data?.lenda?.projectStartDate;
+        const endDateIso = data?.lenda?.projectDeadline;
 
-        if (fetched.length === 0) {
-          // krijo disa projekte mock për testimin e shkarkimit
-          const mockData = [
-            { id: 1, student: { id: 101, fullName: 'Arta Krasniqi' }, fileName: 'Projekti_UI.docx' },
-            { id: 2, student: { id: 102, fullName: 'Blend Morina' }, fileName: 'Analiza_Sigurise.pdf' },
-            { id: 3, student: { id: 103, fullName: 'Diona Shabani' }, fileName: 'Platforma_Web.zip' },
-          ];
+        const startTimeParts = splitTimeParts(startDateIso);
+        const endTimeParts = splitTimeParts(endDateIso);
 
-          // krijojmë blob URL që fetch t’i lexojë për arkivin zip
-          const urls = mockData.map((item) => {
-            const content = [
-              `Ky është një file testues për projektin: ${item.fileName}`,
-              `Studenti: ${item.student.fullName}`,
-              `Lënda: ${subject || 'Lënda'}`,
-              '',
-              'Ky përmbajtje është vetëm për testimin e shkarkimit bulk (.zip).'
-            ].join('\n');
-            const blob = new Blob([content], { type: 'application/octet-stream' });
-            return URL.createObjectURL(blob);
-          });
+        setDeadlineStartDate(startDateIso ? formatDateDisplay(startDateIso) : '');
+        setDeadlineStartHour(startTimeParts.h);
+        setDeadlineStartMinute(startTimeParts.m);
+        setDeadlineStartSecond(startTimeParts.s);
 
-          const mockSubmissions = mockData.map((item, idx) => ({
-            ...item,
-            fileUrl: urls[idx],
-            createdAt: new Date(Date.now() - (idx + 1) * 3600_000).toISOString(),
-          }));
-
-          setMockUrls(urls);
-          setSubmissions(mockSubmissions);
-        } else {
-          setSubmissions(fetched);
-          // nëse kishim mock më parë, i pastrojmë
-          mockUrls.forEach((u) => URL.revokeObjectURL(u));
-          setMockUrls([]);
-        }
+        setDeadlineEndDate(endDateIso ? formatDateDisplay(endDateIso) : '');
+        setDeadlineEndHour(endTimeParts.h);
+        setDeadlineEndMinute(endTimeParts.m);
+        setDeadlineEndSecond(endTimeParts.s);
 
         setStatus({ loading: false, error: null });
       } catch (error) {
@@ -211,18 +241,98 @@ const DoreziметStudentesh = () => {
     display: 'inline-block'
   };
 
-  const feedbackButton = {
-    padding: '0.5rem 1rem',
-    background: 'transparent',
-    border: '1px solid rgba(23,199,122,0.35)',
-    borderRadius: 8,
-    color: '#c8f5e8',
-    fontWeight: 700,
-    cursor: 'pointer',
-    fontSize: 14,
-    textDecoration: 'none',
-    display: 'inline-block',
-    transition: 'all 200ms ease'
+  const handleUpdateGrade = async (projectId) => {
+    const piket = gradeValues[projectId];
+    if (piket === undefined || piket === null || piket === '') {
+      alert('Ju lutem vendosni pikët');
+      return;
+    }
+
+    const numPiket = Number(piket);
+    if (isNaN(numPiket) || numPiket < 0 || numPiket > projectMaxPoints) {
+      alert(`Pikët duhet të jenë numër ndërmjet 0 dhe ${projectMaxPoints}`);
+      return;
+    }
+
+    try {
+      await updateProjectGrade(PROFESOR_ID, projectId, numPiket);
+      setSubmissions(submissions.map(sub =>
+        sub.id === projectId ? { ...sub, piket: numPiket } : sub
+      ));
+      setEditingGrade(null);
+      alert('Pikët u ruajtën me sukses!');
+    } catch (error) {
+      alert('Error: ' + (error.message || 'Nuk u ruajtën pikët'));
+    }
+  };
+
+  const handleSetProjectMax = async () => {
+    const total = Number(bulkGradeValue);
+    if (isNaN(total) || total < 0 || total > 100) {
+      alert('Pikët totale duhet të jenë numër ndërmjet 0 dhe 100');
+      return;
+    }
+
+    try {
+      await updateProjectMaxPoints(PROFESOR_ID, lendaId, total);
+      setProjectMaxPoints(total);
+      setShowBulkGrade(false);
+      setBulkGradeValue('');
+      alert('Pikët totale u përditësuan!');
+    } catch (error) {
+      alert('Error: ' + (error.message || 'Nuk u ruajtën pikët totale'));
+    }
+  };
+
+  const handleSetDeadline = async () => {
+    const startDate = parseDateParts(deadlineStartDate, deadlineStartHour, deadlineStartMinute, deadlineStartSecond);
+    const endDate = parseDateParts(deadlineEndDate, deadlineEndHour, deadlineEndMinute, deadlineEndSecond);
+
+    if (deadlineStartDate || deadlineStartHour || deadlineStartMinute || deadlineStartSecond) {
+      if (!startDate) {
+        alert('Format i pavlefshëm për fillimin. Përdor DD/MM/YYYY dhe orën 00-23, minutat 00-59, sekondat 00-59.');
+        return;
+      }
+    }
+
+    if (deadlineEndDate || deadlineEndHour || deadlineEndMinute || deadlineEndSecond) {
+      if (!endDate) {
+        alert('Format i pavlefshëm për mbarimin. Përdor DD/MM/YYYY dhe orën 00-23, minutat 00-59, sekondat 00-59.');
+        return;
+      }
+    }
+
+    if (startDate && endDate && startDate > endDate) {
+      alert('Data e fillimit duhet të jetë para afatit të dorëzimit');
+      return;
+    }
+
+    const payload = {
+      projectStartDate: startDate ? toLocalTimestamp(startDate) : null,
+      projectDeadline: endDate ? toLocalTimestamp(endDate) : null,
+    };
+
+    try {
+      const res = await updateProjectDeadline(PROFESOR_ID, lendaId, payload);
+      const startIso = res?.lenda?.projectStartDate;
+      const endIso = res?.lenda?.projectDeadline;
+      const startParts = splitTimeParts(startIso);
+      const endParts = splitTimeParts(endIso);
+
+      setDeadlineStartDate(startIso ? formatDateDisplay(startIso) : '');
+      setDeadlineStartHour(startParts.h);
+      setDeadlineStartMinute(startParts.m);
+      setDeadlineStartSecond(startParts.s);
+
+      setDeadlineEndDate(endIso ? formatDateDisplay(endIso) : '');
+      setDeadlineEndHour(endParts.h);
+      setDeadlineEndMinute(endParts.m);
+      setDeadlineEndSecond(endParts.s);
+      setShowDeadline(false);
+      alert('Afatet u përditësuan!');
+    } catch (error) {
+      alert('Error: ' + (error.message || 'Nuk u ruajt afati'));
+    }
   };
 
   const handleDownload = (fileUrl, fileName) => {
@@ -272,8 +382,27 @@ const DoreziметStudentesh = () => {
     }
   };
 
+  const bannerStartDate = parseDateParts(deadlineStartDate, deadlineStartHour, deadlineStartMinute, deadlineStartSecond);
+  const bannerEndDate = parseDateParts(deadlineEndDate, deadlineEndHour, deadlineEndMinute, deadlineEndSecond);
+
   return (
     <div style={pageStyle}>
+      <style>{`
+        /* Hide the calendar icon so users type manually */
+        input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+          display: none !important;
+          -webkit-appearance: none;
+          appearance: none;
+        }
+        /* Hide AM/PM segment */
+        input[type="datetime-local"]::-webkit-datetime-edit-ampm-field {
+          display: none !important;
+          visibility: hidden !important;
+          width: 0 !important;
+          height: 0 !important;
+          opacity: 0 !important;
+        }
+      `}</style>
       <div style={topBarStyle}>
         <div style={brandStyle}>Feedelate</div>
         <div style={{ flex: 1 }} />
@@ -295,22 +424,256 @@ const DoreziметStudentesh = () => {
             <h2 style={{ margin: 0 }}>
               Projektet - {subject || 'Lënda'}
             </h2>
-            {!status.loading && !status.error && submissions.length > 0 && (
-              <div style={{ display: 'flex', gap: 12 }}>
-                <button 
-                  style={feedbackButton} 
-                  onClick={() => navigate('/profesor/feedback', { state: { lendaId, subject, feedbackType: 'projects' } })}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(23, 199, 122, 0.15)';
-                    e.currentTarget.style.borderColor = '#17c77a';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
-                  }}
-                >
-                  Feedback i Përgjithshëm
-                </button>
+            {!status.loading && !status.error && (
+              <div style={{ fontWeight: 600, color: '#17c77a' }}>Pikët totale: {projectMaxPoints}</div>
+            )}
+            {!status.loading && !status.error && (
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                {showDeadline ? (
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <label style={{ fontSize: 12, color: '#17c77a', fontWeight: 600 }}>Fillon (DD/MM/YYYY & HH:MM:SS):</label>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          autoComplete="off"
+                          value={deadlineStartDate}
+                          onChange={(e) => setDeadlineStartDate(e.target.value)}
+                          placeholder="DD/MM/YYYY"
+                          style={{
+                            padding: '0.5rem',
+                            borderRadius: 8,
+                            border: '1px solid rgba(23,199,122,0.5)',
+                            background: 'rgba(9,18,12,0.9)',
+                            color: '#fff',
+                            fontSize: 14,
+                            width: 120
+                          }}
+                        />
+                        <input
+                          type="number"
+                          min="0"
+                          max="23"
+                          inputMode="numeric"
+                          value={deadlineStartHour}
+                          onChange={(e) => setDeadlineStartHour(e.target.value)}
+                          placeholder="HH"
+                          style={{
+                            width: 60,
+                            padding: '0.5rem',
+                            borderRadius: 8,
+                            border: '1px solid rgba(23,199,122,0.5)',
+                            background: 'rgba(9,18,12,0.9)',
+                            color: '#fff',
+                            fontSize: 14
+                          }}
+                        />
+                        <span style={{ color: '#17c77a', fontWeight: 700 }}>:</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max="59"
+                          inputMode="numeric"
+                          value={deadlineStartMinute}
+                          onChange={(e) => setDeadlineStartMinute(e.target.value)}
+                          placeholder="MM"
+                          style={{
+                            width: 60,
+                            padding: '0.5rem',
+                            borderRadius: 8,
+                            border: '1px solid rgba(23,199,122,0.5)',
+                            background: 'rgba(9,18,12,0.9)',
+                            color: '#fff',
+                            fontSize: 14
+                          }}
+                        />
+                        <span style={{ color: '#17c77a', fontWeight: 700 }}>:</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max="59"
+                          inputMode="numeric"
+                          value={deadlineStartSecond}
+                          onChange={(e) => setDeadlineStartSecond(e.target.value)}
+                          placeholder="SS"
+                          style={{
+                            width: 60,
+                            padding: '0.5rem',
+                            borderRadius: 8,
+                            border: '1px solid rgba(23,199,122,0.5)',
+                            background: 'rgba(9,18,12,0.9)',
+                            color: '#fff',
+                            fontSize: 14
+                          }}
+                        />
+                      </div>
+                      <span style={{ fontSize: 10, color: '#17c77a', opacity: 0.7 }}>Orë 00-23, minuta dhe sekonda 00-59</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <label style={{ fontSize: 12, color: '#17c77a', fontWeight: 600 }}>Mbaron (DD/MM/YYYY & HH:MM:SS):</label>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          autoComplete="off"
+                          value={deadlineEndDate}
+                          onChange={(e) => setDeadlineEndDate(e.target.value)}
+                          placeholder="DD/MM/YYYY"
+                          style={{
+                            padding: '0.5rem',
+                            borderRadius: 8,
+                            border: '1px solid rgba(23,199,122,0.5)',
+                            background: 'rgba(9,18,12,0.9)',
+                            color: '#fff',
+                            fontSize: 14,
+                            width: 120
+                          }}
+                        />
+                        <input
+                          type="number"
+                          min="0"
+                          max="23"
+                          inputMode="numeric"
+                          value={deadlineEndHour}
+                          onChange={(e) => setDeadlineEndHour(e.target.value)}
+                          placeholder="HH"
+                          style={{
+                            width: 60,
+                            padding: '0.5rem',
+                            borderRadius: 8,
+                            border: '1px solid rgba(23,199,122,0.5)',
+                            background: 'rgba(9,18,12,0.9)',
+                            color: '#fff',
+                            fontSize: 14
+                          }}
+                        />
+                        <span style={{ color: '#17c77a', fontWeight: 700 }}>:</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max="59"
+                          inputMode="numeric"
+                          value={deadlineEndMinute}
+                          onChange={(e) => setDeadlineEndMinute(e.target.value)}
+                          placeholder="MM"
+                          style={{
+                            width: 60,
+                            padding: '0.5rem',
+                            borderRadius: 8,
+                            border: '1px solid rgba(23,199,122,0.5)',
+                            background: 'rgba(9,18,12,0.9)',
+                            color: '#fff',
+                            fontSize: 14
+                          }}
+                        />
+                        <span style={{ color: '#17c77a', fontWeight: 700 }}>:</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max="59"
+                          inputMode="numeric"
+                          value={deadlineEndSecond}
+                          onChange={(e) => setDeadlineEndSecond(e.target.value)}
+                          placeholder="SS"
+                          style={{
+                            width: 60,
+                            padding: '0.5rem',
+                            borderRadius: 8,
+                            border: '1px solid rgba(23,199,122,0.5)',
+                            background: 'rgba(9,18,12,0.9)',
+                            color: '#fff',
+                            fontSize: 14
+                          }}
+                        />
+                      </div>
+                      <span style={{ fontSize: 10, color: '#17c77a', opacity: 0.7 }}>Orë 00-23, minuta dhe sekonda 00-59</span>
+                    </div>
+                    <button
+                      style={{ ...downloadButton, background: '#17c77a', padding: '0.5rem 1rem' }}
+                      onClick={handleSetDeadline}
+                    >
+                      ✓ Ruaj
+                    </button>
+                    <button
+                      style={{ ...downloadButton, background: '#666', padding: '0.5rem 1rem' }}
+                      onClick={() => { setShowDeadline(false); }}
+                    >
+                      ✕ Mbylle
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    style={{
+                      padding: '0.5rem 1rem',
+                      background: '#0fa36a',
+                      border: 'none',
+                      borderRadius: 8,
+                      color: '#041407',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      fontSize: 14
+                    }}
+                    onClick={() => {
+                      setShowDeadline(true);
+                    }}
+                  >
+                    🗓️ Afati i Dorëzimit
+                  </button>
+                )}
+
+                {showBulkGrade ? (
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={bulkGradeValue}
+                      onChange={(e) => setBulkGradeValue(e.target.value)}
+                      placeholder={`Pikët totale (aktuale ${projectMaxPoints})`}
+                      style={{
+                        width: 140,
+                        padding: '0.5rem',
+                        borderRadius: 8,
+                        border: '1px solid rgba(23,199,122,0.5)',
+                        background: 'rgba(9,18,12,0.9)',
+                        color: '#fff'
+                      }}
+                    />
+                    <button
+                      style={{ ...downloadButton, background: '#17c77a', padding: '0.5rem 1rem' }}
+                      onClick={handleSetProjectMax}
+                    >
+                      ✓ Ruaj
+                    </button>
+                    <button
+                      style={{ ...downloadButton, background: '#666', padding: '0.5rem 1rem' }}
+                      onClick={() => { setShowBulkGrade(false); setBulkGradeValue(''); }}
+                    >
+                      ✕ Anulo
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    style={{
+                      padding: '0.5rem 1rem',
+                      background: '#19c776',
+                      border: 'none',
+                      borderRadius: 8,
+                      color: '#041407',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      fontSize: 14
+                    }}
+                    onClick={() => {
+                      setBulkGradeValue(String(projectMaxPoints));
+                      setShowBulkGrade(true);
+                    }}
+                  >
+                    📊 Cakto Pikët e Projektit
+                  </button>
+                )}
+
                 <button style={downloadButton} onClick={handleBulkDownload} disabled={bulkStatus.loading}>
                   {bulkStatus.loading ? 'Duke paketuar...' : '⬇ Shkarko të gjitha (.zip)'}
                 </button>
@@ -318,6 +681,13 @@ const DoreziметStudentesh = () => {
             )}
           </div>
         </div>
+
+        {!status.loading && !status.error && (
+          <div style={{ ...bannerStyle, background: 'rgba(23,199,122,0.08)', border: '1px solid rgba(23,199,122,0.25)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+            <span>Fillon: {bannerStartDate ? bannerStartDate.toLocaleString('sq-AL', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) : '—'}</span>
+            <span>Mbaron: {bannerEndDate ? bannerEndDate.toLocaleString('sq-AL', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) : '—'}</span>
+          </div>
+        )}
 
         {bulkStatus.error && (
           <div style={{ ...bannerStyle, background: 'rgba(255,82,82,0.2)', border: '1px solid rgba(255,82,82,0.5)' }}>
@@ -357,38 +727,75 @@ const DoreziметStudentesh = () => {
                   <div style={{ fontSize: 14, opacity: 0.7, marginTop: 4 }}>
                     {submission.fileName}
                   </div>
+                  <div style={{ fontSize: 15, fontWeight: 600, marginTop: 8, color: '#17c77a' }}>
+                    Pikët: {editingGrade === submission.id ? (
+                      <input
+                        type="number"
+                        min="0"
+                        max={projectMaxPoints}
+                        value={gradeValues[submission.id] ?? submission.piket ?? 0}
+                        onChange={(e) => setGradeValues({ ...gradeValues, [submission.id]: e.target.value })}
+                        style={{
+                          width: 80,
+                          padding: '0.3rem 0.5rem',
+                          borderRadius: 6,
+                          border: '1px solid rgba(23,199,122,0.5)',
+                          background: 'rgba(9,18,12,0.9)',
+                          color: '#fff',
+                          marginLeft: 8
+                        }}
+                        autoFocus
+                      />
+                    ) : (
+                      <span>{submission.piket ?? 0} / {projectMaxPoints}</span>
+                    )}
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 8, flexDirection: isMobile ? 'column' : 'row' }}>
                   <button
                     style={downloadButton}
                     onClick={() => handleDownload(submission.fileUrl, submission.fileName)}
                   >
                     ⬇ Shkarko
                   </button>
-                  <button
-                    style={feedbackButton}
-                    onClick={() => navigate('/profesor/feedback', { 
-                      state: { 
-                        lendaId, 
-                        subject, 
-                        studentId: submission.student.id,
-                        studentName: submission.student.fullName,
-                        submissionId: submission.id,
-                        fileName: submission.fileName,
-                        createdAt: submission.createdAt
-                      } 
-                    })}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(23, 199, 122, 0.15)';
-                      e.currentTarget.style.borderColor = '#17c77a';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
-                    }}
-                  >
-                    Feedback
-                  </button>
+                  {editingGrade === submission.id ? (
+                    <>
+                      <button
+                        style={{ ...downloadButton, background: '#17c77a' }}
+                        onClick={() => handleUpdateGrade(submission.id)}
+                      >
+                        ✓ Ruaj
+                      </button>
+                      <button
+                        style={{ ...downloadButton, background: '#666' }}
+                        onClick={() => {
+                          setEditingGrade(null);
+                          setGradeValues({ ...gradeValues, [submission.id]: submission.piket ?? 0 });
+                        }}
+                      >
+                        ✕ Anulo
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      style={{
+                        padding: '0.5rem 1rem',
+                        background: '#19c776',
+                        border: 'none',
+                        borderRadius: 8,
+                        color: '#041407',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        fontSize: 14
+                      }}
+                      onClick={() => {
+                        setEditingGrade(submission.id);
+                        setGradeValues({ ...gradeValues, [submission.id]: submission.piket ?? 0 });
+                      }}
+                    >
+                      📝 Vlerëso
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

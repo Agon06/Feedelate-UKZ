@@ -756,10 +756,26 @@ router.get("/:id/projekti/:lendaId", async (req: Request, res: Response) => {
       relations: ["student", "lenda"]
     });
 
+    const lenda = dorezim?.lenda ?? await lendeRepository.findOneBy({ id: lendaId });
+    const projectMaxPoints = lenda?.projectMaxPoints ?? 100;
+    const projectStartDate = lenda?.projectStartDate ?? null;
+    const projectDeadline = lenda?.projectDeadline ?? null;
+
+    // Format dates as local strings (YYYY-MM-DDTHH:MM:SS)
+    const formatLocalDate = (date: Date | null | undefined): string | null => {
+      if (!date) return null;
+      const pad = (n: number) => String(n).padStart(2, '0');
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    };
+
     if (!dorezim) {
+      // Nëse s'ka dorëzim, kthe vetëm info për pikët totale dhe afatet
       return res.json({
         isDorzuar: false,
-        message: "Nuk ka dorëzim për këtë lëndë"
+        message: "Nuk ka dorëzim për këtë lëndë",
+        projectMaxPoints,
+        projectStartDate: formatLocalDate(projectStartDate),
+        projectDeadline: formatLocalDate(projectDeadline),
       });
     }
 
@@ -771,7 +787,10 @@ router.get("/:id/projekti/:lendaId", async (req: Request, res: Response) => {
       afatiDorezimit: dorezim.afatiDorezimit,
       piket: dorezim.piket,
       statusi: dorezim.statusi,
-      createdAt: dorezim.createdAt
+      createdAt: dorezim.createdAt,
+      projectMaxPoints,
+      projectStartDate: formatLocalDate(projectStartDate),
+      projectDeadline: formatLocalDate(projectDeadline),
     });
   } catch (error) {
     res.status(500).json({ message: "Error fetching projekt", error });
@@ -799,6 +818,15 @@ router.post("/:id/projekti/dorezo", uploadProjekti.single("file"), async (req: R
       return res.status(404).json({ message: "Student or Lenda not found" });
     }
 
+    const now = new Date();
+    if (lenda.projectStartDate && now < lenda.projectStartDate) {
+      return res.status(400).json({ message: "Dorëzimi nuk ka filluar ende" });
+    }
+
+    if (lenda.projectDeadline && now > lenda.projectDeadline) {
+      return res.status(400).json({ message: "Afati i dorëzimit ka mbaruar" });
+    }
+
     // Kontrollo nëse ekziston një dorëzim i mëparshëm
     const existing = await dorezimProjektitRepository.findOne({
       where: {
@@ -824,7 +852,7 @@ router.post("/:id/projekti/dorezo", uploadProjekti.single("file"), async (req: R
       lenda,
       fileName: req.file.originalname,
       fileDorezimi: relativePath,
-      afatiDorezimit: new Date(), // Mund ta marrësh nga req.body nëse dëshiron
+      afatiDorezimit: lenda.projectDeadline ?? new Date(),
       piket: 0, // Default 0, do të përditësohet nga profesori
       statusi: "Dorzuar"
     });
