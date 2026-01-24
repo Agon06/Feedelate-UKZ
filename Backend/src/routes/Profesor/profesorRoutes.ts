@@ -643,6 +643,112 @@ router.get("/:id/projekte-studentesh/:lendaId", async (req: Request, res: Respon
   }
 });
 
+// Merr afatin e dorëzimit të ideve për një lëndë
+router.get("/:id/lendet/:lendaId/idea-deadline", async (req: Request, res: Response) => {
+  const profesorId = Number(req.params.id);
+  const lendaId = Number(req.params.lendaId);
+
+  if (Number.isNaN(profesorId) || Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "Invalid IDs" });
+  }
+
+  const formatLocalDate = (date: Date | undefined): string | null => {
+    if (!date) return null;
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  };
+
+  try {
+    const lenda = await lendetRepository.findOne({ where: { id: lendaId } });
+
+    if (!lenda) {
+      return res.status(404).json({ message: "Lënda nuk u gjet" });
+    }
+
+    res.json({
+      lenda: {
+        id: lenda.id,
+        name: lenda.emriLendes,
+        ideaStartDate: formatLocalDate(lenda.ideaStartDate),
+        ideaDeadline: formatLocalDate(lenda.ideaDeadline),
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching idea deadline:", error);
+    res.status(500).json({ message: "Error fetching idea deadline", error: String(error) });
+  }
+});
+
+// Cakto afatin e dorëzimit të ideve për një lëndë
+router.put("/:id/lendet/:lendaId/idea-deadline", async (req: Request, res: Response) => {
+  const profesorId = Number(req.params.id);
+  const lendaId = Number(req.params.lendaId);
+  const { ideaStartDate, ideaDeadline } = req.body;
+
+  if (Number.isNaN(profesorId) || Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "Invalid IDs" });
+  }
+
+  // Parse dates as local timestamps (avoid timezone conversion)
+  // Expected format: YYYY-MM-DDTHH:MM:SS
+  const parseLocalDate = (dateStr: string | null): Date | null => {
+    if (!dateStr) return null;
+    const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})$/);
+    if (!match) return null;
+    const [, year, month, day, hour, minute, second] = match;
+    return new Date(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second));
+  };
+
+  const start = parseLocalDate(ideaStartDate);
+  const end = parseLocalDate(ideaDeadline);
+
+  if (ideaStartDate && !start) {
+    return res.status(400).json({ message: "Data e fillimit nuk është e vlefshme" });
+  }
+
+  if (ideaDeadline && !end) {
+    return res.status(400).json({ message: "Afati i dorëzimit nuk është i vlefshëm" });
+  }
+
+  if (start && end && start > end) {
+    return res.status(400).json({ message: "Data e fillimit duhet të jetë para afatit" });
+  }
+
+  try {
+    const lenda = await lendetRepository.findOne({ where: { id: lendaId } });
+
+    if (!lenda) {
+      return res.status(404).json({ message: "Lënda nuk u gjet" });
+    }
+
+    lenda.ideaStartDate = start ?? undefined;
+    lenda.ideaDeadline = end ?? undefined;
+
+    await lendetRepository.save(lenda);
+
+    console.log(`✓ Idea deadline set for lenda ${lendaId} by profesor ${profesorId}: start=${start?.toISOString() ?? 'null'} end=${end?.toISOString() ?? 'null'}`);
+
+    const formatLocalDate = (date: Date | undefined): string | null => {
+      if (!date) return null;
+      const pad = (n: number) => String(n).padStart(2, '0');
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    };
+
+    res.json({
+      message: "Afati i ideve u përditësua",
+      lenda: {
+        id: lenda.id,
+        name: lenda.emriLendes,
+        ideaStartDate: formatLocalDate(lenda.ideaStartDate),
+        ideaDeadline: formatLocalDate(lenda.ideaDeadline),
+      },
+    });
+  } catch (error) {
+    console.error("Error setting idea deadline:", error);
+    res.status(500).json({ message: "Error setting idea deadline", error: String(error) });
+  }
+});
+
 // Cakto pikët totale të projektit për një lëndë
 router.put("/:id/lendet/:lendaId/project-max", async (req: Request, res: Response) => {
   const profesorId = Number(req.params.id);

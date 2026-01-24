@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import JSZip from 'jszip';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getProfesorIdeas, getStudentSubmissions } from '../services/profesorApi';
+import { getProfesorIdeas, getStudentSubmissions, getIdeaDeadline, updateIdeaDeadline } from '../services/profesorApi';
 import './idetep.css';
 
 const Idetep = () => {
@@ -17,6 +17,8 @@ const Idetep = () => {
   const [files, setFiles] = useState([]);
   const [filesStatus, setFilesStatus] = useState({ loading: true, error: null });
   const [fileSearchTerm, setFileSearchTerm] = useState('');
+  const [ideaDeadline, setIdeaDeadline] = useState({ start: '', end: '' });
+  const [deadlineStatus, setDeadlineStatus] = useState({ loading: true, saving: false, error: null, message: null });
 
   const loadIdeas = useCallback(async () => {
     setListStatus({ loading: true, error: null });
@@ -61,10 +63,30 @@ const Idetep = () => {
     }
   }, [PROFESOR_ID, lendaId]);
 
+  const loadIdeaDeadline = useCallback(async () => {
+    if (!lendaId) {
+      setIdeaDeadline({ start: '', end: '' });
+      setDeadlineStatus({ loading: false, saving: false, error: null, message: null });
+      return;
+    }
+
+    setDeadlineStatus({ loading: true, saving: false, error: null, message: null });
+    try {
+      const response = await getIdeaDeadline(PROFESOR_ID, lendaId);
+      const startValue = response.lenda?.ideaStartDate ? response.lenda.ideaStartDate.slice(0, 16) : '';
+      const endValue = response.lenda?.ideaDeadline ? response.lenda.ideaDeadline.slice(0, 16) : '';
+      setIdeaDeadline({ start: startValue, end: endValue });
+      setDeadlineStatus({ loading: false, saving: false, error: null, message: null });
+    } catch (error) {
+      setDeadlineStatus({ loading: false, saving: false, error: error?.message ?? 'Nuk u lexuan afatet.', message: null });
+    }
+  }, [PROFESOR_ID, lendaId]);
+
   useEffect(() => {
     loadIdeas();
     loadFiles();
-  }, [loadIdeas, loadFiles]);
+    loadIdeaDeadline();
+  }, [loadIdeas, loadFiles, loadIdeaDeadline]);
 
   const handleFeedback = () => {
     navigate('/profesor/feedback', {
@@ -130,6 +152,92 @@ const Idetep = () => {
       setFilesStatus((prev) => ({ ...prev, loading: false }));
     } catch (error) {
       setFilesStatus({ loading: false, error: error?.message ?? 'Nuk u krijua arkivi.' });
+    }
+  };
+
+  const setDatePart = (field, dateStr) => {
+    if (!dateStr) {
+      setIdeaDeadline((prev) => ({ ...prev, [field]: '' }));
+      return;
+    }
+    const defaultTime = field === 'end' ? '23:59' : '00:00';
+    setIdeaDeadline((prev) => ({ ...prev, [field]: `${dateStr}T${defaultTime}` }));
+  };
+
+  const pad2 = (n) => String(n).padStart(2, '0');
+
+  const get24hParts = (value) => {
+    if (!value) return { hour: '00', minute: '00' };
+    const parts = value.split('T')[1];
+    if (!parts) return { hour: '00', minute: '00' };
+    const [h, m] = parts.split(':');
+    return { hour: pad2(Number(h) || 0), minute: pad2(Number(m) || 0) };
+  };
+
+  const setTime24 = (field, hourStr, minuteStr) => {
+    const h = pad2(Math.min(Math.max(Number(hourStr) || 0, 0), 23));
+    const m = pad2(Math.min(Math.max(Number(minuteStr) || 0, 0), 59));
+    setIdeaDeadline((prev) => {
+      const current = prev[field];
+      const datePart = current?.split('T')[0] || new Date().toISOString().slice(0, 10);
+      return { ...prev, [field]: `${datePart}T${h}:${m}` };
+    });
+  };
+
+  const normalizeDateInput = (value) => {
+    if (!value) return null;
+    // Ensure seconds are present for backend format
+    if (value.length === 16) return `${value}:00`;
+    if (value.length === 19) return value;
+    return value;
+  };
+
+  const formatDateDisplay = (value) => {
+    if (!value) return 'Nuk është caktuar';
+    const [datePart, timePart] = value.split('T');
+    const timeClean = (timePart ?? '').slice(0, 5);
+    return timeClean ? `${datePart} ${timeClean}`.trim() : datePart;
+  };
+
+  const handleSaveDeadline = async () => {
+    if (!lendaId) {
+      setDeadlineStatus({ loading: false, saving: false, error: 'Zgjidh lëndën përpara se të caktosh afatin.', message: null });
+      return;
+    }
+
+    const payload = {
+      ideaStartDate: normalizeDateInput(ideaDeadline.start),
+      ideaDeadline: normalizeDateInput(ideaDeadline.end),
+    };
+
+    if (payload.ideaStartDate && payload.ideaDeadline && payload.ideaStartDate > payload.ideaDeadline) {
+      setDeadlineStatus({ loading: false, saving: false, error: 'Data e fillimit duhet të jetë para afatit.', message: null });
+      return;
+    }
+
+    setDeadlineStatus({ loading: false, saving: true, error: null, message: null });
+    try {
+      const response = await updateIdeaDeadline(PROFESOR_ID, lendaId, payload);
+      const startValue = response.lenda?.ideaStartDate ? response.lenda.ideaStartDate.slice(0, 16) : '';
+      const endValue = response.lenda?.ideaDeadline ? response.lenda.ideaDeadline.slice(0, 16) : '';
+      setIdeaDeadline({ start: startValue, end: endValue });
+      setDeadlineStatus({ loading: false, saving: false, error: null, message: 'Afati u ruajt me sukses.' });
+    } catch (error) {
+      setDeadlineStatus({ loading: false, saving: false, error: error?.message ?? 'Nuk u ruajt afati.', message: null });
+    }
+  };
+
+  const handleClearDeadline = async () => {
+    if (!lendaId) return;
+    setDeadlineStatus({ loading: false, saving: true, error: null, message: null });
+    try {
+      const response = await updateIdeaDeadline(PROFESOR_ID, lendaId, { ideaStartDate: null, ideaDeadline: null });
+      const startValue = response.lenda?.ideaStartDate ? response.lenda.ideaStartDate.slice(0, 16) : '';
+      const endValue = response.lenda?.ideaDeadline ? response.lenda.ideaDeadline.slice(0, 16) : '';
+      setIdeaDeadline({ start: startValue, end: endValue });
+      setDeadlineStatus({ loading: false, saving: false, error: null, message: 'Afati u fshi.' });
+    } catch (error) {
+      setDeadlineStatus({ loading: false, saving: false, error: error?.message ?? 'Nuk u fshi afati.', message: null });
     }
   };
 
@@ -274,6 +382,78 @@ const Idetep = () => {
     justifyContent: 'space-between'
   };
 
+  const deadlineBar = {
+    marginTop: '1.25rem',
+    display: 'grid',
+    gridTemplateColumns: 'minmax(360px, 1fr) minmax(260px, 0.8fr)',
+    gap: '1rem',
+    alignItems: 'stretch'
+  };
+
+  const deadlineCard = {
+    background: 'rgba(8,16,12,0.9)',
+    borderRadius: 18,
+    border: '1px solid rgba(23,199,122,0.3)',
+    padding: '1rem 1.1rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.65rem'
+  };
+
+  const deadlineLabel = {
+    fontSize: 14,
+    fontWeight: 700,
+    color: '#1fdc8c',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    letterSpacing: '0.2px'
+  };
+
+  const deadlineInput = {
+    width: '100%',
+    borderRadius: 12,
+    border: '1px solid rgba(255,255,255,0.12)',
+    background: 'rgba(6,12,9,0.7)',
+    color: '#fff',
+    padding: '0.65rem 0.75rem'
+  };
+
+  const compactRow = {
+    display: 'grid',
+    gridTemplateColumns: '1fr',
+    gap: '0.5rem',
+    alignItems: 'center'
+  };
+
+  const timeSegments = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(90px, 1fr))',
+    gap: '0.5rem',
+    marginTop: 8
+  };
+
+  const timeSelect = {
+    width: '100%',
+    borderRadius: 10,
+    border: '1px solid rgba(255,255,255,0.14)',
+    background: 'rgba(6,12,9,0.75)',
+    color: '#fff',
+    padding: '0.55rem 0.6rem'
+  };
+
+  const deadlineActions = {
+    display: 'flex',
+    gap: 10,
+    flexWrap: 'wrap'
+  };
+
+  const deadlineSummary = {
+    ...deadlineCard,
+    borderColor: 'rgba(100,149,237,0.35)',
+    background: 'rgba(6,12,9,0.8)'
+  };
+
   return (
     <div style={pageStyle}>
       <div style={modalStyle}>
@@ -299,6 +479,131 @@ const Idetep = () => {
         <p style={{ margin: 0, opacity: 0.75, fontSize: 15 }}>
           Idetë dhe file-t e dërguara nga studentët për këtë lëndë.
         </p>
+
+        <div style={deadlineBar}>
+          <div style={deadlineCard}>
+            <div style={deadlineLabel}>
+              <span role="img" aria-label="calendar">🗓️</span>
+              Afati i dorëzimit të idesë
+              {deadlineStatus.loading && <span style={{ fontSize: 12, color: '#cfeee0' }}>Duke u lexuar...</span>}
+              {deadlineStatus.error && <span style={{ fontSize: 12, color: '#f8b4b4' }}>{deadlineStatus.error}</span>}
+              {deadlineStatus.message && <span style={{ fontSize: 12, color: '#7be7b2' }}>{deadlineStatus.message}</span>}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 4 }}>Fillimi</div>
+                <div style={compactRow}>
+                  <input
+                    type="date"
+                    style={deadlineInput}
+                    value={ideaDeadline.start ? ideaDeadline.start.split('T')[0] : ''}
+                    onChange={(e) => setDatePart('start', e.target.value)}
+                    disabled={deadlineStatus.loading || deadlineStatus.saving}
+                  />
+                  <div style={timeSegments}>
+                    <select
+                      style={timeSelect}
+                      value={get24hParts(ideaDeadline.start).hour}
+                      onChange={(e) => setTime24('start', e.target.value, get24hParts(ideaDeadline.start).minute)}
+                      disabled={deadlineStatus.loading || deadlineStatus.saving}
+                    >
+                      {Array.from({ length: 24 }, (_, i) => pad2(i)).map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                    <select
+                      style={timeSelect}
+                      value={get24hParts(ideaDeadline.start).minute}
+                      onChange={(e) => setTime24('start', get24hParts(ideaDeadline.start).hour, e.target.value)}
+                      disabled={deadlineStatus.loading || deadlineStatus.saving}
+                    >
+                      {Array.from({ length: 60 }, (_, i) => pad2(i)).map((m) => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 4 }}>Mbarimi</div>
+                <div style={compactRow}>
+                  <input
+                    type="date"
+                    style={deadlineInput}
+                    value={ideaDeadline.end ? ideaDeadline.end.split('T')[0] : ''}
+                    onChange={(e) => setDatePart('end', e.target.value)}
+                    disabled={deadlineStatus.loading || deadlineStatus.saving}
+                  />
+                  <div style={timeSegments}>
+                    <select
+                      style={timeSelect}
+                      value={get24hParts(ideaDeadline.end).hour}
+                      onChange={(e) => setTime24('end', e.target.value, get24hParts(ideaDeadline.end).minute)}
+                      disabled={deadlineStatus.loading || deadlineStatus.saving}
+                    >
+                      {Array.from({ length: 24 }, (_, i) => pad2(i)).map((h) => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                    <select
+                      style={timeSelect}
+                      value={get24hParts(ideaDeadline.end).minute}
+                      onChange={(e) => setTime24('end', get24hParts(ideaDeadline.end).hour, e.target.value)}
+                      disabled={deadlineStatus.loading || deadlineStatus.saving}
+                    >
+                      {Array.from({ length: 60 }, (_, i) => pad2(i)).map((m) => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style={deadlineActions}>
+              <button
+                style={{ ...primaryButton, padding: '0.65rem 1.2rem' }}
+                onClick={handleSaveDeadline}
+                disabled={deadlineStatus.loading || deadlineStatus.saving}
+              >
+                {deadlineStatus.saving ? 'Duke ruajtur...' : 'Ruaj afatin'}
+              </button>
+              <button
+                style={{ ...secondaryButton, padding: '0.65rem 1.2rem' }}
+                onClick={handleClearDeadline}
+                disabled={deadlineStatus.loading || deadlineStatus.saving || (!ideaDeadline.start && !ideaDeadline.end)}
+              >
+                Hiq afatin
+              </button>
+              <button
+                style={{ ...secondaryButton, padding: '0.65rem 1.2rem' }}
+                onClick={loadIdeaDeadline}
+                disabled={deadlineStatus.loading}
+              >
+                Rifresko afatin
+              </button>
+            </div>
+          </div>
+
+          <div style={deadlineSummary}>
+                <div style={{ ...deadlineLabel, color: '#6495ed' }}>
+              <span role="img" aria-label="pin">📌</span>
+              Datat e caktuara
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.5rem' }}>
+              <div style={{ fontSize: 14 }}>
+                <div style={{ opacity: 0.75, fontSize: 12 }}>Fillimi</div>
+                <strong>{formatDateDisplay(normalizeDateInput(ideaDeadline.start) ?? '')}</strong>
+              </div>
+              <div style={{ fontSize: 14 }}>
+                <div style={{ opacity: 0.75, fontSize: 12 }}>Mbarimi</div>
+                <strong>{formatDateDisplay(normalizeDateInput(ideaDeadline.end) ?? '')}</strong>
+              </div>
+            </div>
+            <div style={{ fontSize: 12, opacity: 0.75 }}>
+              Këto data shfaqen si udhëzim për dorëzimin e ideve.
+            </div>
+          </div>
+        </div>
 
         <div style={columnsStyle}>
           {/* Box për Ide */}

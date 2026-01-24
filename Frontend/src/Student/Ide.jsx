@@ -490,7 +490,7 @@ const IdeaPage = () => {
               }
             })}
           >
-            Dorëzo
+            Dorëzo Iden
           </button>
           <button style={secondaryButton} onClick={handleFeedback}>Feedback</button>
         </div>

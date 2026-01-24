@@ -469,6 +469,15 @@ router.post("/:id/dorezime", upload.single("file"), async (req: Request, res: Re
     console.log("Found lenda:", lenda.emriLendes);
     console.log("Lenda details:", { id: lenda.id, name: lenda.emriLendes, profesorId: lenda.profesorId });
 
+    // Kontrollo afatin e dorëzimit të ideve (nëse është i vendosur)
+    const now = new Date();
+    if (lenda.ideaStartDate && now < lenda.ideaStartDate) {
+      return res.status(400).json({ message: "Dorëzimi i ideve nuk ka filluar ende" });
+    }
+    if (lenda.ideaDeadline && now > lenda.ideaDeadline) {
+      return res.status(400).json({ message: "Afati i dorëzimit të ideve ka mbaruar" });
+    }
+
     // Get relative path from uploads folder
     const filePath = path.relative(process.cwd(), req.file.path).replace(/\\/g, "/");
     console.log("File path to save:", filePath);
@@ -554,6 +563,41 @@ router.get("/:id/dorezime/shabllon", async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Template fetch error:", error);
     res.status(500).json({ message: "Error fetching template", error: String(error) });
+  }
+});
+
+// GET: Idea deadlines (start/end) for a lenda, visible to student
+router.get("/:id/lendet/:lendaId/idea-deadline", async (req: Request, res: Response) => {
+  const studentId = Number(req.params.id);
+  const lendaId = Number(req.params.lendaId);
+
+  if (Number.isNaN(studentId) || Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "Invalid student or lenda ID" });
+  }
+
+  try {
+    const student = await studentRepository.findOneBy({ id: studentId });
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const lenda = await lendeRepository.findOneBy({ id: lendaId });
+    if (!lenda) {
+      return res.status(404).json({ message: "Lenda nuk u gjet" });
+    }
+
+    const formatLocalDate = (date: Date | null | undefined): string | null => {
+      if (!date) return null;
+      const pad = (n: number) => String(n).padStart(2, '0');
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    };
+
+    return res.json({
+      ideaStartDate: formatLocalDate(lenda.ideaStartDate ?? null),
+      ideaDeadline: formatLocalDate(lenda.ideaDeadline ?? null),
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Error fetching idea deadline", error });
   }
 });
 

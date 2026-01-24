@@ -32,6 +32,13 @@ export class Lendet {
     @Column({ type: "datetime", nullable: true })
     projectDeadline?: Date;
 
+    // Afati i dorëzimit të ideve (fillimi dhe mbyllja), opsionale
+    @Column({ type: "datetime", nullable: true })
+    ideaStartDate?: Date;
+
+    @Column({ type: "datetime", nullable: true })
+    ideaDeadline?: Date;
+
     // Template/Shabllon files per projektet
     @Column({ nullable: true })
     templateFile?: string;

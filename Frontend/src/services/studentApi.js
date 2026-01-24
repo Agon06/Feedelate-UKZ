@@ -88,6 +88,9 @@ export const getStudentIdeaSubmission = (studentId, lendaId) =>
 export const getStudentTemplate = (studentId, lendaId) =>
   request(`/studentet/${studentId}/dorezime/shabllon?lendaId=${lendaId}`);
 
+export const getStudentIdeaDeadline = (studentId, lendaId) =>
+  request(`/studentet/${studentId}/lendet/${lendaId}/idea-deadline`);
+
 export const getStudentProjects = (studentId) =>
   request(`/projekti/${studentId}`);
 
@@ -133,6 +136,7 @@ export default {
   uploadStudentDorezim,
   getStudentIdeaSubmission,
   getStudentTemplate,
+  getStudentIdeaDeadline,
   deleteStudentDorezim,
   getStudentProjects,
   getStudentProject,

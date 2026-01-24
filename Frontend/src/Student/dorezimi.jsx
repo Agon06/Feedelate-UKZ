@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { uploadStudentDorezim, getStudentTemplate } from '../services/studentApi';
+import { uploadStudentDorezim, getStudentTemplate, getStudentIdeaDeadline } from '../services/studentApi';
 
 const DorezimPage = () => {
   const location = useLocation();
@@ -23,6 +23,8 @@ const DorezimPage = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [template, setTemplate] = useState(null);
   const [templateLoading, setTemplateLoading] = useState(true);
+  const [ideaDeadline, setIdeaDeadline] = useState({ start: null, end: null });
+  const [deadlineLoading, setDeadlineLoading] = useState(true);
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -49,6 +51,22 @@ const DorezimPage = () => {
     };
 
     fetchTemplate();
+  }, [lendaId]);
+
+  // Fetch idea deadlines for this lenda
+  useEffect(() => {
+    const fetchIdeaDeadline = async () => {
+      if (!lendaId) return;
+      try {
+        const data = await getStudentIdeaDeadline(STUDENT_ID, lendaId);
+        setIdeaDeadline({ start: data.ideaStartDate ?? null, end: data.ideaDeadline ?? null });
+      } catch (error) {
+        setIdeaDeadline({ start: null, end: null });
+      } finally {
+        setDeadlineLoading(false);
+      }
+    };
+    fetchIdeaDeadline();
   }, [lendaId]);
 
   const handleDownloadTemplate = () => {
@@ -282,6 +300,42 @@ const DorezimPage = () => {
     fontSize: 13,
   };
 
+  const deadlineBoxStyle = {
+    background: 'rgba(23,199,122,0.08)',
+    borderRadius: 12,
+    border: '1px solid rgba(23,199,122,0.25)',
+    padding: '0.9rem',
+    marginBottom: '1.5rem',
+    fontSize: 13,
+    opacity: 0.9,
+    textAlign: 'center',
+    width: '100%'
+  };
+
+  const formatDisplay = (iso) => {
+    if (!iso) return null;
+    // Expecting YYYY-MM-DDTHH:MM:SS -> display as YYYY-MM-DD HH:MM
+    const [datePart, timePart] = String(iso).split('T');
+    const hm = (timePart || '').slice(0,5);
+    return `${datePart} ${hm}`;
+  };
+
+  const parseLocal = (iso) => {
+    if (!iso) return null;
+    // Parse local ISO without timezone
+    return new Date(iso);
+  };
+
+  const isSubmissionAllowed = (() => {
+    const now = new Date();
+    const start = parseLocal(ideaDeadline.start);
+    const end = parseLocal(ideaDeadline.end);
+    if (deadlineLoading) return true; // while loading, don't block UI hard
+    if (start && now < start) return false;
+    if (end && now > end) return false;
+    return true;
+  })();
+
   return (
     <div style={pageStyle}>
       <div style={modalStyle}>
@@ -296,6 +350,23 @@ const DorezimPage = () => {
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ marginTop: 0, marginBottom: '0.35rem' }}>Dorëzo Detyren</h2>
           <p style={{ margin: 0, opacity: 0.8 }}>Shkarko shabllonin, plotëso dhe dorëzo</p>
+        </div>
+
+        {/* Idea Deadline Banner - positioned under header and above columns */}
+        <div style={deadlineBoxStyle}>
+          {deadlineLoading ? (
+            <span>Duke u ngarkuar afatet...</span>
+          ) : (ideaDeadline.start || ideaDeadline.end) ? (
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: 6 }}>Afati i dorëzimit të idesë</div>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 24, flexWrap: 'wrap' }}>
+                <div>Fillimi: <span style={{ fontWeight: 600 }}>{formatDisplay(ideaDeadline.start)}</span></div>
+                <div>Mbarimi: <span style={{ fontWeight: 600 }}>{formatDisplay(ideaDeadline.end)}</span></div>
+              </div>
+            </div>
+          ) : (
+            <span>Nuk është caktuar afati i ideve për këtë lëndë.</span>
+          )}
         </div>
 
         <div style={columnsStyle}>
@@ -345,6 +416,7 @@ const DorezimPage = () => {
                   onChange={handleFileChange}
                   multiple
                   required
+                  disabled={!isSubmissionAllowed}
                 />
                 {formData.skedaret.length > 0 && (
                   <div style={{ margin: '0.5rem 0 0 0', fontSize: 12, opacity: 0.8 }}>
@@ -375,10 +447,29 @@ const DorezimPage = () => {
                 </div>
               )}
 
+              {/* Block notice when outside the allowed window */}
+              {!isSubmissionAllowed && (
+                <div
+                  style={{
+                    ...bannerStyle,
+                    background: 'rgba(255,82,82,0.12)',
+                    border: '1px solid rgba(255,255,255,0.1)'
+                  }}
+                >
+                  Dorëzimi i ideve është i mbyllur.
+                  {ideaDeadline.start && parseLocal(ideaDeadline.start) && new Date() < parseLocal(ideaDeadline.start) && (
+                    <span> Fillon më: {formatDisplay(ideaDeadline.start)}</span>
+                  )}
+                  {ideaDeadline.end && parseLocal(ideaDeadline.end) && new Date() > parseLocal(ideaDeadline.end) && (
+                    <span> Mbaroi më: {formatDisplay(ideaDeadline.end)}</span>
+                  )}
+                </div>
+              )}
+
               <button
                 style={primaryButton}
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !isSubmissionAllowed}
               >
                 {isSubmitting
                   ? `Duke u dorëzuar... (${formData.skedaret.length} file)`
