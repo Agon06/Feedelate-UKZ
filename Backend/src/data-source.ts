@@ -10,7 +10,7 @@ import { Profesor22 } from "./entities/Profesor/prof";
 import { Student } from "./entities/Student/Student";
 import { Idete } from "./entities/Student/Idete";
 import { Lendet } from "./entities/Student/Lendet";
-import { DorezimiIdes } from "./entities/Student/dorezimiides";
+import { DorezimiIdes } from "./entities/Student/dorezimiIdes";
 import { Projekti } from "./entities/Student/projekti";
 import { dorzimiProjektit } from "./entities/Student/dorzimiProjektit";
 import { Test } from "./entities/test";

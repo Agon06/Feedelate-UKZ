@@ -69,8 +69,9 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
         callbackURL: process.env.GOOGLE_CALLBACK_URL || "http://localhost:5000/api/auth/google/callback",
+        passReqToCallback: true,
       },
-      async (_accessToken, _refreshToken, profile, done) => {
+      async (req: any, _accessToken, _refreshToken, profile, done) => {
       try {
         const email = profile.emails?.[0]?.value;
         
@@ -152,6 +153,9 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         if (email.endsWith(".st@uni-gjilan.net")) {
           // Create new student account
           const nameParts = profile.displayName?.split(" ") || ["", ""];
+          // Accept academicYear and nrIdCard from req (set in authRoutes)
+          let academicYear = req.academicYear || null;
+          let nrIdCard = req.studentCardId || null;
           const newStudent = await studentRepository.save({
             email: email,
             emri: profile.name?.givenName || nameParts[0] || "N/A",
@@ -161,6 +165,8 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
             profilePicture: profile.photos?.[0]?.value || null,
             password: null,
             roles: JSON.stringify(["student"]),
+            academicYear: academicYear,
+            nrIdCard: nrIdCard,
           } as any);
           return done(null, { ...newStudent, type: "student", roles: JSON.stringify(["student"]) } as any);
         } else {
@@ -180,3 +186,6 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 }
 
 export default passport;
+
+
+//setup.ts

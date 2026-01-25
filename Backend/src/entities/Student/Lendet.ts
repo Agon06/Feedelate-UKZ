@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne, JoinColumn } from "typeorm";
 import { Idete } from "./Idete";
-import { DorezimiIdes } from "./dorezimiides";
+import { DorezimiIdes } from "./dorezimiIdes";
 import { dorzimiProjektit } from "./dorzimiProjektit";
 import { Profesor } from "../Profesor/Profesor";
 

@@ -1,3 +1,8 @@
+// Alias for clarity in lendet.jsx usage (must be after getStudentProfile is defined)
+// ...existing code...
+// (move this export to after getStudentProfile)
+// ...existing code...
+
 const API_BASE_URL = (import.meta.env?.VITE_API_URL ?? 'http://localhost:5000/api').replace(/\/$/, '');
 
 const handleResponse = async (response) => {
@@ -69,6 +74,7 @@ export const deleteStudentIdea = (studentId, ideaId) =>
 export const getStudentProfile = (studentId) =>
   request(`/studentet/${studentId}`);
 
+export const getStudentById = getStudentProfile;
 export const uploadStudentDorezim = async (studentId, { lendaId, file }) => {
   const formData = new FormData();
   formData.append('file', file);

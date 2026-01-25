@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from "typeorm";
 import { Idete } from "./Idete";
-import { DorezimiIdes } from "./dorezimiides";
+import { DorezimiIdes } from "./dorezimiIdes";
 import { dorzimiProjektit } from "./dorzimiProjektit";
 
 @Entity("studentet")
@@ -18,8 +18,12 @@ export class Student {
   @Column({ unique: true })
   email: string;
 
+
   @Column({ nullable: true, unique: true })
   nrIdCard: string;
+
+  @Column({ nullable: true })
+  academicYear: string;
 
   // SSO fields
   @Column({ nullable: true })

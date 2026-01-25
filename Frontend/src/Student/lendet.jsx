@@ -1,21 +1,76 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getStudentYearData } from '../services/studentApi';
+import { getStudentYearData, getStudentById } from '../services/studentApi';
 
 const Lendet = () => {
+  // thisYear: format MM/YYYY
+  const now = new Date();
+  const thisYear = `${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+
+
+  // Merr student nga localStorage, ose nga API nëse academicYear mungon
+  const [student, setStudent] = useState(() => JSON.parse(localStorage.getItem('student') || '{}'));
+  const [loadingStudent, setLoadingStudent] = useState(false);
+
+  useEffect(() => {
+    if (student.id && !student.academicYear && !loadingStudent) {
+      setLoadingStudent(true);
+      getStudentById(student.id)
+        .then((freshStudent) => {
+          if (freshStudent && freshStudent.academicYear) {
+            localStorage.setItem('student', JSON.stringify(freshStudent));
+            setStudent(freshStudent);
+          }
+        })
+        .finally(() => setLoadingStudent(false));
+    }
+  }, [student, loadingStudent]);
+
+  const academicYear = student.academicYear || '';
+
+  // Calculate vitiStudimeve
+  let vitiStudimeve = 0;
+  if (academicYear) {
+    // academicYear format: '2025/2026'
+    const [startYearStr, endYearStr] = academicYear.split('/');
+    const startYear = parseInt(startYearStr, 10);
+    const endYear = parseInt(endYearStr, 10);
+    const currentMonth = now.getMonth() + 1; // 1-12
+    const currentYear = now.getFullYear();
+
+    // Periudha: tetor (10) i startYear deri shtator (9) i endYear
+    let inCurrentAcademicYear = false;
+    if (
+      (currentYear === startYear && currentMonth >= 10) ||
+      (currentYear === endYear && currentMonth <= 9)
+    ) {
+      inCurrentAcademicYear = true;
+    }
+
+    if (inCurrentAcademicYear) {
+      vitiStudimeve = 1;
+    } else if (
+      (currentYear === startYear + 1 && currentMonth >= 10) ||
+      (currentYear === endYear + 1 && currentMonth <= 9) ||
+      (currentYear === endYear && currentMonth > 9)
+    ) {
+      vitiStudimeve = 2;
+    } else {
+      vitiStudimeve = 3;
+    }
+  }
   const { yearId } = useParams();
   const navigate = useNavigate();
 
-  const student = JSON.parse(localStorage.getItem('student') || '{}');
   const STUDENT_ID = student.id;
 
   useEffect(() => {
-    if (!student.id) {
+    if (!student.id && !loadingStudent) {
       navigate('/');
     }
-  }, [navigate, student.id]);
+  }, [navigate, student.id, loadingStudent]);
 
-  if (!student.id) {
+  if (!student.id || loadingStudent) {
     return null;
   }
 
@@ -458,6 +513,10 @@ const Lendet = () => {
 
   return (
     <div style={pageStyle}>
+      {/* TEST: Shfaq vitiStudimeve */}
+      <div style={{ background: '#1fdc8c', color: '#222', padding: '0.5rem 1rem', borderRadius: 8, margin: '1rem auto', maxWidth: 320, textAlign: 'center', fontWeight: 700 }}>
+        Viti i studimeve (test): {vitiStudimeve}
+      </div>
       <div style={topBarStyle}>
         <div style={brandStyle}>Feedelate</div>
         <div style={{ flex: 1, textAlign: 'center', fontWeight: 600, letterSpacing: 0.6 }}>Universiteti Publik Kadri Zeka</div>
@@ -529,41 +588,56 @@ const Lendet = () => {
 
         {yearData && semestersToRender.length > 0 && (
           <div style={semesterGrid}>
-            {semestersToRender.map((semester) => (
-              <div key={semester.id ?? semester.name} style={semesterCard}>
-                <div style={semesterTitle}>{semester.name}</div>
-                <div style={subjectGrid}>
-                  {semester.subjects.filter((s) => !s.isElective).length === 0 && (
-                    <div style={emptySubjectsStyle}>Ende nuk ka lëndë për këtë semestër.</div>
-                  )}
-                  {semester.subjects.filter((s) => !s.isElective).map((subject) => {
-                    const isSelected = selectedElectives.some((item) => item.id === subject.id);
-                    return (
-                      <div
-                        key={`${semester.id}-${subject.id}`}
-                        style={{
-                          ...subjectItem,
-                          border: isSelected ? '1px solid rgba(23,199,122,0.65)' : subjectItem.border,
-                          color: isSelected ? '#1fdc8c' : subjectItem.color,
-                          cursor: 'pointer'
-                        }}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => openSubjectModal(subject)}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault();
-                            openSubjectModal(subject);
-                          }
-                        }}
-                      >
-                        {subject.name}
-                      </div>
-                    );
-                  })}
+            {semestersToRender.map((semester, idx) => {
+              // idx: 0 = first year, 1 = second year, 2 = third year, etc.
+              // vitiStudimeve: 1, 2, 3
+              // Allowed: vitiStudimeve >= idx+1
+              // const canInteract = vitiStudimeve >= idx + 1;
+              const semesterYear = Math.ceil((semester.id || 1) / 2);
+const canInteract = vitiStudimeve >= semesterYear;
+              return (
+                <div key={semester.id ?? semester.name} style={semesterCard}>
+                  <div style={semesterTitle}>{semester.name}</div>
+                  <div style={subjectGrid}>
+                    {semester.subjects.filter((s) => !s.isElective).length === 0 && (
+                      <div style={emptySubjectsStyle}>Ende nuk ka lëndë për këtë semestër.</div>
+                    )}
+                    {semester.subjects.filter((s) => !s.isElective).map((subject) => {
+                      const isSelected = selectedElectives.some((item) => item.id === subject.id);
+                      return (
+                        <div
+                          key={`${semester.id}-${subject.id}`}
+                          style={{
+                            ...subjectItem,
+                            border: isSelected ? '1px solid rgba(23,199,122,0.65)' : subjectItem.border,
+                            color: isSelected ? '#1fdc8c' : subjectItem.color,
+                            cursor: canInteract ? 'pointer' : 'not-allowed',
+                            opacity: canInteract ? 1 : 0.6
+                          }}
+                          role="button"
+                          tabIndex={canInteract ? 0 : -1}
+                          onClick={canInteract ? () => openSubjectModal(subject) : undefined}
+                          onKeyDown={canInteract ? (event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault();
+                              openSubjectModal(subject);
+                            }
+                          } : undefined}
+                          aria-disabled={!canInteract}
+                        >
+                          {subject.name}
+                          {!canInteract && (
+                            <span style={{ display: 'block', fontSize: 12, marginTop: 4, color: '#fbd38d' }}>
+                              Vetëm shikim
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
         {selectedElectives.length > 0 && (

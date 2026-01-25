@@ -1,8 +1,36 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { getStudentById } from '../services/studentApi';
+
+
+// Funksion për llogaritjen dinamike të viteve akademike
+function getAcademicYears(today = new Date()) {
+  const year = today.getFullYear();
+  const month = today.getMonth() + 1;
+  const baseYear = (month >= 10) ? year : year - 1;
+  // 3 vitet më të reja (dinamike)
+  const dynamicYears = [
+    `${baseYear}/${baseYear + 1}`,
+    `${baseYear - 1}/${baseYear}`,
+    `${baseYear - 2}/${baseYear - 1}`
+  ];
+  // Gjej 2 vitet më të vjetra që nuk janë në dynamicYears
+  const minYear = 2021; // Viti më i vjetër që mund të shfaqet ndonjëherë
+  const allYears = [];
+  for (let y = baseYear; y >= minYear; y--) {
+    allYears.push(`${y}/${y + 1}`);
+  }
+  // Filtrimi i viteve historike
+  const legacyYears = allYears.filter(y => !dynamicYears.includes(y)).slice(-2);
+  return [...legacyYears, ...dynamicYears];
+}
 
 const Login = () => {
   const [error, setError] = useState('');
+  const [firstTime, setFirstTime] = useState(false);
+  const academicYears = getAcademicYears();
+  const [selectedYear, setSelectedYear] = useState(academicYears[0]);
+  const [studentCardId, setStudentCardId] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -38,15 +66,26 @@ const Login = () => {
         const { user, type } = data.payload;
         try {
           localStorage.setItem('authenticated', 'true');
-          localStorage.setItem('student', JSON.stringify(user));
-          
-          if (type === 'student') {
-            navigate('/student', { replace: true });
+          // Fetch full student profile if type is student
+          if (type === 'student' && user?.id) {
+            getStudentById(user.id)
+              .then((fullStudent) => {
+                localStorage.setItem('student', JSON.stringify(fullStudent));
+                navigate('/student', { replace: true });
+              })
+              .catch(() => {
+                // fallback if fetch fails
+                localStorage.setItem('student', JSON.stringify(user));
+                navigate('/student', { replace: true });
+              });
           } else if (type === 'profesor') {
+            localStorage.setItem('student', JSON.stringify(user));
             navigate('/profesor', { replace: true });
           } else if (type === 'admin') {
+            localStorage.setItem('student', JSON.stringify(user));
             navigate('/admin', { replace: true });
           } else {
+            localStorage.setItem('student', JSON.stringify(user));
             navigate('/login');
           }
         } catch (err) {
@@ -79,18 +118,27 @@ const Login = () => {
     if (userParam && typeParam) {
       try {
         const userData = JSON.parse(decodeURIComponent(userParam));
-        localStorage.setItem('student', JSON.stringify(userData));
         localStorage.setItem('authenticated', 'true');
-        
-        // Replace history entry to prevent back button returning to callback
-        window.history.replaceState({}, document.title, '/student');
-        
-        // Redirect based on user type
-        if (typeParam === 'student') {
-          navigate('/student', { replace: true });
+        // Fetch full student profile if type is student
+        if (typeParam === 'student' && userData?.id) {
+          getStudentById(userData.id)
+            .then((fullStudent) => {
+              localStorage.setItem('student', JSON.stringify(fullStudent));
+              window.history.replaceState({}, document.title, '/student');
+              navigate('/student', { replace: true });
+            })
+            .catch(() => {
+              localStorage.setItem('student', JSON.stringify(userData));
+              window.history.replaceState({}, document.title, '/student');
+              navigate('/student', { replace: true });
+            });
         } else if (typeParam === 'profesor') {
+          localStorage.setItem('student', JSON.stringify(userData));
+          window.history.replaceState({}, document.title, '/profesor');
           navigate('/profesor', { replace: true });
         } else if (typeParam === 'admin') {
+          localStorage.setItem('student', JSON.stringify(userData));
+          window.history.replaceState({}, document.title, '/admin');
           navigate('/admin', { replace: true });
         }
       } catch (err) {
@@ -107,7 +155,15 @@ const Login = () => {
     const left = window.screenX + (window.outerWidth - width) / 2;
     const top = window.screenY + (window.outerHeight - height) / 2;
     const features = `popup=yes,toolbar=0,location=0,status=0,menubar=0,scrollbars=1,resizable=1,width=${width},height=${height},left=${left},top=${top}`;
-    const popup = window.open('http://localhost:5000/api/auth/google?popup=1', 'google-oauth', features);
+    let url = 'http://localhost:5000/api/auth/google?popup=1';
+    if (firstTime) {
+      const params = new URLSearchParams();
+      params.set('firstTime', '1');
+      params.set('academicYear', selectedYear);
+      params.set('studentCardId', studentCardId);
+      url += `&${params.toString()}`;
+    }
+    const popup = window.open(url, 'google-oauth', features);
     if (!popup) {
       setError('Popup blocked. Please allow popups and try again.');
     }
@@ -183,7 +239,48 @@ const Login = () => {
             Sign in with your @uni-gjilan.net Google account.
           </p>
         </div>
-        
+
+        {/* First time login checkbox */}
+        <div style={{ marginBottom: '1rem', textAlign: 'left' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 15 }}>
+            <input
+              type="checkbox"
+              checked={firstTime}
+              onChange={e => setFirstTime(e.target.checked)}
+              style={{ marginRight: 8 }}
+            />
+            Kyçem për herë të parë
+          </label>
+        </div>
+
+        {/* Show academic year dropdown and StudentCardID input if first time */}
+        {firstTime && (
+          <div style={{ marginBottom: '1rem', textAlign: 'left' }}>
+            <label style={{ fontSize: 14, color: '#b7c2bd' }}>
+              Zgjedh vitin akademik:
+              <select
+                value={selectedYear}
+                onChange={e => setSelectedYear(e.target.value)}
+                style={{ ...inputStyle, margin: '0.5rem 0 0.5rem 0', color: '#222' }}
+              >
+                {academicYears.map((year) => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+            </label>
+            <label style={{ fontSize: 14, color: '#b7c2bd', display: 'block', marginTop: 8 }}>
+              Student Card ID:
+              <input
+                type="text"
+                value={studentCardId}
+                onChange={e => setStudentCardId(e.target.value)}
+                style={{ ...inputStyle, margin: '0.5rem 0 0.5rem 0' }}
+                placeholder="P.sh. 123456"
+              />
+            </label>
+          </div>
+        )}
+
         {error && (
           <div style={{
             color: '#ff6b6b',
@@ -196,7 +293,7 @@ const Login = () => {
             {error}
           </div>
         )}
-        
+
         <button onClick={handleGoogleLogin} style={buttonStyle}>
           <svg style={logoStyle} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

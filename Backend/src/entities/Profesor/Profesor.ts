@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from "typeorm";
 import { Idete } from "../Student/Idete";
-import { DorezimiIdes } from "../Student/dorezimiides";
+import { DorezimiIdes } from "../Student/dorezimiIdes";
 import { Lendet } from "../Student/Lendet";
 
 @Entity("profesoret")

@@ -6,7 +6,7 @@ import path from "path";
 import fs from "fs";
 // Import entities - tani përdorim vetëm tabelat e unifikuara pa duplikatat
 import { Profesor } from "../../entities/Profesor/Profesor";
-import { DorezimiIdes } from "../../entities/Student/dorezimiides";
+import { DorezimiIdes } from "../../entities/Student/dorezimiIdes";
 import { Student } from "../../entities/Student/Student";
 import { Lendet } from "../../entities/Student/Lendet";
 import { Idete } from "../../entities/Student/Idete";
