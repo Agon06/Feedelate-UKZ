@@ -108,6 +108,18 @@ export const updateProjectDeadline = (profesorId, lendaId, payload) =>
     body: JSON.stringify(payload),
   });
 
+export const getIdeaDeadline = (profesorId, lendaId) =>
+  request(`/profesoret/${profesorId}/lendet/${lendaId}/idea-deadline`);
+
+export const updateIdeaDeadline = (profesorId, lendaId, payload) =>
+  request(`/profesoret/${profesorId}/lendet/${lendaId}/idea-deadline`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
 export const getProfesorProjects = (profesorId) =>
   request(`/projektip/${profesorId}`);
 
@@ -184,6 +196,8 @@ export default {
   updateProjectGrade,
   updateProjectMaxPoints,
   updateProjectDeadline,
+  getIdeaDeadline,
+  updateIdeaDeadline,
   getProfesorProjects,
   getProfesorProject,
   createProfesorProject,
