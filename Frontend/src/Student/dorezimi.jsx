@@ -16,7 +16,7 @@ const DorezimPage = () => {
   const STUDENT_ID = student.id;
 
   const [formData, setFormData] = useState({
-    skedaret: [],
+    skedar: null,
   });
   const [formFeedback, setFormFeedback] = useState({ type: null, message: null });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -94,15 +94,14 @@ const DorezimPage = () => {
   };
 
   const handleFileChange = (event) => {
-    const files = Array.from(event.target.files || []);
-    if (files.length > 0) {
-      // Kontrollo madhësinë e secilit file
-      const oversizedFiles = files.filter(f => f.size > 10 * 1024 * 1024);
-      if (oversizedFiles.length > 0) {
-        setFormFeedback({ type: 'error', message: `${oversizedFiles.length} file(s) kalojnë 10MB.` });
+    const file = event.target.files?.[0] || null;
+    if (file) {
+      // Kontrollo madhësinë e file-it (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        setFormFeedback({ type: 'error', message: 'File-i kalon 10MB.' });
         return;
       }
-      setFormData((prev) => ({ ...prev, skedaret: files }));
+      setFormData((prev) => ({ ...prev, skedar: file }));
       setFormFeedback({ type: null, message: null });
     }
   };
@@ -116,8 +115,8 @@ const DorezimPage = () => {
       return;
     }
 
-    if (formData.skedaret.length === 0) {
-      setFormFeedback({ type: 'error', message: 'Duhet të ngarkosh të paktën një fajll.' });
+    if (!formData.skedar) {
+      setFormFeedback({ type: 'error', message: 'Duhet të zgjedhësh një fajll për ta dorëzuar.' });
       return;
     }
 
@@ -125,18 +124,13 @@ const DorezimPage = () => {
     setFormFeedback({ type: null, message: null });
 
     try {
-      console.log('Uploading files:', { lendaId, fileCount: formData.skedaret.length });
+      console.log('Uploading file:', { lendaId, fileName: formData.skedar.name });
 
-      // Dërgo çdo file veç e veç
-      for (let i = 0; i < formData.skedaret.length; i++) {
-        const file = formData.skedaret[i];
-        console.log(`Uploading file ${i + 1}/${formData.skedaret.length}:`, file.name);
-        await uploadStudentDorezim(STUDENT_ID, { lendaId, file });
-      }
+      await uploadStudentDorezim(STUDENT_ID, { lendaId, file: formData.skedar });
 
-      setFormFeedback({ type: 'success', message: `${formData.skedaret.length} detyra(t) u dorëzua me sukses!` });
+      setFormFeedback({ type: 'success', message: 'Detyra u dorëzua me sukses!' });
       setTimeout(() => {
-        setFormData({ skedaret: [] });
+        setFormData({ skedar: null });
         navigate(-1);
       }, 1200);
     } catch (error) {
@@ -408,30 +402,27 @@ const DorezimPage = () => {
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: isMobile ? '16px' : '20px' }}>
               <div style={formField}>
-                <label style={labelStyle}>Ngarko Detyrat (mund të zgjedhësh më shumë se një) *</label>
+                <label style={labelStyle}>Ngarko Detyrën (një file - ZIP, RAR, Word, Excel, PDF, etj.) *</label>
                 <input
                   style={inputStyle}
                   type="file"
-                  accept=".doc,.docx,.pdf,.ppt,.pptx,.xls,.xlsx,.txt"
+                  accept=".doc,.docx,.pdf,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.rar"
                   onChange={handleFileChange}
-                  multiple
                   required
                   disabled={!isSubmissionAllowed}
                 />
-                {formData.skedaret.length > 0 && (
+                {formData.skedar && (
                   <div style={{ margin: '0.5rem 0 0 0', fontSize: 12, opacity: 0.8 }}>
                     <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>
-                      📎 {formData.skedaret.length} file(s) të zgjedhur:
+                      📎 File i zgjedhur:
                     </div>
-                    {formData.skedaret.map((file, idx) => (
-                      <div key={idx} style={{ paddingLeft: '1rem', marginBottom: '0.15rem' }}>
-                        • {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                      </div>
-                    ))}
+                    <div style={{ paddingLeft: '1rem' }}>
+                      • {formData.skedar.name} ({(formData.skedar.size / 1024 / 1024).toFixed(2)} MB)
+                    </div>
                   </div>
                 )}
                 <p style={{ margin: '0.5rem 0 0 0', fontSize: 12, opacity: 0.7 }}>
-                  (Maksimumi për file: 10MB - Word, PDF, PowerPoint, Excel)
+                  (Maksimumi: 10MB - ZIP, RAR, Word, PDF, PowerPoint, Excel)
                 </p>
               </div>
 
@@ -472,8 +463,8 @@ const DorezimPage = () => {
                 disabled={isSubmitting || !isSubmissionAllowed}
               >
                 {isSubmitting
-                  ? `Duke u dorëzuar... (${formData.skedaret.length} file)`
-                  : `Dorëzo ${formData.skedaret.length > 0 ? `(${formData.skedaret.length} file)` : ''}`
+                  ? 'Duke u dorëzuar...'
+                  : 'Dorëzo'
                 }
               </button>
             </form>

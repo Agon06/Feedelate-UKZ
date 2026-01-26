@@ -188,15 +188,23 @@ const Projektip = () => {
 
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-          gap: "1.5rem",
+          maxHeight: "580px",
+          overflowY: "auto",
+          overflowX: "hidden",
+          paddingRight: "0.5rem",
         }}
       >
-        {projects.length === 0 ? (
-          <p>Nuk keni projekte të krijuara akoma.</p>
-        ) : (
-          projects.map((project) => (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+            gap: "1.5rem",
+          }}
+        >
+          {projects.length === 0 ? (
+            <p>Nuk keni projekte të krijuara akoma.</p>
+          ) : (
+            projects.map((project) => (
             <div
               key={project.id}
               style={{
@@ -230,6 +238,7 @@ const Projektip = () => {
             </div>
           ))
         )}
+        </div>
       </div>
     </div>
   );
