@@ -14,6 +14,28 @@ const AdminProfessorManagement = () => {
     const [editData, setEditData] = useState({});
     const [notification, setNotification] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [isLendaModalOpen, setIsLendaModalOpen] = useState(false);
+    const [lendaFilter, setLendaFilter] = useState('all');
+    const [subjectsData] = useState({
+        1: [
+            { id: 1, name: 'Matematika Diskrete', semester: 1, type: 'obligative' },
+            { id: 2, name: 'Algoritmet', semester: 1, type: 'obligative' },
+            { id: 3, name: 'Programim I', semester: 2, type: 'obligative' },
+            { id: 4, name: 'Strukturat e të Dhënave', semester: 2, type: 'zgjedhore' }
+        ],
+        2: [
+            { id: 5, name: 'Baza të Të Dhënave', semester: 3, type: 'obligative' },
+            { id: 6, name: 'Arkitektura e Kompjuterit', semester: 3, type: 'zgjedhore' },
+            { id: 7, name: 'Rrjetet Kompjuterike', semester: 4, type: 'obligative' },
+            { id: 8, name: 'Sigurimi i Sistemeve', semester: 4, type: 'zgjedhore' }
+        ],
+        3: [
+            { id: 9, name: 'Inteligjenca Artificiale', semester: 5, type: 'obligative' },
+            { id: 10, name: 'Machine Learning', semester: 5, type: 'zgjedhore' },
+            { id: 11, name: 'Sisteme Operative Avancuar', semester: 6, type: 'obligative' },
+            { id: 12, name: 'Cloud Computing', semester: 6, type: 'zgjedhore' }
+        ]
+    });
 
     useEffect(() => {
         // Load user data from localStorage
@@ -438,6 +460,25 @@ const AdminProfessorManagement = () => {
                                             >
                                                 Modifiko
                                             </button>
+                                            <button
+                                                style={{
+                                                    ...modifyButtonStyle,
+                                                    marginLeft: '0.5rem',
+                                                    background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(139, 92, 246, 0.1) 100%)',
+                                                    borderColor: 'rgba(139, 92, 246, 0.3)'
+                                                }}
+                                                onClick={() => setIsLendaModalOpen(true)}
+                                                onMouseEnter={(e) => {
+                                                    e.target.style.background = 'linear-gradient(135deg, rgba(139, 92, 246, 0.3) 0%, rgba(139, 92, 246, 0.2) 100%)';
+                                                    e.target.style.borderColor = 'rgba(139, 92, 246, 0.5)';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.target.style.background = 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(139, 92, 246, 0.1) 100%)';
+                                                    e.target.style.borderColor = 'rgba(139, 92, 246, 0.3)';
+                                                }}
+                                            >
+                                                Lendet
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}
@@ -799,6 +840,195 @@ const AdminProfessorManagement = () => {
                         {notification.type === 'success' ? '✓' : '✕'}
                     </span>
                     {notification.message}
+                </div>
+            )}
+
+            {/* Lenda Modal */}
+            {isLendaModalOpen && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0, 0, 0, 0.7)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1000
+                }}>
+                    <div style={{
+                        background: 'linear-gradient(180deg, rgba(16, 24, 20, 0.95) 0%, rgba(12, 20, 16, 0.95) 100%)',
+                        border: '1px solid rgba(23, 199, 122, 0.3)',
+                        borderRadius: 16,
+                        padding: '2rem',
+                        maxWidth: 600,
+                        width: '90%',
+                        maxHeight: '80vh',
+                        overflowY: 'auto',
+                        boxShadow: '0 24px 60px rgba(0,0,0,0.55)',
+                        color: '#fff'
+                    }}>
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '2rem'
+                        }}>
+                            <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 800 }}>
+                                Zgjedh Lendet
+                            </h2>
+                            <button
+                                onClick={() => setIsLendaModalOpen(false)}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    fontSize: '28px',
+                                    color: '#17c77a',
+                                    cursor: 'pointer',
+                                    padding: 0,
+                                    width: '32px',
+                                    height: '32px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        {/* Filter buttons */}
+                        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                            {[
+                                { key: 'all', label: 'Të gjitha' },
+                                { key: 'viti-1', label: 'Viti 1' },
+                                { key: 'viti-2', label: 'Viti 2' },
+                                { key: 'viti-3', label: 'Viti 3' },
+                                { key: 'zgjedhore', label: 'Zgjedhore' }
+                            ].map((btn) => (
+                                <button
+                                    key={btn.key}
+                                    onClick={() => setLendaFilter(btn.key)}
+                                    style={{
+                                        padding: '0.5rem 0.75rem',
+                                        background: lendaFilter === btn.key ? 'linear-gradient(135deg, rgba(23,199,122,0.2) 0%, rgba(23,199,122,0.12) 100%)' : 'rgba(255,255,255,0.03)',
+                                        color: lendaFilter === btn.key ? '#17c77a' : '#fff',
+                                        border: lendaFilter === btn.key ? '1px solid rgba(23,199,122,0.4)' : '1px solid rgba(255,255,255,0.04)',
+                                        borderRadius: 8,
+                                        cursor: 'pointer',
+                                        fontWeight: 700,
+                                        fontSize: 13
+                                    }}
+                                >
+                                    {btn.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Subjects grouped by year (filtered) */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                            {(() => {
+                                const years = [1, 2, 3];
+                                const visibleYears = lendaFilter && lendaFilter.startsWith('viti') ? [parseInt(lendaFilter.split('-')[1])] : years;
+
+                                return visibleYears.map((year) => {
+                                    const raw = subjectsData[year] || [];
+                                    const filtered = lendaFilter === 'zgjedhore' ? raw.filter(s => s.type === 'zgjedhore') : raw;
+                                    if (filtered.length === 0) return null;
+
+                                    return (
+                                        <div key={year}>
+                                            <h3 style={{
+                                                fontSize: 15,
+                                                fontWeight: 700,
+                                                color: '#17c77a',
+                                                marginBottom: '0.75rem',
+                                                letterSpacing: '-0.3px'
+                                            }}>Viti {year}</h3>
+
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', paddingLeft: '1rem' }}>
+                                                {filtered.map((subject) => (
+                                                    <label key={subject.id} style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '0.6rem',
+                                                        cursor: 'pointer',
+                                                        padding: '0.6rem',
+                                                        borderRadius: 8,
+                                                        background: 'rgba(255, 255, 255, 0.02)',
+                                                        transition: 'all 200ms ease'
+                                                    }}
+                                                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                                                    onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}>
+                                                        <input type="checkbox" style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#17c77a' }} />
+                                                        <span style={{ flex: 1, fontSize: 14, color: '#fff' }}>{subject.name}</span>
+                                                        <span style={{ fontSize: 12, padding: '0.25rem 0.5rem', background: 'rgba(23,199,122,0.12)', borderRadius: 4, color: '#17c77a' }}>Semestri {subject.semester}</span>
+                                                        <span style={{ fontSize: 12, padding: '0.25rem 0.5rem', background: subject.type === 'zgjedhore' ? 'rgba(139,92,246,0.12)' : 'rgba(251,191,36,0.12)', borderRadius: 4, color: subject.type === 'zgjedhore' ? '#c4b5fd' : '#fbbf24' }}>{subject.type === 'zgjedhore' ? 'Zgjedhore' : 'Obligative'}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                });
+                            })()}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div style={{
+                            display: 'flex',
+                            gap: '1rem',
+                            marginTop: '2.5rem',
+                            paddingTop: '1.5rem',
+                            borderTop: '1px solid rgba(23, 199, 122, 0.15)'
+                        }}>
+                            <button
+                                onClick={() => setIsLendaModalOpen(false)}
+                                style={{
+                                    flex: 1,
+                                    padding: '0.85rem 1.5rem',
+                                    background: 'rgba(255, 255, 255, 0.08)',
+                                    color: '#fff',
+                                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                                    borderRadius: 8,
+                                    fontWeight: 600,
+                                    fontSize: 14,
+                                    cursor: 'pointer',
+                                    transition: 'all 200ms ease'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.target.style.background = 'rgba(255, 255, 255, 0.12)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.target.style.background = 'rgba(255, 255, 255, 0.08)';
+                                }}
+                            >
+                                Mbyll
+                            </button>
+                            <button
+                                style={{
+                                    flex: 1,
+                                    padding: '0.85rem 1.5rem',
+                                    background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.5) 0%, rgba(139, 92, 246, 0.4) 100%)',
+                                    color: '#fff',
+                                    border: '1px solid rgba(139, 92, 246, 0.5)',
+                                    borderRadius: 8,
+                                    fontWeight: 600,
+                                    fontSize: 14,
+                                    cursor: 'pointer',
+                                    transition: 'all 200ms ease'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.target.style.background = 'linear-gradient(135deg, rgba(139, 92, 246, 0.6) 0%, rgba(139, 92, 246, 0.5) 100%)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.target.style.background = 'linear-gradient(135deg, rgba(139, 92, 246, 0.5) 0%, rgba(139, 92, 246, 0.4) 100%)';
+                                }}
+                            >
+                                Ruaj
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

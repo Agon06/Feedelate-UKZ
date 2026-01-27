@@ -3,11 +3,13 @@ import { AppDataSource } from "../../data-source";
 import { Admin } from "../../entities/Admin/Admin";
 import { Student } from "../../entities/Student/Student";
 import { Profesor } from "../../entities/Profesor/Profesor";
+import { Lendet } from "../../entities/Student/Lendet";
 
 const router = Router();
 const adminRepository = AppDataSource.getRepository(Admin);
 const studentRepository = AppDataSource.getRepository(Student);
 const profesorRepository = AppDataSource.getRepository(Profesor);
+const lendetRepository = AppDataSource.getRepository(Lendet);
 
 // Get all admins     Nese eshte empty shkuraj nuk ka adminaaa
 
@@ -179,6 +181,70 @@ router.put("/profesors/:id", async (req: Request, res: Response) => {
         res.status(500).json({ message: "Error updating profesor", error });
     }
 });
+
+// ========== LENDET ROUTES (must be BEFORE /:id route to avoid route conflicts) ==========
+
+// Get all lendet (subjects)
+router.get("/lendet/all", async (req: Request, res: Response) => {
+    try {
+        const lendet = await lendetRepository.find({
+            order: {
+                viti: "ASC",
+                semestri: "ASC"
+            }
+        });
+        res.json(lendet);
+    } catch (error) {
+        console.error("Error fetching lendet:", error);
+        res.status(500).json({ message: "Error fetching lendet", error });
+    }
+});
+
+// Create lendet (register a new subject)
+router.post("/lendet", async (req: Request, res: Response) => {
+    try {
+        const { emriLendes, viti, semestri, isZgjedhore } = req.body;
+
+        // Validate required fields
+        if (!emriLendes || viti === undefined || semestri === undefined || isZgjedhore === undefined) {
+            return res.status(400).json({ 
+                message: "Missing required fields: emriLendes, viti, semestri, isZgjedhore" 
+            });
+        }
+
+        const lendet = lendetRepository.create({
+            emriLendes,
+            viti: parseInt(viti),
+            semestri: parseInt(semestri),
+            isZgjedhore: isZgjedhore === true || isZgjedhore === "true"
+        });
+
+        const result = await lendetRepository.save(lendet);
+        res.status(201).json(result);
+    } catch (error) {
+        console.error("Error creating lendet:", error);
+        res.status(500).json({ message: "Error creating lendet", error });
+    }
+});
+
+// Get lendet by year
+router.get("/lendet/by-year/:viti", async (req: Request, res: Response) => {
+    try {
+        const viti = parseInt(req.params.viti);
+        const lendet = await lendetRepository.find({
+            where: { viti },
+            order: {
+                semestri: "ASC"
+            }
+        });
+        res.json(lendet);
+    } catch (error) {
+        console.error("Error fetching lendet by year:", error);
+        res.status(500).json({ message: "Error fetching lendet by year", error });
+    }
+});
+
+// ========== ADMIN ROUTES ==========
 
 // Get admin by id
 router.get("/:id", async (req: Request, res: Response) => {
