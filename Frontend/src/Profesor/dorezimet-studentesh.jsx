@@ -8,7 +8,8 @@ const DoreziметStudentesh = () => {
   const location = useLocation();
   const { subject, lendaId } = location.state || {};
 
-  const PROFESOR_ID = 1;
+  const student = JSON.parse(localStorage.getItem('student') || '{}');
+  const PROFESOR_ID = student.id || 1;
   const [submissions, setSubmissions] = useState([]);
   const [status, setStatus] = useState({ loading: true, error: null });
   const [isMobile, setIsMobile] = useState(false);

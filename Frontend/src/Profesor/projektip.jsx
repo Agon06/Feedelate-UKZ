@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { getProfesorProjects, createProfesorProject, deleteProfesorProject } from "../services/profesorApi";
 
 const Projektip = () => {
-  const PROFESOR_ID = 1;
+  const student = JSON.parse(localStorage.getItem('student') || '{}');
+  const PROFESOR_ID = student.id || 1;
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

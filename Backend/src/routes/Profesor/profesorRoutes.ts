@@ -11,6 +11,7 @@ import { Student } from "../../entities/Student/Student";
 import { Lendet } from "../../entities/Student/Lendet";
 import { Idete } from "../../entities/Student/Idete";
 import { dorzimiProjektit } from "../../entities/Student/dorzimiProjektit";
+import { ProfesorLendetMapping } from "../../entities/Student/ProfesorLendetMapping";
 
 const router = Router();
 const profesorRepository = AppDataSource.getRepository(Profesor);
@@ -19,6 +20,7 @@ const ideteRepository = AppDataSource.getRepository(Idete);
 const dorezimiIdeeshRepository = AppDataSource.getRepository(DorezimiIdes);
 const studentRepository = AppDataSource.getRepository(Student);
 const dorezimProjektitRepository = AppDataSource.getRepository(dorzimiProjektit);
+const mappingRepository = AppDataSource.getRepository(ProfesorLendetMapping);
 
 // Multer config for file upload (disk storage)
 const uploadDir = path.resolve(process.cwd(), "uploads", "dorezime");
@@ -75,7 +77,7 @@ const uploadTemplate = multer({
   limits: { fileSize: 20 * 1024 * 1024 } // 20MB
 });
 
-const formatProfesorSummary = (profesor: Profesor) => ({
+const formatProfesorSummary = (profesor: Profesor | Student) => ({
   id: profesor.id,
   emri: profesor.emri,
   mbiemri: profesor.mbiemri,
@@ -89,24 +91,49 @@ const getYearLabel = (yearNumber: number) => {
 };
 
 // Dashboard snapshot for a profesor
-// ✅ ALIGNED WITH STUDENT: Uses same Lendet entity and structure
+// ✅ ALIGNED WITH STUDENT: Uses ProfesorLendetMapping to get assigned subjects
+// ✅ NOW FILTERS BY ACADEMIC YEAR
 router.get("/:id/dashboard", async (req: Request, res: Response) => {
   const profesorId = Number(req.params.id);
+  const academicYear = req.query.academicYear ? String(req.query.academicYear) : undefined;
+  
   if (Number.isNaN(profesorId)) {
     return res.status(400).json({ message: "Profesor id is invalid" });
   }
 
   try {
-    const profesor = await profesorRepository.findOneBy({ id: profesorId });
+    // Check both profesoret and studentet tables
+    let profesor = await profesorRepository.findOneBy({ id: profesorId });
+    let profesorData: Profesor | Student | null = profesor;
+    
     if (!profesor) {
+      const student = await studentRepository.findOneBy({ id: profesorId });
+      if (!student) {
+        return res.status(404).json({ message: "Profesor not found" });
+      }
+      profesorData = student;
+    }
+
+    if (!profesorData) {
       return res.status(404).json({ message: "Profesor not found" });
     }
 
-    // ✅ UNIFIED: Query nga tabela e njëjtë Lendet, filtron me profesorId (Role-based)
-    const lendet = await lendetRepository.find({
-      where: { profesor: { id: profesorId } },
-      order: { viti: "ASC", semestri: "ASC" },
-    });
+    // ✅ UNIFIED: Get lendet assigned to this profesor via mapping table
+    // ✅ FILTER BY ACADEMIC YEAR if provided
+    const whereCondition: any = { profesorId };
+    if (academicYear) {
+      whereCondition.academicYear = academicYear;
+    }
+    
+    const mappings = await mappingRepository.find({ where: whereCondition });
+    const lendetIds = mappings.map(m => m.lendetId);
+    
+    const lendet = lendetIds.length > 0 
+      ? await lendetRepository.find({
+          where: lendetIds.map(id => ({ id })),
+          order: { viti: "ASC", semestri: "ASC" }
+        })
+      : [];
 
     const yearMap = new Map<number, {
       id: string;
@@ -144,7 +171,7 @@ router.get("/:id/dashboard", async (req: Request, res: Response) => {
       .map(([, value]) => value);
 
     res.json({
-      profesor: formatProfesorSummary(profesor),
+      profesor: formatProfesorSummary(profesorData),
       years,
     });
   } catch (error) {
@@ -154,9 +181,15 @@ router.get("/:id/dashboard", async (req: Request, res: Response) => {
 
 // Curriculum view per year
 // ✅ PERFECTLY ALIGNED WITH STUDENT: Same endpoint structure, same data format
+// ✅ NOW FILTERS BY ACADEMIC YEAR
 router.get("/:id/lendet/:yearId", async (req: Request, res: Response) => {
   const profesorId = Number(req.params.id);
   const yearParam = Number(req.params.yearId);
+  const academicYear = req.query.academicYear ? String(req.query.academicYear) : undefined;
+  
+  console.log(`=== FETCHING SUBJECTS FOR PROFESOR ===`);
+  console.log(`Profesor ID: ${profesorId}, Year: ${yearParam}, Academic Year: ${academicYear}`);
+  
   if (Number.isNaN(profesorId)) {
     return res.status(400).json({ message: "Profesor id is invalid" });
   }
@@ -166,18 +199,48 @@ router.get("/:id/lendet/:yearId", async (req: Request, res: Response) => {
   }
 
   try {
-    const profesor = await profesorRepository.findOneBy({ id: profesorId });
+    // Check both profesoret and studentet tables
+    let profesor = await profesorRepository.findOneBy({ id: profesorId });
+    let profesorData: Profesor | Student | null = profesor;
+    
     if (!profesor) {
+      const student = await studentRepository.findOneBy({ id: profesorId });
+      if (!student) {
+        return res.status(404).json({ message: "Profesor not found" });
+      }
+      profesorData = student;
+    }
+
+    if (!profesorData) {
       return res.status(404).json({ message: "Profesor not found" });
     }
 
-    // ✅ UNIFIED: Same query as Student - show all subjects for this year
-    const lendet = await lendetRepository.find({
-      where: {
-        viti: yearParam
-      },
-      order: { semestri: "ASC", emriLendes: "ASC" },
-    });
+    // ✅ UNIFIED: Get lendet assigned to this profesor via mapping table
+    // ✅ FILTER BY ACADEMIC YEAR if provided
+    const whereCondition: any = { profesorId };
+    if (academicYear) {
+      whereCondition.academicYear = academicYear;
+    }
+    
+    console.log(`Mapping where condition:`, whereCondition);
+    const mappings = await mappingRepository.find({ where: whereCondition });
+    console.log(`Found ${mappings.length} mappings:`, mappings.map(m => ({ lendetId: m.lendetId, academicYear: m.academicYear })));
+    
+    const lendetIds = mappings.map(m => m.lendetId);
+    
+    // Get all assigned subjects and filter by year in memory
+    const allAssignedLendet = lendetIds.length > 0
+      ? await lendetRepository.find({
+          where: lendetIds.map(id => ({ id })),
+          order: { viti: "ASC", semestri: "ASC", emriLendes: "ASC" },
+        })
+      : [];
+    
+    console.log(`Found ${allAssignedLendet.length} assigned lendet:`, allAssignedLendet.map(l => ({ id: l.id, name: l.emriLendes, viti: l.viti, semestri: l.semestri })));
+    
+    // Filter by the specific year being viewed
+    const lendet = allAssignedLendet.filter(l => l.viti === yearParam);
+    console.log(`After filtering by year ${yearParam}, found ${lendet.length} subjects`);
 
     const semesterMap = new Map<number, {
       id: number;
@@ -212,7 +275,7 @@ router.get("/:id/lendet/:yearId", async (req: Request, res: Response) => {
       }));
 
     res.json({
-      profesor: formatProfesorSummary(profesor),
+      profesor: formatProfesorSummary(profesorData),
       year: { id: String(yearParam), title: getYearLabel(yearParam) },
       semesters: semestersPayload,
       electives,

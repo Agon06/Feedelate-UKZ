@@ -4,12 +4,14 @@ import { Admin } from "../../entities/Admin/Admin";
 import { Student } from "../../entities/Student/Student";
 import { Profesor } from "../../entities/Profesor/Profesor";
 import { Lendet } from "../../entities/Student/Lendet";
+import { ProfesorLendetMapping } from "../../entities/Student/ProfesorLendetMapping";
 
 const router = Router();
 const adminRepository = AppDataSource.getRepository(Admin);
 const studentRepository = AppDataSource.getRepository(Student);
 const profesorRepository = AppDataSource.getRepository(Profesor);
 const lendetRepository = AppDataSource.getRepository(Lendet);
+const mappingRepository = AppDataSource.getRepository(ProfesorLendetMapping);
 
 // Get all admins     Nese eshte empty shkuraj nuk ka adminaaa
 
@@ -231,13 +233,34 @@ router.post("/lendet", async (req: Request, res: Response) => {
 router.get("/lendet/by-year/:viti", async (req: Request, res: Response) => {
     try {
         const viti = parseInt(req.params.viti);
+        console.log(`Fetching lendet for viti: ${viti}`);
+
         const lendet = await lendetRepository.find({
             where: { viti },
             order: {
                 semestri: "ASC"
             }
         });
-        res.json(lendet);
+
+        console.log(`Found ${lendet.length} lendet for viti ${viti}`);
+
+        // Get all mappings to include profesor assignments
+        const mappings = await mappingRepository.find();
+        console.log(`Total mappings: ${mappings.length}`);
+
+        const mappingMap = new Map();
+        mappings.forEach(m => {
+            mappingMap.set(m.lendetId, m.profesorId);
+        });
+
+        // Add profesorId from mapping to each lendet
+        const lendetWithAssignments = lendet.map(l => ({
+            ...l,
+            profesorId: mappingMap.get(l.id) || null
+        }));
+
+        console.log(`Returning ${lendetWithAssignments.length} lendet with assignments`);
+        res.json(lendetWithAssignments);
     } catch (error) {
         console.error("Error fetching lendet by year:", error);
         res.status(500).json({ message: "Error fetching lendet by year", error });
@@ -295,6 +318,111 @@ router.delete("/:id", async (req: Request, res: Response) => {
         res.json({ message: "Admin deleted successfully" });
     } catch (error) {
         res.status(500).json({ message: "Error deleting admin", error });
+    }
+});
+
+// ========== ASSIGN LENDET TO PROFESOR ==========
+// Assign subjects to a professor using mapping table with academic year
+router.post("/assign-lendet/:profesorId", async (req: Request, res: Response) => {
+    try {
+        const profesorId = parseInt(req.params.profesorId);
+        const { lendetIds, academicYear } = req.body; // Array of subject IDs and academic year
+
+        if (!lendetIds || !Array.isArray(lendetIds)) {
+            return res.status(400).json({ message: "lendetIds must be an array" });
+        }
+
+        if (!academicYear || typeof academicYear !== 'string') {
+            return res.status(400).json({ message: "academicYear must be provided (e.g., '2023/2024')" });
+        }
+
+        // Verify profesor exists (can be in either profesoret or studentet table)
+        let profesorName = 'Unknown';
+        const profesor = await profesorRepository.findOneBy({ id: profesorId });
+        if (profesor) {
+            profesorName = `${profesor.emri} ${profesor.mbiemri}`;
+        } else {
+            const student = await studentRepository.findOneBy({ id: profesorId });
+            if (student) {
+                profesorName = `${student.emri} ${student.mbiemri}`;
+            } else {
+                return res.status(404).json({ message: `Profesor/Student with id ${profesorId} not found` });
+            }
+        }
+
+        console.log(`Assigning ${lendetIds.length} lendet to profesor ${profesorId} (${profesorName}) for academic year ${academicYear}`);
+
+        // First, delete all existing assignments for this profesor and academic year
+        await mappingRepository.delete({ profesorId, academicYear });
+        console.log(`Cleared previous assignments for profesor ${profesorId} in academic year ${academicYear}`);
+
+        // Then create new assignments
+        let successCount = 0;
+        const failedIds = [];
+        
+        for (const lendetId of lendetIds) {
+            try {
+                const lendet = await lendetRepository.findOneBy({ id: lendetId });
+                if (!lendet) {
+                    console.warn(`Lendet with id ${lendetId} not found`);
+                    failedIds.push(lendetId);
+                    continue;
+                }
+
+                // Create mapping entry with academic year
+                const mapping = mappingRepository.create({
+                    profesorId,
+                    lendetId,
+                    academicYear
+                });
+                await mappingRepository.save(mapping);
+                console.log(`Created mapping: profesor ${profesorId} -> lendet ${lendetId} (${academicYear})`);
+                successCount++;
+            } catch (err) {
+                console.error(`Error assigning lendet ${lendetId}:`, err);
+                failedIds.push(lendetId);
+            }
+        }
+
+        res.json({
+            message: `Successfully assigned ${successCount} lendet to profesor ${profesorName} for ${academicYear}`,
+            assignedCount: successCount,
+            failedIds: failedIds.length > 0 ? failedIds : undefined
+        });
+    } catch (error) {
+        console.error("Error assigning lendet:", error);
+        res.status(500).json({ message: "Error assigning lendet", error });
+    }
+});
+
+// Get assignments for a professor for a specific academic year
+router.get("/profesor-assignments/:profesorId", async (req: Request, res: Response) => {
+    try {
+        const profesorId = parseInt(req.params.profesorId);
+        const academicYear = req.query.academicYear ? String(req.query.academicYear) : undefined;
+
+        if (Number.isNaN(profesorId)) {
+            return res.status(400).json({ message: "Profesor id is invalid" });
+        }
+
+        // Get mappings for this profesor
+        const whereCondition: any = { profesorId };
+        if (academicYear) {
+            whereCondition.academicYear = academicYear;
+        }
+
+        const mappings = await mappingRepository.find({ where: whereCondition });
+        
+        console.log(`Found ${mappings.length} assignments for profesor ${profesorId}${academicYear ? ` for academic year ${academicYear}` : ''}`);
+
+        res.json({
+            profesorId,
+            academicYear: academicYear || null,
+            assignedLendetIds: mappings.map(m => m.lendetId)
+        });
+    } catch (error) {
+        console.error("Error fetching profesor assignments:", error);
+        res.status(500).json({ message: "Error fetching profesor assignments", error });
     }
 });
 

@@ -13,6 +13,7 @@ import { Lendet } from "./entities/Student/Lendet";
 import { DorezimiIdes } from "./entities/Student/dorezimiIdes";
 import { Projekti } from "./entities/Student/projekti";
 import { dorzimiProjektit } from "./entities/Student/dorzimiProjektit";
+import { ProfesorLendetMapping } from "./entities/Student/ProfesorLendetMapping";
 import { Test } from "./entities/test";
 
 dotenv.config();
@@ -38,6 +39,7 @@ export const AppDataSource = new DataSource({
     DorezimiIdes,
     Projekti,
     dorzimiProjektit,
+    ProfesorLendetMapping,
     Test,
   ],
   migrations: ["dist/migrations/**/*.js"],

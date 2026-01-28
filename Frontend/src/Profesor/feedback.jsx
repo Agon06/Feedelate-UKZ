@@ -5,7 +5,8 @@ import { getProfesorIdeas, addFeedbackToSubmission } from '../services/profesorA
 const Feedbackp = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const PROFESOR_ID = 1;
+  const student = JSON.parse(localStorage.getItem('student') || '{}');
+  const PROFESOR_ID = student.id || 1;
 
   const ideaId = location.state?.ideaId ?? null;
   const lendaId = location.state?.lendaId ?? null;

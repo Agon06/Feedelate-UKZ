@@ -5,7 +5,8 @@ import { getProfesorYearData, uploadLendaTemplate, getLendaTemplateInfo, deleteL
 const Lendetp = () => {
   const { yearId } = useParams();
   const navigate = useNavigate();
-  const PROFESOR_ID = 1;
+  const student = JSON.parse(localStorage.getItem('student') || '{}');
+  const PROFESOR_ID = student.id || 1;
   const electiveStorageKey = useMemo(() => `selectedElectives:${PROFESOR_ID}:${yearId}`, [PROFESOR_ID, yearId]);
   const [isMobile, setIsMobile] = useState(false);
   const [showElectivePicker, setShowElectivePicker] = useState(false);
@@ -65,7 +66,11 @@ const Lendetp = () => {
 
     const fetchYearData = async () => {
       try {
-        const data = await getProfesorYearData(PROFESOR_ID, yearId);
+        // Get academic year from localStorage
+        const academicYear = localStorage.getItem('profesorAcademicYear');
+        console.log('Fetching data for academic year:', academicYear);
+        
+        const data = await getProfesorYearData(PROFESOR_ID, yearId, academicYear);
         if (!isMounted) return;
         
         // Debug: Log response
@@ -74,6 +79,7 @@ const Lendetp = () => {
           success: true,
           profesorId: PROFESOR_ID,
           yearId: yearId,
+          academicYear: academicYear,
           semesterCount: data?.semesters?.length || 0,
           subjectCount: data?.semesters?.reduce((sum, s) => sum + (s.subjects?.length || 0), 0) || 0,
           rawData: data

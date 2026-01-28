@@ -1,5 +1,18 @@
 const API_BASE_URL = (import.meta.env?.VITE_API_URL ?? 'http://localhost:5000/api').replace(/\/$/, '');
 
+// Helper function to convert academic year format
+// Converts 23/24 to 2023/2024, 24/25 to 2024/2025, etc.
+const convertAcademicYearFormat = (shortFormat) => {
+  if (!shortFormat || !shortFormat.includes('/')) return shortFormat;
+  const [start, end] = shortFormat.split('/');
+  const startYear = parseInt(start, 10);
+  const endYear = parseInt(end, 10);
+  // Assume years are in 20xx century
+  const fullStartYear = startYear < 100 ? 2000 + startYear : startYear;
+  const fullEndYear = endYear < 100 ? 2000 + endYear : endYear;
+  return `${fullStartYear}/${fullEndYear}`;
+};
+
 const handleResponse = async (response) => {
   const contentType = response.headers.get('content-type');
   const payload = contentType && contentType.includes('application/json')
@@ -28,11 +41,17 @@ const request = async (path, options = {}) => {
   return handleResponse(response);
 };
 
-export const getProfesorDashboard = (profesorId) =>
-  request(`/profesoret/${profesorId}/dashboard`);
+export const getProfesorDashboard = (profesorId, academicYear) => {
+  const fullYearFormat = convertAcademicYearFormat(academicYear);
+  const url = `/profesoret/${profesorId}/dashboard${fullYearFormat ? `?academicYear=${encodeURIComponent(fullYearFormat)}` : ''}`;
+  return request(url);
+};
 
-export const getProfesorYearData = (profesorId, yearId) =>
-  request(`/profesoret/${profesorId}/lendet/${yearId}`);
+export const getProfesorYearData = (profesorId, yearId, academicYear) => {
+  const fullYearFormat = convertAcademicYearFormat(academicYear);
+  const url = `/profesoret/${profesorId}/lendet/${yearId}${fullYearFormat ? `?academicYear=${encodeURIComponent(fullYearFormat)}` : ''}`;
+  return request(url);
+};
 
 export const getProfesorIdeas = (profesorId, lendaId) => {
   const params = new URLSearchParams();
