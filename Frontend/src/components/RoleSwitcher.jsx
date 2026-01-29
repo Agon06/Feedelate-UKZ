@@ -18,7 +18,13 @@ const RoleSwitcher = ({ currentRole = 'student' }) => {
           let roles;
           // Handle both string and array formats
           if (typeof userData.roles === 'string') {
-            roles = JSON.parse(userData.roles);
+            try {
+              // Try to parse as JSON first
+              roles = JSON.parse(userData.roles);
+            } catch (e) {
+              // If it fails, treat it as a comma-separated string
+              roles = userData.roles.split(',').map(r => r.trim());
+            }
           } else {
             roles = userData.roles;
           }

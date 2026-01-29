@@ -64,23 +64,25 @@ const Lendet = () => {
 
   const STUDENT_ID = student.id;
 
+  // Move all hooks before any conditional returns
+  const electiveStorageKey = useMemo(() => `selectedElectives:${STUDENT_ID}:${yearId}`, [STUDENT_ID, yearId]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [showElectivePicker, setShowElectivePicker] = useState(false);
+  const [selectedElectives, setSelectedElectives] = useState([]);
+  const [activeModal, setActiveModal] = useState({ open: false, subject: null });
+  const [yearData, setYearData] = useState(null);
+  const [status, setStatus] = useState({ loading: true, error: null });
+
   useEffect(() => {
     if (!student.id && !loadingStudent) {
       navigate('/');
     }
   }, [navigate, student.id, loadingStudent]);
 
+  // Early return after all hooks are defined
   if (!student.id || loadingStudent) {
     return null;
   }
-
-  const electiveStorageKey = useMemo(() => `selectedElectives:${STUDENT_ID}:${yearId}`, [STUDENT_ID, yearId]);
-  const [isMobile, setIsMobile] = useState(false);
-  const [showElectivePicker, setShowElectivePicker] = useState(false);
-  const [selectedElectives, setSelectedElectives] = useState([]);
-  const [activeModal, setActiveModal] = useState({ open: false, subject: null });
-  const [yearData, setYearData] = useState(null);
-  const [status, setStatus] = useState({ loading: true, error: null });
 
   const baseSemesters = useMemo(() => {
     const parsed = Number(yearId);
@@ -594,7 +596,7 @@ const Lendet = () => {
               // Allowed: vitiStudimeve >= idx+1
               // const canInteract = vitiStudimeve >= idx + 1;
               const semesterYear = Math.ceil((semester.id || 1) / 2);
-const canInteract = vitiStudimeve >= semesterYear;
+              const canInteract = vitiStudimeve >= semesterYear;
               return (
                 <div key={semester.id ?? semester.name} style={semesterCard}>
                   <div style={semesterTitle}>{semester.name}</div>

@@ -8,12 +8,19 @@ const Projektip = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [formData, setFormData] = useState({
     emriProjekti: "",
     pershkrimiProjekti: "",
     deaAdline: "",
     lendaId: 1,
   });
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     fetchProjects();
@@ -206,39 +213,39 @@ const Projektip = () => {
             <p>Nuk keni projekte të krijuara akoma.</p>
           ) : (
             projects.map((project) => (
-            <div
-              key={project.id}
-              style={{
-                background: "rgba(13, 30, 19, 0.85)",
-                border: "1px solid rgba(23, 199, 122, 0.35)",
-                borderRadius: "12px",
-                padding: "1.5rem",
-              }}
-            >
-              <h3 style={{ color: "#1fdc8c", marginTop: 0 }}>{project.emriProjekti}</h3>
-              <p>{project.pershkrimiProjekti}</p>
-              {project.deaAdline && (
-                <p style={{ fontSize: "0.9rem", color: "#9bf3c8" }}>
-                  Afati: {new Date(project.deaAdline).toLocaleDateString()}
-                </p>
-              )}
-              <button
-                onClick={() => handleDelete(project.id)}
+              <div
+                key={project.id}
                 style={{
-                  padding: "0.5rem 1rem",
-                  background: "rgba(255,82,82,0.3)",
-                  color: "#ff5252",
-                  border: "1px solid rgba(255,82,82,0.5)",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  marginTop: "1rem",
+                  background: "rgba(13, 30, 19, 0.85)",
+                  border: "1px solid rgba(23, 199, 122, 0.35)",
+                  borderRadius: "12px",
+                  padding: "1.5rem",
                 }}
               >
-                Fshi
-              </button>
-            </div>
-          ))
-        )}
+                <h3 style={{ color: "#1fdc8c", marginTop: 0 }}>{project.emriProjekti}</h3>
+                <p>{project.pershkrimiProjekti}</p>
+                {project.deaAdline && (
+                  <p style={{ fontSize: "0.9rem", color: "#9bf3c8" }}>
+                    Afati: {new Date(project.deaAdline).toLocaleDateString()}
+                  </p>
+                )}
+                <button
+                  onClick={() => handleDelete(project.id)}
+                  style={{
+                    padding: "0.5rem 1rem",
+                    background: "rgba(255,82,82,0.3)",
+                    color: "#ff5252",
+                    border: "1px solid rgba(255,82,82,0.5)",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    marginTop: "1rem",
+                  }}
+                >
+                  Fshi
+                </button>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

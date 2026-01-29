@@ -30,6 +30,14 @@ const Feedbackp = () => {
   const storageKeySubmission = useMemo(() => (!ideaId && submissionId) ? `profesorSubmissionFeedback:${PROFESOR_ID}:${submissionId}` : null, [ideaId, submissionId]);
   const storageKeyIdeaFile = useMemo(() => (!ideaId && fileId) ? `profesorIdeaFileFeedback:${PROFESOR_ID}:${fileId}` : null, [ideaId, fileId]);
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const [status, setStatus] = useState({ loading: !!ideaId, error: null });
   const [idea, setIdea] = useState(null);
   const [submission, setSubmission] = useState(null);

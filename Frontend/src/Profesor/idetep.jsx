@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import JSZip from 'jszip';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getProfesorIdeas, getStudentSubmissions, getIdeaDeadline, updateIdeaDeadline, uploadLendaTemplate, getLendaTemplateInfo, deleteLendaTemplate } from '../services/profesorApi';
@@ -22,6 +22,18 @@ const Idetep = () => {
   const [deadlineStatus, setDeadlineStatus] = useState({ loading: true, saving: false, error: null, message: null });
   const [templateInfo, setTemplateInfo] = useState({ hasTemplate: false, fileName: '' });
   const [uploadingTemplate, setUploadingTemplate] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  const [selectedPeriod, setSelectedPeriod] = useState('');
+  const [periods, setPeriods] = useState([]);
+  const [deadlineTitle, setDeadlineTitle] = useState('');
+  const [activeTab, setActiveTab] = useState('ideas');
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const loadIdeas = useCallback(async () => {
     setListStatus({ loading: true, error: null });
@@ -54,6 +66,7 @@ const Idetep = () => {
         fileSize: 'N/A', // Backend nuk e kthen madhësinë, mund të shtohet më vonë
         uploadDate: new Date(file.createdAt).toLocaleDateString('sq-AL'),
         fileUrl: file.fileUrl,
+        createdAt: file.createdAt,
         ideaTitle: null, // Mund të lidhet me idetë nëse nevojitet
       }));
       setFiles(filesData);
@@ -65,6 +78,73 @@ const Idetep = () => {
       });
     }
   }, [PROFESOR_ID, lendaId]);
+
+  const getSubmissionDate = (item) => {
+    const raw = item?.submission_date || item?.submissionDate || item?.createdAt || item?.created_at;
+    if (!raw) return null;
+    const parsed = new Date(raw);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  };
+
+  const calculatePeriods = () => {
+    const months = ['Janar', 'Shkurt', 'Mars', 'Prill', 'Maj', 'Qershor', 'Korrik', 'Gusht', 'Shtator', 'Tetor', 'Nëntor', 'Dhjetor'];
+    const periodsMap = new Map(); // Store unique periods
+
+    // Load saved periods from localStorage (now storing objects with title)
+    const savedPeriods = JSON.parse(localStorage.getItem(`idea-periods-${lendaId}`) || '[]');
+
+    // Add saved periods (manually set by professor)
+    savedPeriods.forEach((periodData) => {
+      // Handle both old string format and new object format
+      const periodKey = typeof periodData === 'string' ? periodData : periodData.key;
+      const customTitle = typeof periodData === 'object' ? periodData.title : null;
+
+      const [yearStr, monthStr] = periodKey.split('-');
+      const year = parseInt(yearStr);
+      const month = parseInt(monthStr);
+
+      if (!isNaN(year) && !isNaN(month)) {
+        const endMonth = (month + 2) % 12;
+        const endYear = month + 2 >= 12 ? year + 1 : year;
+        const periodLabel = `${months[month]} - ${months[endMonth]} ${year}`;
+
+        const key = `${year}-${month}`;
+        if (!periodsMap.has(key)) {
+          periodsMap.set(key, {
+            id: key,
+            label: customTitle ? `📌 ${customTitle}` : `📅 ${periodLabel}`,
+            startDate: new Date(year, month, 1),
+            endDate: new Date(endYear, (endMonth + 1) % 12, 0)
+          });
+        }
+      }
+    });
+
+    // ✅ ALSO: Generate periods from actual idea submission dates
+    ideas.forEach((idea) => {
+      const submitDate = new Date(idea.createdAt || idea.created_at);
+      const year = submitDate.getFullYear();
+      const month = submitDate.getMonth();
+
+      const key = `${year}-${month}`;
+      if (!periodsMap.has(key)) {
+        const endMonth = (month + 2) % 12;
+        const endYear = month + 2 >= 12 ? year + 1 : year;
+        const periodLabel = `${months[month]} - ${months[endMonth]} ${year}`;
+
+        periodsMap.set(key, {
+          id: key,
+          label: `📅 ${periodLabel}`,
+          startDate: new Date(year, month, 1),
+          endDate: new Date(endYear, (endMonth + 1) % 12, 0)
+        });
+      }
+    });
+
+    // Convert map to array and set
+    const periodsList = Array.from(periodsMap.values());
+    setPeriods(periodsList);
+  };
 
   const loadIdeaDeadline = useCallback(async () => {
     if (!lendaId) {
@@ -133,17 +213,49 @@ const Idetep = () => {
     loadFiles();
     loadIdeaDeadline();
     loadTemplateInfo();
-  }, [loadIdeas, loadFiles, loadIdeaDeadline]);
+  }, [loadIdeas, loadFiles, loadIdeaDeadline, loadTemplateInfo]);
+
+  // Calculate periods whenever deadline or submission data changes
+  useEffect(() => {
+    calculatePeriods();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ideaDeadline, ideas, files]);
+
+  const filteredIdeas = useMemo(() => {
+    // If nothing selected or "all" is selected, show all
+    if (!selectedPeriod || selectedPeriod === 'all') return ideas;
+    return ideas.filter(idea => {
+      const submitDate = new Date(idea.createdAt || idea.created_at);
+      const submitYear = submitDate.getFullYear();
+      const submitMonth = submitDate.getMonth();
+      const submitKey = `${submitYear}-${submitMonth}`;
+      return submitKey === selectedPeriod;
+    });
+  }, [ideas, selectedPeriod]);
+
+  const filteredFiles = useMemo(() => {
+    // If nothing selected or "all" is selected, show all
+    if (!selectedPeriod || selectedPeriod === 'all') return files;
+    return files.filter(file => {
+      const submitDate = new Date(file.createdAt);
+      const submitYear = submitDate.getFullYear();
+      const submitMonth = submitDate.getMonth();
+      const submitKey = `${submitYear}-${submitMonth}`;
+      return submitKey === selectedPeriod;
+    });
+  }, [files, selectedPeriod]);
 
   const handleFeedback = () => {
     navigate('/profesor/feedback', {
       state: {
         lendaId: lendaId,
         subject: subjectName,
-        feedbackType: 'ideas' // Dallojmë feedback-un e përgjithshëm për IDE
+        feedbackType: 'ideas'
       }
     });
   };
+
+  // Navigation handler
 
   const triggerDownload = (blob, filename) => {
     const url = URL.createObjectURL(blob);
@@ -268,7 +380,39 @@ const Idetep = () => {
       const startValue = response.lenda?.ideaStartDate ? response.lenda.ideaStartDate.slice(0, 16) : '';
       const endValue = response.lenda?.ideaDeadline ? response.lenda.ideaDeadline.slice(0, 16) : '';
       setIdeaDeadline({ start: startValue, end: endValue });
+
+      // Save periods to localStorage with custom title
+      if (startValue || endValue) {
+        const savedPeriods = JSON.parse(localStorage.getItem(`idea-periods-${lendaId}`) || '[]');
+        if (startValue && endValue) {
+          const startDate = new Date(startValue);
+          const endDate = new Date(endValue);
+          const periodKey = `${startDate.getFullYear()}-${startDate.getMonth()}`;
+
+          // Check if period already exists (handle both old string and new object format)
+          const exists = savedPeriods.some(p =>
+            (typeof p === 'string' && p === periodKey) ||
+            (typeof p === 'object' && p.key === periodKey)
+          );
+
+          if (!exists) {
+            // Save as object with key and title
+            savedPeriods.push({
+              key: periodKey,
+              title: deadlineTitle.trim() || null
+            });
+            localStorage.setItem(`idea-periods-${lendaId}`, JSON.stringify(savedPeriods));
+          }
+        }
+      }
+
       setDeadlineStatus({ loading: false, saving: false, error: null, message: 'Afati u ruajt me sukses.' });
+
+      // Reset form fields to default (00:00)
+      setTimeout(() => {
+        setIdeaDeadline({ start: '', end: '' });
+        setDeadlineTitle('');
+      }, 1500);
     } catch (error) {
       setDeadlineStatus({ loading: false, saving: false, error: error?.message ?? 'Nuk u ruajt afati.', message: null });
     }
@@ -296,18 +440,23 @@ const Idetep = () => {
     alignItems: 'center',
     justifyContent: 'center',
     fontFamily: 'Inter, system-ui, sans-serif',
-    padding: '2rem',
-    overflow: 'hidden'
+    padding: isMobile ? '1rem' : '2rem',
+    overflow: 'hidden',
+    boxSizing: 'border-box'
   };
 
   const modalStyle = {
-    width: 'min(1200px, 100%)',
+    width: '100%',
+    maxWidth: isMobile ? '95vw' : '1100px',
     background: 'rgba(6,13,9,0.95)',
-    borderRadius: 28,
+    borderRadius: isMobile ? 16 : 28,
     border: '1px solid rgba(23,199,122,0.4)',
     boxShadow: '0 30px 80px rgba(0,0,0,0.6)',
-    padding: '2rem',
-    position: 'relative'
+    padding: isMobile ? '1rem' : '2rem',
+    position: 'relative',
+    boxSizing: 'border-box',
+    maxHeight: '90vh',
+    overflowY: 'auto'
   };
 
   const closeButtonStyle = {
@@ -326,17 +475,17 @@ const Idetep = () => {
 
   const columnsStyle = {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-    gap: '1.5rem',
+    gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(320px, 1fr))',
+    gap: isMobile ? '1rem' : '1.5rem',
     marginTop: '1rem'
   };
 
   const columnCard = {
     background: 'rgba(9,18,12,0.9)',
-    borderRadius: 20,
+    borderRadius: isMobile ? 12 : 20,
     border: '1px solid rgba(23,199,122,0.25)',
-    padding: '1.25rem',
-    minHeight: 360
+    padding: isMobile ? '1rem' : '1.25rem',
+    minHeight: isMobile ? 280 : 360
   };
 
   const searchInput = {
@@ -423,11 +572,12 @@ const Idetep = () => {
     transition: 'all 200ms ease'
   };
 
-  const footerStyle = {
-    marginTop: '1.5rem',
-    display: 'flex',
-    justifyContent: 'space-between'
-  };
+  // Footer styling (layout helper)
+  // const footerStyle = {
+  //   marginTop: '1.5rem',
+  //   display: 'flex',
+  //   justifyContent: 'space-between'
+  // };
 
   const deadlineBar = {
     marginTop: '1.25rem',
@@ -501,555 +651,729 @@ const Idetep = () => {
     background: 'rgba(6,12,9,0.8)'
   };
 
+  const containerStyle = {
+    display: isMobile ? 'block' : 'flex',
+    maxWidth: 1400,
+    margin: '0 auto',
+    padding: '2rem',
+    gap: '2rem',
+    minHeight: 'calc(100vh - 80px)'
+  };
+
+  const leftPanelStyle = {
+    flex: isMobile ? '1' : '0 0 280px',
+    background: 'rgba(9,18,12,0.85)',
+    border: '1px solid rgba(23,199,122,0.35)',
+    borderRadius: 18,
+    padding: '2rem 1.5rem',
+    height: 'fit-content',
+    position: isMobile ? 'relative' : 'sticky',
+    top: isMobile ? '0' : '2rem',
+    marginBottom: isMobile ? '2rem' : '0'
+  };
+
+  const rightPanelStyle = {
+    flex: 1,
+    background: 'rgba(9,18,12,0.85)',
+    border: '1px solid rgba(23,199,122,0.35)',
+    borderRadius: 18,
+    padding: '2rem'
+  };
+
+  const tabButtonStyle = (isActive) => ({
+    width: '100%',
+    padding: '1rem',
+    background: isActive ? 'rgba(23,199,122,0.25)' : 'rgba(9,18,12,0.5)',
+    border: `1px solid ${isActive ? '#17c77a' : 'rgba(255,255,255,0.1)'}`,
+    borderRadius: 12,
+    color: isActive ? '#1fdc8c' : '#c4f0da',
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: 'pointer',
+    marginBottom: '0.75rem',
+    transition: 'all 0.2s',
+    textAlign: 'left'
+  });
+
+  const backButtonStyle = {
+    background: 'rgba(255,255,255,0.05)',
+    border: '1px solid rgba(255,255,255,0.15)',
+    borderRadius: 10,
+    padding: '0.6rem 1.2rem',
+    color: '#c4f0da',
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: 'pointer',
+    width: '100%',
+    marginTop: '1rem'
+  };
+
   return (
     <div style={pageStyle}>
-      <div style={modalStyle}>
-        <button
-          style={closeButtonStyle}
-          onClick={() => navigate(-1)}
-          aria-label="Mbyll"
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent';
-            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-          }}
-        >
-          ✕
-        </button>
-
-        <h2 style={{ margin: '0 0 0.5rem', fontSize: 26, fontWeight: 800 }}>
-          {subjectName}
-        </h2>
-        <p style={{ margin: 0, opacity: 0.75, fontSize: 15 }}>
-          Idetë dhe file-t e dërguara nga studentët për këtë lëndë.
-        </p>
-
-        <div style={deadlineBar}>
-          <div style={deadlineCard}>
-            <div style={deadlineLabel}>
-              <span role="img" aria-label="calendar">🗓️</span>
-              Afati i dorëzimit të idesë
-              {deadlineStatus.loading && <span style={{ fontSize: 12, color: '#cfeee0' }}>Duke u lexuar...</span>}
-              {deadlineStatus.error && <span style={{ fontSize: 12, color: '#f8b4b4' }}>{deadlineStatus.error}</span>}
-              {deadlineStatus.message && <span style={{ fontSize: 12, color: '#7be7b2' }}>{deadlineStatus.message}</span>}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
-              <div>
-                <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 4 }}>Fillimi</div>
-                <div style={compactRow}>
-                  <input
-                    type="date"
-                    style={deadlineInput}
-                    value={ideaDeadline.start ? ideaDeadline.start.split('T')[0] : ''}
-                    onChange={(e) => setDatePart('start', e.target.value)}
-                    disabled={deadlineStatus.loading || deadlineStatus.saving}
-                  />
-                  <div style={timeSegments}>
-                    <select
-                      style={timeSelect}
-                      value={get24hParts(ideaDeadline.start).hour}
-                      onChange={(e) => setTime24('start', e.target.value, get24hParts(ideaDeadline.start).minute)}
-                      disabled={deadlineStatus.loading || deadlineStatus.saving}
-                    >
-                      {Array.from({ length: 24 }, (_, i) => pad2(i)).map((h) => (
-                        <option key={h} value={h}>{h}</option>
-                      ))}
-                    </select>
-                    <select
-                      style={timeSelect}
-                      value={get24hParts(ideaDeadline.start).minute}
-                      onChange={(e) => setTime24('start', get24hParts(ideaDeadline.start).hour, e.target.value)}
-                      disabled={deadlineStatus.loading || deadlineStatus.saving}
-                    >
-                      {Array.from({ length: 60 }, (_, i) => pad2(i)).map((m) => (
-                        <option key={m} value={m}>{m}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 4 }}>Mbarimi</div>
-                <div style={compactRow}>
-                  <input
-                    type="date"
-                    style={deadlineInput}
-                    value={ideaDeadline.end ? ideaDeadline.end.split('T')[0] : ''}
-                    onChange={(e) => setDatePart('end', e.target.value)}
-                    disabled={deadlineStatus.loading || deadlineStatus.saving}
-                  />
-                  <div style={timeSegments}>
-                    <select
-                      style={timeSelect}
-                      value={get24hParts(ideaDeadline.end).hour}
-                      onChange={(e) => setTime24('end', e.target.value, get24hParts(ideaDeadline.end).minute)}
-                      disabled={deadlineStatus.loading || deadlineStatus.saving}
-                    >
-                      {Array.from({ length: 24 }, (_, i) => pad2(i)).map((h) => (
-                        <option key={h} value={h}>{h}</option>
-                      ))}
-                    </select>
-                    <select
-                      style={timeSelect}
-                      value={get24hParts(ideaDeadline.end).minute}
-                      onChange={(e) => setTime24('end', get24hParts(ideaDeadline.end).hour, e.target.value)}
-                      disabled={deadlineStatus.loading || deadlineStatus.saving}
-                    >
-                      {Array.from({ length: 60 }, (_, i) => pad2(i)).map((m) => (
-                        <option key={m} value={m}>{m}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div style={deadlineActions}>
-              <button
-                style={{ ...primaryButton, padding: '0.65rem 1.2rem' }}
-                onClick={handleSaveDeadline}
-                disabled={deadlineStatus.loading || deadlineStatus.saving}
-              >
-                {deadlineStatus.saving ? 'Duke ruajtur...' : 'Ruaj afatin'}
-              </button>
-              <button
-                style={{ ...secondaryButton, padding: '0.65rem 1.2rem' }}
-                onClick={handleClearDeadline}
-                disabled={deadlineStatus.loading || deadlineStatus.saving || (!ideaDeadline.start && !ideaDeadline.end)}
-              >
-                Hiq afatin
-              </button>
-              <button
-                style={{ ...secondaryButton, padding: '0.65rem 1.2rem' }}
-                onClick={loadIdeaDeadline}
-                disabled={deadlineStatus.loading}
-              >
-                Rifresko afatin
-              </button>
-            </div>
-          </div>
-
-          <div style={deadlineSummary}>
-                <div style={{ ...deadlineLabel, color: '#6495ed' }}>
-              <span role="img" aria-label="pin">📌</span>
-              Datat e caktuara
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.5rem' }}>
-              <div style={{ fontSize: 14 }}>
-                <div style={{ opacity: 0.75, fontSize: 12 }}>Fillimi</div>
-                <strong>{formatDateDisplay(normalizeDateInput(ideaDeadline.start) ?? '')}</strong>
-              </div>
-              <div style={{ fontSize: 14 }}>
-                <div style={{ opacity: 0.75, fontSize: 12 }}>Mbarimi</div>
-                <strong>{formatDateDisplay(normalizeDateInput(ideaDeadline.end) ?? '')}</strong>
-              </div>
-            </div>
-            <div style={{ fontSize: 12, opacity: 0.75 }}>
-              Këto data shfaqen si udhëzim për dorëzimin e ideve.
-            </div>
-          </div>
+      <div style={containerStyle}>
+        {/* Left Sidebar */}
+        <div style={leftPanelStyle}>
+          <h2 style={{ fontSize: 24, fontWeight: 700, color: '#1fdc8c', marginBottom: '1.5rem', textAlign: 'center', letterSpacing: 1 }}>
+            {subjectName}
+          </h2>
+          <button
+            style={tabButtonStyle(activeTab === 'deadline')}
+            onClick={() => setActiveTab('deadline')}
+          >
+            📅 Afati i dorëzimit
+          </button>
+          <button
+            style={tabButtonStyle(activeTab === 'template')}
+            onClick={() => setActiveTab('template')}
+          >
+            📄 Template/Instruksionet
+          </button>
+          <button
+            style={tabButtonStyle(activeTab === 'ideas')}
+            onClick={() => setActiveTab('ideas')}
+          >
+            📋 Lista e Ideve
+          </button>
+          <button
+            style={tabButtonStyle(activeTab === 'files')}
+            onClick={() => setActiveTab('files')}
+          >
+            📁 File-t e Dërguara
+          </button>
+          <button style={backButtonStyle} onClick={() => navigate(-1)}>
+            ← Kthehu Mbrapa
+          </button>
         </div>
 
-        {/* Template/Instruksionet Section */}
-        <div style={{
-          background: 'rgba(23,199,122,0.08)',
-          border: '1px solid rgba(23,199,122,0.25)',
-          borderRadius: 12,
-          padding: '1rem',
-          marginBottom: '1.5rem'
-        }}>
-          <h3 style={{ margin: '0 0 0.75rem', fontSize: 16, color: '#1fdc8c' }}>📄 Template/Instruksionet</h3>
-          {templateInfo.hasTemplate ? (
-            <div>
-              <p style={{ margin: '0 0 0.75rem', fontSize: 14, color: '#c4f0da' }}>
-                <strong>File:</strong> {templateInfo.fileName}
-              </p>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <label
-                  htmlFor="template-upload"
-                  style={{
-                    flex: 1,
-                    padding: '0.5rem',
-                    background: 'rgba(23,199,122,0.2)',
-                    border: '1px solid rgba(23,199,122,0.5)',
-                    borderRadius: 8,
-                    color: '#1fdc8c',
-                    fontWeight: 600,
-                    cursor: uploadingTemplate ? 'not-allowed' : 'pointer',
-                    textAlign: 'center',
-                    fontSize: 13,
-                    opacity: uploadingTemplate ? 0.5 : 1,
-                    transition: 'all 200ms ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!uploadingTemplate) {
-                      e.currentTarget.style.background = 'rgba(23, 199, 122, 0.3)';
-                      e.currentTarget.style.borderColor = '#1fdc8c';
-                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(23, 199, 122, 0.15)';
+        {/* Right Content */}
+        <div style={rightPanelStyle}>
+          {/* Afati i dorëzimit Tab */}
+          {activeTab === 'deadline' && (
+            <div style={deadlineBar}>
+              <div style={deadlineCard}>
+                <div style={deadlineLabel}>
+                  <span role="img" aria-label="calendar">🗓️</span>
+                  Afati i dorëzimit të idesë
+                  {deadlineStatus.loading && <span style={{ fontSize: 12, color: '#cfeee0' }}>Duke u lexuar...</span>}
+                  {deadlineStatus.error && <span style={{ fontSize: 12, color: '#f8b4b4' }}>{deadlineStatus.error}</span>}
+                  {deadlineStatus.message && <span style={{ fontSize: 12, color: '#7be7b2' }}>{deadlineStatus.message}</span>}
+                </div>
+                <div style={{ marginBottom: '1rem' }}>
+                  <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 4 }}>Emërtimi i dorëzimit (opsional)</div>
+                  <input
+                    type="text"
+                    placeholder="Vendos titullin e Assignment."
+                    value={deadlineTitle}
+                    onChange={(e) => setDeadlineTitle(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: 10,
+                      border: '1px solid rgba(23,199,122,0.4)',
+                      background: 'rgba(4,10,6,0.7)',
+                      color: '#1fdc8c',
+                      fontSize: 14,
+                      fontWeight: 500,
+                      outline: 'none'
+                    }}
+                    disabled={deadlineStatus.loading || deadlineStatus.saving}
+                  />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
+                  <div>
+                    <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 4 }}>Fillimi</div>
+                    <div style={compactRow}>
+                      <input
+                        type="date"
+                        style={deadlineInput}
+                        value={ideaDeadline.start ? ideaDeadline.start.split('T')[0] : ''}
+                        onChange={(e) => setDatePart('start', e.target.value)}
+                        disabled={deadlineStatus.loading || deadlineStatus.saving}
+                      />
+                      <div style={timeSegments}>
+                        <select
+                          style={timeSelect}
+                          value={get24hParts(ideaDeadline.start).hour}
+                          onChange={(e) => setTime24('start', e.target.value, get24hParts(ideaDeadline.start).minute)}
+                          disabled={deadlineStatus.loading || deadlineStatus.saving}
+                        >
+                          {Array.from({ length: 24 }, (_, i) => pad2(i)).map((h) => (
+                            <option key={h} value={h}>{h}</option>
+                          ))}
+                        </select>
+                        <select
+                          style={timeSelect}
+                          value={get24hParts(ideaDeadline.start).minute}
+                          onChange={(e) => setTime24('start', get24hParts(ideaDeadline.start).hour, e.target.value)}
+                          disabled={deadlineStatus.loading || deadlineStatus.saving}
+                        >
+                          {Array.from({ length: 60 }, (_, i) => pad2(i)).map((m) => (
+                            <option key={m} value={m}>{m}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 4 }}>Mbarimi</div>
+                    <div style={compactRow}>
+                      <input
+                        type="date"
+                        style={deadlineInput}
+                        value={ideaDeadline.end ? ideaDeadline.end.split('T')[0] : ''}
+                        onChange={(e) => setDatePart('end', e.target.value)}
+                        disabled={deadlineStatus.loading || deadlineStatus.saving}
+                      />
+                      <div style={timeSegments}>
+                        <select
+                          style={timeSelect}
+                          value={get24hParts(ideaDeadline.end).hour}
+                          onChange={(e) => setTime24('end', e.target.value, get24hParts(ideaDeadline.end).minute)}
+                          disabled={deadlineStatus.loading || deadlineStatus.saving}
+                        >
+                          {Array.from({ length: 24 }, (_, i) => pad2(i)).map((h) => (
+                            <option key={h} value={h}>{h}</option>
+                          ))}
+                        </select>
+                        <select
+                          style={timeSelect}
+                          value={get24hParts(ideaDeadline.end).minute}
+                          onChange={(e) => setTime24('end', get24hParts(ideaDeadline.end).hour, e.target.value)}
+                          disabled={deadlineStatus.loading || deadlineStatus.saving}
+                        >
+                          {Array.from({ length: 60 }, (_, i) => pad2(i)).map((m) => (
+                            <option key={m} value={m}>{m}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div style={deadlineActions}>
+                  <button
+                    style={{ ...primaryButton, padding: '0.65rem 1.2rem' }}
+                    onClick={handleSaveDeadline}
+                    disabled={deadlineStatus.loading || deadlineStatus.saving}
+                  >
+                    {deadlineStatus.saving ? 'Duke ruajtur...' : 'Ruaj afatin'}
+                  </button>
+                  <button
+                    style={{ ...secondaryButton, padding: '0.65rem 1.2rem' }}
+                    onClick={handleClearDeadline}
+                    disabled={deadlineStatus.loading || deadlineStatus.saving || (!ideaDeadline.start && !ideaDeadline.end)}
+                  >
+                    Hiq afatin
+                  </button>
+                  <button
+                    style={{ ...secondaryButton, padding: '0.65rem 1.2rem' }}
+                    onClick={loadIdeaDeadline}
+                    disabled={deadlineStatus.loading}
+                  >
+                    Rifresko afatin
+                  </button>
+                </div>
+              </div>
+
+              <div style={deadlineSummary}>
+                <div style={{ ...deadlineLabel, color: '#6495ed' }}>
+                  <span role="img" aria-label="pin">📌</span>
+                  Datat e caktuara
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.5rem' }}>
+                  <div style={{ fontSize: 14 }}>
+                    <div style={{ opacity: 0.75, fontSize: 12 }}>Fillimi</div>
+                    <strong>{formatDateDisplay(normalizeDateInput(ideaDeadline.start) ?? '')}</strong>
+                  </div>
+                  <div style={{ fontSize: 14 }}>
+                    <div style={{ opacity: 0.75, fontSize: 12 }}>Mbarimi</div>
+                    <strong>{formatDateDisplay(normalizeDateInput(ideaDeadline.end) ?? '')}</strong>
+                  </div>
+                </div>
+                <div style={{ fontSize: 12, opacity: 0.75 }}>
+                  Këto data shfaqen si udhëzim për dorëzimin e ideve.
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Template/Instruksionet Tab */}
+          {activeTab === 'template' && (
+            <div style={{
+              background: 'rgba(23,199,122,0.08)',
+              border: '1px solid rgba(23,199,122,0.25)',
+              borderRadius: 12,
+              padding: '1rem',
+              marginBottom: '1.5rem'
+            }}>
+              <h3 style={{ margin: '0 0 0.75rem', fontSize: 16, color: '#1fdc8c' }}>📄 Template/Instruksionet</h3>
+              {templateInfo.hasTemplate ? (
+                <div>
+                  <p style={{ margin: '0 0 0.75rem', fontSize: 14, color: '#c4f0da' }}>
+                    <strong>File:</strong> {templateInfo.fileName}
+                  </p>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <label
+                      htmlFor="template-upload"
+                      style={{
+                        flex: 1,
+                        padding: '0.5rem',
+                        background: 'rgba(23,199,122,0.2)',
+                        border: '1px solid rgba(23,199,122,0.5)',
+                        borderRadius: 8,
+                        color: '#1fdc8c',
+                        fontWeight: 600,
+                        cursor: uploadingTemplate ? 'not-allowed' : 'pointer',
+                        textAlign: 'center',
+                        fontSize: 13,
+                        opacity: uploadingTemplate ? 0.5 : 1,
+                        transition: 'all 200ms ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!uploadingTemplate) {
+                          e.currentTarget.style.background = 'rgba(23, 199, 122, 0.3)';
+                          e.currentTarget.style.borderColor = '#1fdc8c';
+                          e.currentTarget.style.boxShadow = '0 6px 16px rgba(23, 199, 122, 0.15)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!uploadingTemplate) {
+                          e.currentTarget.style.background = 'rgba(23, 199, 122, 0.2)';
+                          e.currentTarget.style.borderColor = 'rgba(23, 199, 122, 0.5)';
+                          e.currentTarget.style.boxShadow = 'none';
+                        }
+                      }}
+                    >
+                      {uploadingTemplate ? 'Duke ngarkuar...' : '🔄 Ndrysho'}
+                    </label>
+                    <button
+                      onClick={handleDeleteTemplate}
+                      disabled={uploadingTemplate}
+                      style={{
+                        flex: 1,
+                        padding: '0.5rem',
+                        background: 'rgba(255,82,82,0.2)',
+                        border: '1px solid rgba(255,82,82,0.5)',
+                        borderRadius: 8,
+                        color: '#ff5252',
+                        fontWeight: 600,
+                        cursor: uploadingTemplate ? 'not-allowed' : 'pointer',
+                        fontSize: 13,
+                        opacity: uploadingTemplate ? 0.5 : 1,
+                        transition: 'all 200ms ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!uploadingTemplate) {
+                          e.currentTarget.style.background = 'rgba(255, 82, 82, 0.3)';
+                          e.currentTarget.style.borderColor = '#ff5252';
+                          e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 82, 82, 0.15)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!uploadingTemplate) {
+                          e.currentTarget.style.background = 'rgba(255, 82, 82, 0.2)';
+                          e.currentTarget.style.borderColor = 'rgba(255, 82, 82, 0.5)';
+                          e.currentTarget.style.boxShadow = 'none';
+                        }
+                      }}
+                    >
+                      🗑️ Fshi
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <p style={{ margin: '0 0 0.75rem', fontSize: 14, opacity: 0.7 }}>
+                    Nuk ka template të ngarkuar
+                  </p>
+                  <label
+                    htmlFor="template-upload"
+                    style={{
+                      display: 'block',
+                      padding: '0.6rem',
+                      background: 'linear-gradient(135deg, #17c77a 0%, #14b56d 100%)',
+                      border: 'none',
+                      borderRadius: 8,
+                      color: '#0a1612',
+                      fontWeight: 700,
+                      cursor: uploadingTemplate ? 'not-allowed' : 'pointer',
+                      textAlign: 'center',
+                      fontSize: 14,
+                      opacity: uploadingTemplate ? 0.5 : 1
+                    }}
+                  >
+                    {uploadingTemplate ? 'Duke ngarkuar...' : '📤 Ngarko Template'}
+                  </label>
+                </div>
+              )}
+              <input
+                id="template-upload"
+                type="file"
+                accept=".pdf,.doc,.docx,.txt"
+                onChange={handleFileUpload}
+                disabled={uploadingTemplate}
+                style={{ display: 'none' }}
+              />
+            </div>
+          )}
+
+          {/* Lista e Ideve Tab */}
+          {activeTab === 'ideas' && (
+            <div style={columnCard}>
+              <h3 style={{ margin: '0 0 1rem', fontSize: 18, color: '#1fdc8c' }}>📋 Lista e Ideve</h3>
+              {periods.length > 0 && (
+                <div style={{ marginBottom: '0.75rem', display: 'flex', gap: '0.5rem' }}>
+                  <select
+                    value={selectedPeriod}
+                    onChange={(e) => setSelectedPeriod(e.target.value)}
+                    style={{
+                      flex: 1,
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: 10,
+                      border: '1px solid rgba(23,199,122,0.4)',
+                      background: 'rgba(4,10,6,0.7)',
+                      color: '#1fdc8c',
+                      fontSize: 12,
+                      fontWeight: 500,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <option value="all">📅 Të gjitha periudhat</option>
+                    {periods.map(p => (
+                      <option key={p.id} value={p.id}>{p.label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <input
+                type="text"
+                placeholder="Kërko idenë..."
+                style={searchInput}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <div style={ideaList} className="idea-list-scroll">
+                {listStatus.loading && (
+                  <div style={{ textAlign: 'center', opacity: 0.8 }}>Duke u ngarkuar...</div>
+                )}
+                {listStatus.error && (
+                  <div style={{ textAlign: 'center', color: '#f8b4b4' }}>{listStatus.error}</div>
+                )}
+                {!listStatus.loading && !listStatus.error && filteredIdeas.length === 0 && selectedPeriod && (
+                  <div style={{ textAlign: 'center', padding: '2rem', color: '#999' }}>
+                    Nuk ka ide të dorëzuara në këtë periudhë.
+                  </div>
+                )}
+                {!listStatus.loading && !listStatus.error && filteredIdeas
+                  .filter(idea => {
+                    const matchesSearch = idea.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      idea.shorthand.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      (idea.studentName && idea.studentName.toLowerCase().includes(searchTerm.toLowerCase()));
+                    return matchesSearch;
+                  })
+                  .filter(idea => {
+                    if (selectedPeriod === 'all') return true;
+                    const period = periods.find(p => p.id === selectedPeriod);
+                    if (!period) return true;
+                    const ideaDate = getSubmissionDate(idea);
+                    if (!ideaDate) return true;
+                    return ideaDate >= period.startDate && ideaDate <= period.endDate;
+                  })
+                  .sort((a, b) => {
+                    // Rendit studentët para, pastaj profesorin
+                    if (a.type === 'student' && b.type === 'profesor') return -1;
+                    if (a.type === 'profesor' && b.type === 'student') return 1;
+                    // Nëse të dy janë të njëjtit tip, rendit alfabetikisht
+                    if (a.type === 'student' && b.type === 'student') {
+                      return (a.studentName || '').localeCompare(b.studentName || '', 'sq');
                     }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!uploadingTemplate) {
-                      e.currentTarget.style.background = 'rgba(23, 199, 122, 0.2)';
-                      e.currentTarget.style.borderColor = 'rgba(23, 199, 122, 0.5)';
-                      e.currentTarget.style.boxShadow = 'none';
+                    return 0;
+                  })
+                  .length === 0 && (
+                    <div style={{ textAlign: 'center', opacity: 0.8 }}>
+                      {searchTerm ? 'Nuk u gjet asnjë ide me këtë kriter.' : 'Ende nuk ka ide për këtë lëndë.'}
+                    </div>
+                  )}
+                {!listStatus.loading && !listStatus.error && filteredIdeas
+                  .filter(idea =>
+                    idea.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    idea.shorthand.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    (idea.studentName && idea.studentName.toLowerCase().includes(searchTerm.toLowerCase()))
+                  )
+                  .sort((a, b) => {
+                    // Rendit studentët para, pastaj profesorin
+                    if (a.type === 'student' && b.type === 'profesor') return -1;
+                    if (a.type === 'profesor' && b.type === 'student') return 1;
+                    // Nëse të dy janë të njëjtit tip, rendit alfabetikisht
+                    if (a.type === 'student' && b.type === 'student') {
+                      return (a.studentName || '').localeCompare(b.studentName || '', 'sq');
                     }
-                  }}
-                >
-                  {uploadingTemplate ? 'Duke ngarkuar...' : '🔄 Ndrysho'}
-                </label>
+                    return 0;
+                  })
+                  .map((idea) => (
+                    <div key={`${idea.type}-${idea.id}`} style={ideaItem}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 600, fontSize: 15 }}>
+                          {idea.title}
+                          {idea.type === 'student' && (
+                            <span style={{
+                              marginLeft: 8,
+                              fontSize: 11,
+                              padding: '2px 6px',
+                              borderRadius: 4,
+                              background: 'rgba(100, 200, 255, 0.15)',
+                              color: '#64c8ff',
+                              border: '1px solid rgba(100, 200, 255, 0.3)'
+                            }}>
+                              Student
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: 12, opacity: 0.8, marginTop: 4 }}>
+                          {idea.subject?.name && <span>{idea.subject.name}</span>}
+                          {idea.studentName && (
+                            <span>
+                              {idea.subject?.name ? ' • ' : ''}
+                              {idea.studentName}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <span style={tagStyle}>{idea.shorthand}</span>
+                        <button
+                          style={tinyButton}
+                          onClick={() => navigate('/profesor/feedback', { state: { lendaId, subject: subjectName, ideaId: idea.id } })}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(23, 199, 122, 0.15)';
+                            e.currentTarget.style.borderColor = '#17c77a';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'transparent';
+                            e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
+                          }}
+                        >
+                          Feedback
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+              <div style={{ display: 'flex', gap: 12, marginTop: '1.5rem' }}>
                 <button
-                  onClick={handleDeleteTemplate}
-                  disabled={uploadingTemplate}
-                  style={{
-                    flex: 1,
-                    padding: '0.5rem',
-                    background: 'rgba(255,82,82,0.2)',
-                    border: '1px solid rgba(255,82,82,0.5)',
-                    borderRadius: 8,
-                    color: '#ff5252',
-                    fontWeight: 600,
-                    cursor: uploadingTemplate ? 'not-allowed' : 'pointer',
-                    fontSize: 13,
-                    opacity: uploadingTemplate ? 0.5 : 1,
-                    transition: 'all 200ms ease'
-                  }}
+                  style={{ ...secondaryButton, flex: 1 }}
+                  onClick={loadIdeas}
+                  disabled={listStatus.loading}
                   onMouseEnter={(e) => {
-                    if (!uploadingTemplate) {
-                      e.currentTarget.style.background = 'rgba(255, 82, 82, 0.3)';
-                      e.currentTarget.style.borderColor = '#ff5252';
-                      e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 82, 82, 0.15)';
-                    }
+                    e.currentTarget.style.background = 'rgba(23, 199, 122, 0.1)';
+                    e.currentTarget.style.borderColor = '#17c77a';
                   }}
                   onMouseLeave={(e) => {
-                    if (!uploadingTemplate) {
-                      e.currentTarget.style.background = 'rgba(255, 82, 82, 0.2)';
-                      e.currentTarget.style.borderColor = 'rgba(255, 82, 82, 0.5)';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
                   }}
                 >
-                  🗑️ Fshi
+                  Rifresko listën
+                </button>
+                <button
+                  style={{ ...primaryButton, flex: 1 }}
+                  onClick={() => {
+                    const rows = filteredIdeas.map(i => ({
+                      Titulli: i.title,
+                      Shkurtesa: i.shorthand,
+                      Lenda: i.subject?.name ?? '',
+                      Student: i.studentName ?? 'Profesor',
+                      Tipi: i.type === 'student' ? 'Student' : 'Profesor'
+                    }));
+                    const header = ['Titulli', 'Shkurtesa', 'Lenda', 'Student', 'Tipi'];
+                    const csv = [header.join(','), ...rows.map(r => header.map(h => `"${String(r[h] ?? '').replace(/"/g, '""')}"`).join(','))].join('\n');
+                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `idet_${subjectName.replace(/\s+/g, '_')}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(25, 199, 118, 0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  ⬇ Shkarko të gjitha
                 </button>
               </div>
             </div>
-          ) : (
-            <div>
-              <p style={{ margin: '0 0 0.75rem', fontSize: 14, opacity: 0.7 }}>
-                Nuk ka template të ngarkuar
-              </p>
-              <label
-                htmlFor="template-upload"
-                style={{
-                  display: 'block',
-                  padding: '0.6rem',
-                  background: 'linear-gradient(135deg, #17c77a 0%, #14b56d 100%)',
-                  border: 'none',
-                  borderRadius: 8,
-                  color: '#0a1612',
-                  fontWeight: 700,
-                  cursor: uploadingTemplate ? 'not-allowed' : 'pointer',
-                  textAlign: 'center',
-                  fontSize: 14,
-                  opacity: uploadingTemplate ? 0.5 : 1
-                }}
-              >
-                {uploadingTemplate ? 'Duke ngarkuar...' : '📤 Ngarko Template'}
-              </label>
+          )}
+
+          {/* File-t e Dërguara Tab */}
+          {activeTab === 'files' && (
+            <div style={columnCard}>
+              <h3 style={{ margin: '0 0 1rem', fontSize: 18, color: '#6495ed' }}>📄 File-t e Dërguara</h3>
+              {periods.length > 0 && (
+                <div style={{ marginBottom: '0.75rem', display: 'flex', gap: '0.5rem' }}>
+                  <select
+                    value={selectedPeriod}
+                    onChange={(e) => setSelectedPeriod(e.target.value)}
+                    style={{
+                      flex: 1,
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: 10,
+                      border: '1px solid rgba(100,149,237,0.4)',
+                      background: 'rgba(4,10,6,0.7)',
+                      color: '#6495ed',
+                      fontSize: 12,
+                      fontWeight: 500,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <option value="all">📅 Të gjitha periudhat</option>
+                    {periods.map(p => (
+                      <option key={p.id} value={p.id}>{p.label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <input
+                type="text"
+                placeholder="Kërko file..."
+                style={searchInput}
+                value={fileSearchTerm}
+                onChange={(e) => setFileSearchTerm(e.target.value)}
+              />
+              <div style={ideaList} className="idea-list-scroll">
+                {filesStatus.loading && (
+                  <div style={{ textAlign: 'center', opacity: 0.8 }}>Duke u ngarkuar...</div>
+                )}
+                {filesStatus.error && (
+                  <div style={{ textAlign: 'center', color: '#f8b4b4' }}>{filesStatus.error}</div>
+                )}
+                {!filesStatus.loading && !filesStatus.error && filteredFiles.length === 0 && selectedPeriod && (
+                  <div style={{ textAlign: 'center', padding: '2rem', color: '#999' }}>
+                    Nuk ka file të dorëzuara në këtë periudhë.
+                  </div>
+                )}
+                {!filesStatus.loading && !filesStatus.error && filteredFiles
+                  .filter(file => {
+                    const matchesSearch = file.fileName.toLowerCase().includes(fileSearchTerm.toLowerCase()) ||
+                      file.studentName.toLowerCase().includes(fileSearchTerm.toLowerCase());
+                    return matchesSearch;
+                  })
+                  .filter(file => {
+                    if (selectedPeriod === 'all') return true;
+                    const period = periods.find(p => p.id === selectedPeriod);
+                    if (!period) return true;
+                    const fileDate = getSubmissionDate(file);
+                    if (!fileDate) return true;
+                    return fileDate >= period.startDate && fileDate <= period.endDate;
+                  })
+                  .length === 0 && (
+                    <div style={{ textAlign: 'center', opacity: 0.8 }}>
+                      {fileSearchTerm ? 'Nuk u gjet asnjë file me këtë kriter.' : 'Ende nuk ka file të dërguar.'}
+                    </div>
+                  )}
+                {!filesStatus.loading && !filesStatus.error && filteredFiles
+                  .filter(file =>
+                    file.fileName.toLowerCase().includes(fileSearchTerm.toLowerCase()) ||
+                    file.studentName.toLowerCase().includes(fileSearchTerm.toLowerCase())
+                  )
+                  .map((file) => (
+                    <div key={file.id} style={ideaItem}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 600, fontSize: 15 }}>📝 {file.fileName}</div>
+                        <div style={{ fontSize: 12, opacity: 0.8, marginTop: 4 }}>
+                          <span>{file.studentName}</span>
+                          <span style={{ margin: '0 0.5rem' }}>•</span>
+                          <span>{file.fileSize}</span>
+                          <span style={{ margin: '0 0.5rem' }}>•</span>
+                          <span>{file.uploadDate}</span>
+                        </div>
+                        {file.ideaTitle && (
+                          <div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>
+                            Ideja: {file.ideaTitle}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <button
+                          style={downloadButton}
+                          onClick={() => handleDownloadFile(file)}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(100, 149, 237, 0.15)';
+                            e.currentTarget.style.borderColor = '#6495ed';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'transparent';
+                            e.currentTarget.style.borderColor = 'rgba(100,149,237,0.35)';
+                          }}
+                        >
+                          ⬇ Shkarko
+                        </button>
+                        <button
+                          style={tinyButton}
+                          onClick={() => navigate('/profesor/feedback', {
+                            state: {
+                              lendaId,
+                              subject: subjectName,
+                              fileId: file.id,
+                              studentName: file.studentName,
+                              fileName: file.fileName,
+                              uploadDate: file.uploadDate,
+                              ideaTitle: file.ideaTitle,
+                              feedbackType: 'idea-file'
+                            }
+                          })}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(23, 199, 122, 0.15)';
+                            e.currentTarget.style.borderColor = '#17c77a';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'transparent';
+                            e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
+                          }}
+                        >
+                          Feedback
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+              <div style={{ display: 'flex', gap: 12, marginTop: '1.5rem' }}>
+                <button
+                  style={{ ...secondaryButton, flex: 1 }}
+                  onClick={loadFiles}
+                  disabled={filesStatus.loading}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(23, 199, 122, 0.1)';
+                    e.currentTarget.style.borderColor = '#17c77a';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
+                  }}
+                >
+                  Rifresko listën
+                </button>
+                <button
+                  style={{ ...primaryButton, flex: 1 }}
+                  onClick={handleDownloadAllFiles}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(25, 199, 118, 0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  📦 Shkarko të gjitha (.zip)
+                </button>
+              </div>
             </div>
           )}
-          <input
-            id="template-upload"
-            type="file"
-            accept=".pdf,.doc,.docx,.txt"
-            onChange={handleFileUpload}
-            disabled={uploadingTemplate}
-            style={{ display: 'none' }}
-          />
-        </div>
-
-        <div style={columnsStyle}>
-          {/* Box për Ide */}
-          <div style={columnCard}>
-            <h3 style={{ margin: '0 0 1rem', fontSize: 18, color: '#1fdc8c' }}>📋 Lista e Ideve</h3>
-            <input
-              type="text"
-              placeholder="Kërko idenë..."
-              style={searchInput}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <div style={ideaList} className="idea-list-scroll">
-              {listStatus.loading && (
-                <div style={{ textAlign: 'center', opacity: 0.8 }}>Duke u ngarkuar...</div>
-              )}
-              {listStatus.error && (
-                <div style={{ textAlign: 'center', color: '#f8b4b4' }}>{listStatus.error}</div>
-              )}
-              {!listStatus.loading && !listStatus.error && ideas
-                .filter(idea =>
-                  idea.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  idea.shorthand.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  (idea.studentName && idea.studentName.toLowerCase().includes(searchTerm.toLowerCase()))
-                )
-                .sort((a, b) => {
-                  // Rendit studentët para, pastaj profesorin
-                  if (a.type === 'student' && b.type === 'profesor') return -1;
-                  if (a.type === 'profesor' && b.type === 'student') return 1;
-                  // Nëse të dy janë të njëjtit tip, rendit alfabetikisht
-                  if (a.type === 'student' && b.type === 'student') {
-                    return (a.studentName || '').localeCompare(b.studentName || '', 'sq');
-                  }
-                  return 0;
-                })
-                .length === 0 && (
-                  <div style={{ textAlign: 'center', opacity: 0.8 }}>
-                    {searchTerm ? 'Nuk u gjet asnjë ide me këtë kriter.' : 'Ende nuk ka ide për këtë lëndë.'}
-                  </div>
-                )}
-              {!listStatus.loading && !listStatus.error && ideas
-                .filter(idea =>
-                  idea.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  idea.shorthand.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  (idea.studentName && idea.studentName.toLowerCase().includes(searchTerm.toLowerCase()))
-                )
-                .sort((a, b) => {
-                  // Rendit studentët para, pastaj profesorin
-                  if (a.type === 'student' && b.type === 'profesor') return -1;
-                  if (a.type === 'profesor' && b.type === 'student') return 1;
-                  // Nëse të dy janë të njëjtit tip, rendit alfabetikisht
-                  if (a.type === 'student' && b.type === 'student') {
-                    return (a.studentName || '').localeCompare(b.studentName || '', 'sq');
-                  }
-                  return 0;
-                })
-                .map((idea) => (
-                  <div key={`${idea.type}-${idea.id}`} style={ideaItem}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 600, fontSize: 15 }}>
-                        {idea.title}
-                        {idea.type === 'student' && (
-                          <span style={{
-                            marginLeft: 8,
-                            fontSize: 11,
-                            padding: '2px 6px',
-                            borderRadius: 4,
-                            background: 'rgba(100, 200, 255, 0.15)',
-                            color: '#64c8ff',
-                            border: '1px solid rgba(100, 200, 255, 0.3)'
-                          }}>
-                            Student
-                          </span>
-                        )}
-                      </div>
-                      <div style={{ fontSize: 12, opacity: 0.8, marginTop: 4 }}>
-                        {idea.subject?.name && <span>{idea.subject.name}</span>}
-                        {idea.studentName && (
-                          <span>
-                            {idea.subject?.name ? ' • ' : ''}
-                            {idea.studentName}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <span style={tagStyle}>{idea.shorthand}</span>
-                      <button
-                        style={tinyButton}
-                        onClick={() => navigate('/profesor/feedback', { state: { lendaId, subject: subjectName, ideaId: idea.id } })}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'rgba(23, 199, 122, 0.15)';
-                          e.currentTarget.style.borderColor = '#17c77a';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'transparent';
-                          e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
-                        }}
-                      >
-                        Feedback
-                      </button>
-                    </div>
-                  </div>
-                ))}
-            </div>
-            <div style={{ display: 'flex', gap: 12, marginTop: '1.5rem' }}>
-              <button
-                style={{ ...secondaryButton, flex: 1 }}
-                onClick={loadIdeas}
-                disabled={listStatus.loading}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(23, 199, 122, 0.1)';
-                  e.currentTarget.style.borderColor = '#17c77a';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
-                }}
-              >
-                Rifresko listën
-              </button>
-              <button
-                style={{ ...primaryButton, flex: 1 }}
-                onClick={() => {
-                  const rows = ideas.map(i => ({
-                    Titulli: i.title,
-                    Shkurtesa: i.shorthand,
-                    Lenda: i.subject?.name ?? '',
-                    Student: i.studentName ?? 'Profesor',
-                    Tipi: i.type === 'student' ? 'Student' : 'Profesor'
-                  }));
-                  const header = ['Titulli', 'Shkurtesa', 'Lenda', 'Student', 'Tipi'];
-                  const csv = [header.join(','), ...rows.map(r => header.map(h => `"${String(r[h] ?? '').replace(/"/g, '""')}"`).join(','))].join('\n');
-                  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `idet_${subjectName.replace(/\s+/g, '_')}.csv`;
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-                  URL.revokeObjectURL(url);
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(25, 199, 118, 0.3)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              >
-                ⬇ Shkarko të gjitha
-              </button>
-            </div>
-          </div>
-
-          {/* Box për File-t Word */}
-          <div style={columnCard}>
-            <h3 style={{ margin: '0 0 1rem', fontSize: 18, color: '#6495ed' }}>📄 File-t e Dërguara</h3>
-            <input
-              type="text"
-              placeholder="Kërko file..."
-              style={searchInput}
-              value={fileSearchTerm}
-              onChange={(e) => setFileSearchTerm(e.target.value)}
-            />
-            <div style={ideaList} className="idea-list-scroll">
-              {filesStatus.loading && (
-                <div style={{ textAlign: 'center', opacity: 0.8 }}>Duke u ngarkuar...</div>
-              )}
-              {filesStatus.error && (
-                <div style={{ textAlign: 'center', color: '#f8b4b4' }}>{filesStatus.error}</div>
-              )}
-              {!filesStatus.loading && !filesStatus.error && files
-                .filter(file =>
-                  file.fileName.toLowerCase().includes(fileSearchTerm.toLowerCase()) ||
-                  file.studentName.toLowerCase().includes(fileSearchTerm.toLowerCase())
-                )
-                .length === 0 && (
-                  <div style={{ textAlign: 'center', opacity: 0.8 }}>
-                    {fileSearchTerm ? 'Nuk u gjet asnjë file me këtë kriter.' : 'Ende nuk ka file të dërguar.'}
-                  </div>
-                )}
-              {!filesStatus.loading && !filesStatus.error && files
-                .filter(file =>
-                  file.fileName.toLowerCase().includes(fileSearchTerm.toLowerCase()) ||
-                  file.studentName.toLowerCase().includes(fileSearchTerm.toLowerCase())
-                )
-                .map((file) => (
-                  <div key={file.id} style={ideaItem}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 600, fontSize: 15 }}>📝 {file.fileName}</div>
-                      <div style={{ fontSize: 12, opacity: 0.8, marginTop: 4 }}>
-                        <span>{file.studentName}</span>
-                        <span style={{ margin: '0 0.5rem' }}>•</span>
-                        <span>{file.fileSize}</span>
-                        <span style={{ margin: '0 0.5rem' }}>•</span>
-                        <span>{file.uploadDate}</span>
-                      </div>
-                      {file.ideaTitle && (
-                        <div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>
-                          Ideja: {file.ideaTitle}
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <button
-                        style={downloadButton}
-                        onClick={() => handleDownloadFile(file)}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'rgba(100, 149, 237, 0.15)';
-                          e.currentTarget.style.borderColor = '#6495ed';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'transparent';
-                          e.currentTarget.style.borderColor = 'rgba(100,149,237,0.35)';
-                        }}
-                      >
-                        ⬇ Shkarko
-                      </button>
-                      <button
-                        style={tinyButton}
-                        onClick={() => navigate('/profesor/feedback', {
-                          state: {
-                            lendaId,
-                            subject: subjectName,
-                            fileId: file.id,
-                            studentName: file.studentName,
-                            fileName: file.fileName,
-                            uploadDate: file.uploadDate,
-                            ideaTitle: file.ideaTitle,
-                            feedbackType: 'idea-file'
-                          }
-                        })}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'rgba(23, 199, 122, 0.15)';
-                          e.currentTarget.style.borderColor = '#17c77a';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'transparent';
-                          e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
-                        }}
-                      >
-                        Feedback
-                      </button>
-                    </div>
-                  </div>
-                ))}
-            </div>
-            <div style={{ display: 'flex', gap: 12, marginTop: '1.5rem' }}>
-              <button
-                style={{ ...secondaryButton, flex: 1 }}
-                onClick={loadFiles}
-                disabled={filesStatus.loading}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(23, 199, 122, 0.1)';
-                  e.currentTarget.style.borderColor = '#17c77a';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
-                }}
-              >
-                Rifresko listën
-              </button>
-              <button
-                style={{ ...primaryButton, flex: 1 }}
-                onClick={handleDownloadAllFiles}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(25, 199, 118, 0.3)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              >
-                📦 Shkarko të gjitha (.zip)
-              </button>
-            </div>
-          </div>
 
         </div>
-
       </div>
     </div>
   );

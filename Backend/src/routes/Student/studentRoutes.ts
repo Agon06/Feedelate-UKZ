@@ -693,86 +693,6 @@ router.delete("/:id/dorezime/:dorezimId", async (req: Request, res: Response) =>
   }
 });
 
-// Get all studentet
-router.get("/", async (req: Request, res: Response) => {
-  try {
-    const studentet = await studentRepository.find();
-    res.json(studentet);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching studentet", error });
-  }
-});
-
-// Get student by id 
-router.get("/:id", async (req: Request, res: Response) => {
-  try {
-    const student = await studentRepository.findOneBy({ id: parseInt(req.params.id, 10) });
-    if (!student) {
-      return res.status(404).json({ message: "Student not found" });
-    }
-    res.json(student);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching student", error });
-  }
-});
-
-// Create student
-router.post("/", async (req: Request, res: Response) => {
-  try {
-    const student = studentRepository.create(req.body);
-    const result = await studentRepository.save(student);
-    res.status(201).json(result);
-  } catch (error) {
-    res.status(500).json({ message: "Error creating student", error });
-  }
-});
-
-
-//router.get i merrr prej db, router.post i inserton n db, router. put/patch i updeton, dhe router.delete i fshin
-//ktu krijohen api  endpoint per me i menaxhu db. 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Update student
-router.put("/:id", async (req: Request, res: Response) => {
-  try {
-    const student = await studentRepository.findOneBy({ id: parseInt(req.params.id, 10) });
-    if (!student) {
-      return res.status(404).json({ message: "Student not found" });
-    }
-    studentRepository.merge(student, req.body);
-    const result = await studentRepository.save(student);
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ message: "Error updating student", error });
-  }
-});
-
-// Delete student
-router.delete("/:id", async (req: Request, res: Response) => {
-  try {
-    const result = await studentRepository.delete(parseInt(req.params.id, 10));
-    if (result.affected === 0) {
-      return res.status(404).json({ message: "Student not found" });
-    }
-    res.json({ message: "Student deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Error deleting student", error });
-  }
-});
-
 // ============ DOREZIMI I PROJEKTIT ROUTES ============
 
 // GET: Merr projektin e dorëzuar për një lëndë
@@ -1028,6 +948,71 @@ router.get("/:id/projekti/:lendaId/template/download", async (req: Request, res:
     return res.download(absolutePath, lenda.templateFileName);
   } catch (error) {
     res.status(500).json({ message: "Error downloading template", error });
+  }
+});
+
+// ============ GENERIC CRUD ROUTES (MUST BE LAST) ============
+// These routes must be defined after all specific routes to avoid matching issues
+
+// Get all studentet
+router.get("/", async (req: Request, res: Response) => {
+  try {
+    const studentet = await studentRepository.find();
+    res.json(studentet);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching studentet", error });
+  }
+});
+
+// Create student
+router.post("/", async (req: Request, res: Response) => {
+  try {
+    const student = studentRepository.create(req.body);
+    const result = await studentRepository.save(student);
+    res.status(201).json(result);
+  } catch (error) {
+    res.status(500).json({ message: "Error creating student", error });
+  }
+});
+
+// Update student
+router.put("/:id", async (req: Request, res: Response) => {
+  try {
+    const student = await studentRepository.findOneBy({ id: parseInt(req.params.id, 10) });
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+    studentRepository.merge(student, req.body);
+    const result = await studentRepository.save(student);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ message: "Error updating student", error });
+  }
+});
+
+// Delete student
+router.delete("/:id", async (req: Request, res: Response) => {
+  try {
+    const result = await studentRepository.delete(parseInt(req.params.id, 10));
+    if (result.affected === 0) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+    res.json({ message: "Student deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting student", error });
+  }
+});
+
+// Get student by id (MUST BE LAST GET ROUTE)
+router.get("/:id", async (req: Request, res: Response) => {
+  try {
+    const student = await studentRepository.findOneBy({ id: parseInt(req.params.id, 10) });
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+    res.json(student);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching student", error });
   }
 });
 

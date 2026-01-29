@@ -13,12 +13,19 @@ const Projekti = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [formData, setFormData] = useState({
     emriProjekti: "",
     pershkrimiProjekti: "",
     deaAdline: "",
     lendaId: 1,
   });
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     fetchProjects();

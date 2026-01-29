@@ -596,11 +596,10 @@ router.get("/:id/dorezime-studentesh/:lendaId", async (req: Request, res: Respon
     console.log("Profesor ID:", profesorId);
     console.log("Lenda ID:", lendaId);
 
-    // Fetch all idea submissions for this subject that belong to this profesor
+    // ✅ UPDATED: Don't filter by profesorId - show all submissions for this subject
     const ideaSubmissions = await dorezimiIdeeshRepository.find({
       where: {
         lenda: { id: lendaId },
-        profesorId: profesorId,
         isShabllon: false,
       },
       relations: ["student", "lenda"],

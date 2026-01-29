@@ -49,7 +49,9 @@ export const getProfesorDashboard = (profesorId, academicYear) => {
 
 export const getProfesorYearData = (profesorId, yearId, academicYear) => {
   const fullYearFormat = convertAcademicYearFormat(academicYear);
+  console.log(`[API] Fetching year data - profesorId: ${profesorId}, yearId: ${yearId}, academicYear: ${academicYear} -> ${fullYearFormat}`);
   const url = `/profesoret/${profesorId}/lendet/${yearId}${fullYearFormat ? `?academicYear=${encodeURIComponent(fullYearFormat)}` : ''}`;
+  console.log(`[API] Request URL: ${url}`);
   return request(url);
 };
 
