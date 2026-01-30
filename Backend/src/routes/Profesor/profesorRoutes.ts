@@ -12,6 +12,7 @@ import { Lendet } from "../../entities/Student/Lendet";
 import { Idete } from "../../entities/Student/Idete";
 import { dorzimiProjektit } from "../../entities/Student/dorzimiProjektit";
 import { ProfesorLendetMapping } from "../../entities/Student/ProfesorLendetMapping";
+import { InstructionTemplate } from "../../entities/Student/InstructionTemplate";
 
 const router = Router();
 const profesorRepository = AppDataSource.getRepository(Profesor);
@@ -21,6 +22,7 @@ const dorezimiIdeeshRepository = AppDataSource.getRepository(DorezimiIdes);
 const studentRepository = AppDataSource.getRepository(Student);
 const dorezimProjektitRepository = AppDataSource.getRepository(dorzimiProjektit);
 const mappingRepository = AppDataSource.getRepository(ProfesorLendetMapping);
+const instructionRepository = AppDataSource.getRepository(InstructionTemplate);
 
 // Multer config for file upload (disk storage)
 const uploadDir = path.resolve(process.cwd(), "uploads", "dorezime");
@@ -51,6 +53,23 @@ const upload = multer({
   },
   limits: { fileSize: 10 * 1024 * 1024 }
 });
+
+// Multer config for instruction files
+const instructionUploadDir = path.resolve(process.cwd(), "uploads", "instructions");
+if (!fs.existsSync(instructionUploadDir)) {
+  fs.mkdirSync(instructionUploadDir, { recursive: true });
+}
+
+const instructionStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, instructionUploadDir),
+  filename: (_req, file, cb) => {
+    const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `instruction-${unique}${ext}`);
+  }
+});
+
+const uploadInstructions = multer({ storage: instructionStorage });
 
 // Multer config për template upload (PDF, DOC, DOCX, TXT)
 const uploadTemplate = multer({
@@ -1163,6 +1182,107 @@ router.get("/:id/lendet/:lendaId/template", async (req: Request, res: Response) 
     });
   } catch (error) {
     res.status(500).json({ message: "Error fetching template info", error });
+  }
+});
+
+// POST: Shto instruksione për një lëndë
+router.post("/:id/lendet/:lendaId/instructions", uploadInstructions.array("files", 10), async (req: Request, res: Response) => {
+  const lendaId = Number(req.params.lendaId);
+  const title = (req.body?.title ?? "Instruksione").toString().trim() || "Instruksione";
+  const content = (req.body?.content ?? "").toString();
+
+  if (Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "Invalid lenda ID" });
+  }
+
+  try {
+    const lenda = await lendetRepository.findOneBy({ id: lendaId });
+    if (!lenda) {
+      return res.status(404).json({ message: "Lenda not found" });
+    }
+
+    const uploadedFiles = (req.files as Express.Multer.File[]) || [];
+    const filesPayload = uploadedFiles.map((file) => ({
+      name: file.originalname,
+      size: file.size,
+      type: file.mimetype,
+      path: path.relative(process.cwd(), file.path),
+    }));
+
+    const instruction = instructionRepository.create({
+      lendaId,
+      title,
+      content,
+      files: filesPayload.length ? filesPayload : undefined,
+    });
+
+    const saved = await instructionRepository.save(instruction);
+
+    res.json({
+      id: saved.id,
+      title: saved.title,
+      content: saved.content,
+      createdAt: saved.createdAt,
+      files: (saved.files || []).map((f) => ({ name: f.name, size: f.size, type: f.type })),
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error saving instructions", error: String(error) });
+  }
+});
+
+// GET: Merr instruksionet për një lëndë
+router.get("/:id/lendet/:lendaId/instructions", async (req: Request, res: Response) => {
+  const lendaId = Number(req.params.lendaId);
+
+  if (Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "Invalid lenda ID" });
+  }
+
+  try {
+    const instructions = await instructionRepository.find({
+      where: { lendaId },
+      order: { createdAt: "DESC" },
+    });
+
+    res.json(
+      instructions.map((instruction) => ({
+        id: instruction.id,
+        title: instruction.title,
+        content: instruction.content,
+        createdAt: instruction.createdAt,
+        files: (instruction.files || []).map((f) => ({ name: f.name, size: f.size, type: f.type })),
+      }))
+    );
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching instructions", error: String(error) });
+  }
+});
+
+// DELETE: Fshij instruksionet për një lëndë
+router.delete("/:id/lendet/:lendaId/instructions/:instructionId", async (req: Request, res: Response) => {
+  const instructionId = Number(req.params.instructionId);
+
+  if (Number.isNaN(instructionId)) {
+    return res.status(400).json({ message: "Invalid instruction ID" });
+  }
+
+  try {
+    const instruction = await instructionRepository.findOneBy({ id: instructionId });
+    if (!instruction) {
+      return res.status(404).json({ message: "Instruction not found" });
+    }
+
+    (instruction.files || []).forEach((file) => {
+      const absolutePath = path.resolve(process.cwd(), file.path);
+      if (fs.existsSync(absolutePath)) {
+        fs.unlinkSync(absolutePath);
+      }
+    });
+
+    await instructionRepository.delete(instructionId);
+    res.json({ message: "Instruction deleted" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting instruction", error: String(error) });
   }
 });
 

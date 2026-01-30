@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import JSZip from 'jszip';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { getStudentProjectSubmissions, updateProjectGrade, updateProjectMaxPoints, updateProjectDeadline } from '../services/profesorApi';
+import { getStudentProjectSubmissions, updateProjectGrade, updateProjectMaxPoints, updateProjectDeadline, addInstructionTemplate, getInstructionTemplates, deleteInstructionTemplate } from '../services/profesorApi';
 
 const DoreziметStudentesh = () => {
   const navigate = useNavigate();
@@ -33,6 +33,11 @@ const DoreziметStudentesh = () => {
   const [deadlineTitle, setDeadlineTitle] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [periods, setPeriods] = useState([]);
+  const [templates, setTemplates] = useState([]);
+  const [showTemplateForm, setShowTemplateForm] = useState(false);
+  const [templateTitle, setTemplateTitle] = useState('');
+  const [templateContent, setTemplateContent] = useState('');
+  const [templateFiles, setTemplateFiles] = useState([]);
 
   const pad2 = (num) => String(num).padStart(2, '0');
   const formatDateDisplay = (isoString) => {
@@ -124,6 +129,24 @@ const DoreziметStudentesh = () => {
       isMounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lendaId]);
+
+  // Load instruction templates when component mounts
+  useEffect(() => {
+    if (!lendaId) return;
+    
+    const loadTemplates = async () => {
+      try {
+        const data = await getInstructionTemplates(PROFESOR_ID, lendaId);
+        if (data && Array.isArray(data)) {
+          setTemplates(data);
+        }
+      } catch (error) {
+        console.error('Error loading instruction templates:', error);
+      }
+    };
+
+    loadTemplates();
   }, [lendaId]);
 
   const profesorName = 'Profesor';
@@ -527,6 +550,12 @@ const DoreziметStudentesh = () => {
         {/* Left Sidebar */}
         <div style={leftPanelStyle}>
           <button
+            style={tabButtonStyle(activeTab === 'templates')}
+            onClick={() => setActiveTab('templates')}
+          >
+            📋 Template/Instruksione
+          </button>
+          <button
             style={tabButtonStyle(activeTab === 'projects')}
             onClick={() => setActiveTab('projects')}
           >
@@ -554,6 +583,322 @@ const DoreziметStudentesh = () => {
 
         {/* Right Content Panel */}
         <div style={rightPanelStyle}>
+          {/* TEMPLATES TAB */}
+          {activeTab === 'templates' && (
+            <div>
+              <h2 style={{ margin: '0 0 1.5rem 0', color: '#1fdc8c' }}>📋 Template/Instruksione</h2>
+              <button
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: '#19c776',
+                  border: 'none',
+                  borderRadius: 10,
+                  color: '#041407',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontSize: 14,
+                  marginBottom: '1.5rem',
+                  width: '100%'
+                }}
+                onClick={() => setShowTemplateForm(!showTemplateForm)}
+              >
+                {showTemplateForm ? '✕ Anulo' : '➕ Shto Template/Instruksion'}
+              </button>
+
+              {showTemplateForm && (
+                <div style={{
+                  background: 'rgba(23, 199, 122, 0.1)',
+                  border: '1px solid rgba(23, 199, 122, 0.3)',
+                  borderRadius: 10,
+                  padding: '1.5rem',
+                  marginBottom: '1.5rem'
+                }}>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: 14, fontWeight: 600, color: '#17c77a' }}>
+                      Përmbajtja/Instruksionet:
+                    </label>
+                    <textarea
+                      placeholder="Shkruaj instruksionet ose përmbajtjen e template-it..."
+                      value={templateContent}
+                      onChange={(e) => setTemplateContent(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '1rem',
+                        borderRadius: 8,
+                        border: '1px solid rgba(23,199,122,0.4)',
+                        background: 'rgba(4,10,6,0.7)',
+                        color: '#1fdc8c',
+                        fontSize: 14,
+                        fontFamily: 'inherit',
+                        minHeight: '200px',
+                        boxSizing: 'border-box',
+                        resize: 'vertical'
+                      }}
+                    />
+                  </div>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: 14, fontWeight: 600, color: '#17c77a' }}>
+                      📎 Shto Fajllat (PDF, Excel, ZIP, etj.):
+                    </label>
+                    <input
+                      type="file"
+                      multiple
+                      onChange={(e) => {
+                        const newFiles = Array.from(e.target.files || []).map(file => ({
+                          name: file.name,
+                          size: file.size,
+                          type: file.type,
+                          data: file
+                        }));
+                        setTemplateFiles([...templateFiles, ...newFiles]);
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem 1rem',
+                        borderRadius: 8,
+                        border: '1px solid rgba(23,199,122,0.4)',
+                        background: 'rgba(4,10,6,0.7)',
+                        color: '#1fdc8c',
+                        fontSize: 14,
+                        fontFamily: 'inherit',
+                        boxSizing: 'border-box',
+                        cursor: 'pointer'
+                      }}
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.txt,.jpg,.png,.jpeg"
+                    />
+                    {templateFiles.length > 0 && (
+                      <div style={{ marginTop: '0.75rem' }}>
+                        <label style={{ fontSize: 12, color: '#17c77a', fontWeight: 600 }}>Fajllat e shtuar:</label>
+                        <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                          {templateFiles.map((file, idx) => (
+                            <div
+                              key={idx}
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                background: 'rgba(9, 18, 12, 0.7)',
+                                padding: '0.75rem 1rem',
+                                borderRadius: 6,
+                                fontSize: 13,
+                                border: '1px solid rgba(23,199,122,0.2)'
+                              }}
+                            >
+                              <span style={{ color: '#e0e0e0' }}>📄 {file.name}</span>
+                              <button
+                                type="button"
+                                style={{
+                                  background: 'rgba(255, 107, 107, 0.2)',
+                                  border: '1px solid rgba(255, 107, 107, 0.4)',
+                                  color: '#ff6b6b',
+                                  padding: '0.3rem 0.6rem',
+                                  borderRadius: 4,
+                                  cursor: 'pointer',
+                                  fontSize: 11,
+                                  fontWeight: 600
+                                }}
+                                onClick={() => {
+                                  setTemplateFiles(templateFiles.filter((_, i) => i !== idx));
+                                }}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      background: '#17c77a',
+                      border: 'none',
+                      borderRadius: 8,
+                      color: '#041407',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      fontSize: 14,
+                      width: '100%'
+                    }}
+                    onClick={async () => {
+                      if (templateContent.trim() || templateFiles.length > 0) {
+                        const newTemplate = {
+                          id: Date.now(),
+                          title: templateTitle || 'Instruksione',
+                          content: templateContent,
+                          files: templateFiles.map(f => ({
+                            name: f.name,
+                            size: f.size,
+                            type: f.type
+                          })),
+                          createdAt: new Date().toLocaleString('sq-AL')
+                        };
+                        
+                        // Save to backend
+                        try {
+                          await addInstructionTemplate(PROFESOR_ID, lendaId, {
+                            title: templateTitle || 'Instruksione',
+                            content: templateContent,
+                            files: templateFiles
+                          });
+                          
+                          // Reload templates from backend
+                          const updatedTemplates = await getInstructionTemplates(PROFESOR_ID, lendaId);
+                          setTemplates(updatedTemplates || []);
+                          
+                          setTemplateTitle('');
+                          setTemplateContent('');
+                          setTemplateFiles([]);
+                          setShowTemplateForm(false);
+                          alert('Template u ruajt me sukses!');
+                        } catch (error) {
+                          console.error('Error saving template:', error);
+                          alert('Error: ' + (error.message || 'Nuk u ruajt template'));
+                        }
+                      } else {
+                        alert('Shto instruksion ose fajll!');
+                      }
+                    }}
+                  >
+                    💾 Ruaj Template
+                  </button>
+                </div>
+              )}
+
+              {templates.length === 0 ? (
+                <div style={{ ...bannerStyle, background: 'rgba(23, 199, 122, 0.1)' }}>
+                  Nuk ka template/instruksione të ruajtura ende. Kliko butonin më lart për të shtuar një.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {templates.map((template) => (
+                    <div
+                      key={template.id}
+                      style={{
+                        background: 'rgba(16, 24, 20, 0.6)',
+                        border: '1px solid rgba(23, 199, 122, 0.2)',
+                        borderRadius: 10,
+                        padding: '1.5rem',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.75rem' }}>
+                        <h3 style={{ margin: 0, color: '#1fdc8c', fontSize: 18, fontWeight: 700 }}>
+                          {template.title}
+                        </h3>
+                        <button
+                          style={{
+                            background: 'rgba(255, 107, 107, 0.2)',
+                            border: '1px solid rgba(255, 107, 107, 0.4)',
+                            color: '#ff6b6b',
+                            padding: '0.4rem 0.8rem',
+                            borderRadius: 6,
+                            cursor: 'pointer',
+                            fontSize: 12,
+                            fontWeight: 600
+                          }}
+                          onClick={async () => {
+                            try {
+                              await deleteInstructionTemplate(PROFESOR_ID, lendaId, template.id);
+                              const updatedTemplates = await getInstructionTemplates(PROFESOR_ID, lendaId);
+                              setTemplates(updatedTemplates || []);
+                            } catch (error) {
+                              console.error('Error deleting template:', error);
+                              alert('Error: ' + (error.message || 'Nuk u fshi template'));
+                            }
+                          }}
+                        >
+                          ✕ Fshi
+                        </button>
+                      </div>
+                      <div style={{ fontSize: 13, color: '#999', marginBottom: '1rem' }}>
+                        Krijuar: {template.createdAt}
+                      </div>
+                      <div style={{
+                        background: 'rgba(9, 18, 12, 0.5)',
+                        borderRadius: 8,
+                        padding: '1rem',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                        fontSize: 14,
+                        lineHeight: 1.6,
+                        color: '#e0e0e0',
+                        maxHeight: '300px',
+                        overflow: 'auto',
+                        marginBottom: '1rem'
+                      }}>
+                        {template.content}
+                      </div>
+                      {template.files && template.files.length > 0 && (
+                        <div style={{
+                          background: 'rgba(23, 199, 122, 0.08)',
+                          border: '1px solid rgba(23, 199, 122, 0.2)',
+                          borderRadius: 8,
+                          padding: '1rem',
+                          marginTop: '1rem'
+                        }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: '#17c77a', marginBottom: '0.75rem' }}>
+                            📎 Fajllat e Lidhur:
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            {template.files.map((file, idx) => {
+                              const formatFileSize = (bytes) => {
+                                if (bytes === 0) return '0 B';
+                                const k = 1024;
+                                const sizes = ['B', 'KB', 'MB', 'GB'];
+                                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                                return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+                              };
+                              return (
+                                <div
+                                  key={idx}
+                                  style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    background: 'rgba(9, 18, 12, 0.6)',
+                                    padding: '0.75rem 1rem',
+                                    borderRadius: 6,
+                                    fontSize: 13,
+                                    border: '1px solid rgba(23,199,122,0.15)'
+                                  }}
+                                >
+                                  <div style={{ color: '#e0e0e0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                                    📄 {file.name} <span style={{ color: '#999', fontSize: 12 }}>({formatFileSize(file.size)})</span>
+                                  </div>
+                                  <button
+                                    style={{
+                                      background: '#17c77a',
+                                      border: 'none',
+                                      color: '#041407',
+                                      padding: '0.4rem 0.8rem',
+                                      borderRadius: 4,
+                                      cursor: 'pointer',
+                                      fontSize: 11,
+                                      fontWeight: 600,
+                                      marginLeft: '0.75rem',
+                                      whiteSpace: 'nowrap'
+                                    }}
+                                    onClick={() => {
+                                      alert(`Për të shkarkuar "${file.name}", do të nevojitet integrimi me serverin. Fajlli mund të shkarkohet pasi të ruhet në bazën e të dhënave.`);
+                                    }}
+                                  >
+                                    ⬇ Shkarko
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* PROJECTS TAB */}
           {activeTab === 'projects' && (
             <div>

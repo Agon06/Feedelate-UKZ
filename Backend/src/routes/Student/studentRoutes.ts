@@ -12,6 +12,7 @@ import { DorezimiIdes } from "../../entities/Student/dorezimiIdes";
 import { Projekti } from "../../entities/Student/projekti";
 import { dorzimiProjektit } from "../../entities/Student/dorzimiProjektit";
 import { MenaxhimiAfateve } from "../../entities/Student/menaxhimiAfateve";
+import { InstructionTemplate } from "../../entities/Student/InstructionTemplate";
 
 
 const router = Router();
@@ -22,6 +23,7 @@ const dorezimRepository = AppDataSource.getRepository(DorezimiIdes);
 const projektiRepository = AppDataSource.getRepository(Projekti);
 const dorezimProjektitRepository = AppDataSource.getRepository(dorzimiProjektit);
 const menaxhimiAfateveRepository = AppDataSource.getRepository(MenaxhimiAfateve);
+const instructionRepository = AppDataSource.getRepository(InstructionTemplate);
 //e thirr repositorin e testi
 
 
@@ -922,6 +924,64 @@ router.get("/:id/projekti/:lendaId/template", async (req: Request, res: Response
     });
   } catch (error) {
     res.status(500).json({ message: "Error fetching template info", error });
+  }
+});
+
+// GET: Merr instruksionet për një lëndë (student)
+router.get("/:id/projekti/:lendaId/instructions", async (req: Request, res: Response) => {
+  const lendaId = Number(req.params.lendaId);
+
+  if (Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "Invalid lenda ID" });
+  }
+
+  try {
+    const instructions = await instructionRepository.find({
+      where: { lendaId },
+      order: { createdAt: "DESC" },
+    });
+
+    res.json(
+      instructions.map((instruction) => ({
+        id: instruction.id,
+        title: instruction.title,
+        content: instruction.content,
+        createdAt: instruction.createdAt,
+        files: (instruction.files || []).map((f) => ({ name: f.name, size: f.size, type: f.type })),
+      }))
+    );
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching instructions", error: String(error) });
+  }
+});
+
+// DOWNLOAD: Shkarko fajllin e instruksioneve
+router.get("/:id/projekti/:lendaId/instructions/:fileName/download", async (req: Request, res: Response) => {
+  const lendaId = Number(req.params.lendaId);
+  const fileName = decodeURIComponent(req.params.fileName);
+
+  if (Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "Invalid lenda ID" });
+  }
+
+  try {
+    const instructions = await instructionRepository.find({ where: { lendaId } });
+    const matching = instructions
+      .flatMap((instruction) => instruction.files || [])
+      .find((file) => file.name === fileName);
+
+    if (!matching) {
+      return res.status(404).json({ message: "File not found" });
+    }
+
+    const absolutePath = path.resolve(process.cwd(), matching.path);
+    if (!fs.existsSync(absolutePath)) {
+      return res.status(404).json({ message: "File not found on disk" });
+    }
+
+    return res.download(absolutePath, matching.name);
+  } catch (error) {
+    res.status(500).json({ message: "Error downloading instruction file", error: String(error) });
   }
 });
 

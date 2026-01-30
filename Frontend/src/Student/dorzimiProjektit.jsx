@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { getProjektiDorezuar, dorezoProjektin, fshijProjektin, shkarkoProjektin, getTemplateInfo, shkarkoTemplate } from "../services/projektiApi";
+import { getProjektiDorezuar, dorezoProjektin, fshijProjektin, shkarkoProjektin, getTemplateInfo, shkarkoTemplate, getStudentInstructions, downloadInstructionFile } from "../services/projektiApi";
 
 const DorzimiProjektit = () => {
     const location = useLocation();
@@ -19,6 +19,9 @@ const DorzimiProjektit = () => {
     const [projectDeadlineDisplay, setProjectDeadlineDisplay] = useState(null);
     const [projectStartIso, setProjectStartIso] = useState(null);
     const [projectDeadlineIso, setProjectDeadlineIso] = useState(null);
+    const [instructions, setInstructions] = useState([]);
+    const [instructionsLoading, setInstructionsLoading] = useState(false);
+    const [submitMessage, setSubmitMessage] = useState(null);
 
     const student = JSON.parse(localStorage.getItem('student') || '{}');
     if (!student.id) {
@@ -32,9 +35,25 @@ const DorzimiProjektit = () => {
         if (lendaId) {
             loadProjektiDorezuar();
             loadTemplateInfo();
+                loadInstructions();
         }
     }, [lendaId]);
 
+        // Load instruction templates
+        const loadInstructions = async () => {
+            try {
+                setInstructionsLoading(true);
+                const data = await getStudentInstructions(STUDENT_ID, lendaId);
+                if (data && Array.isArray(data)) {
+                    setInstructions(data);
+                }
+            } catch (error) {
+                console.error("Error loading instructions:", error);
+                setInstructions([]);
+            } finally {
+                setInstructionsLoading(false);
+            }
+        };
     // Auto-refresh project deadline data every 5 seconds to detect changes from profesor
     useEffect(() => {
         if (!lendaId) return;
@@ -229,12 +248,13 @@ const DorzimiProjektit = () => {
     };
 
     const handleDorzoProjektin = async () => {
+        setSubmitMessage(null);
         if (isDeadlinePassed) {
-            alert("Na vjen keq, afati i dorëzimit ka kaluar.");
+            setSubmitMessage({ type: "error", text: "Na vjen keq, afati i dorëzimit ka kaluar." });
             return;
         }
         if (!selectedFile) {
-            alert("Ju lutem zgjidhni një file!");
+            setSubmitMessage({ type: "error", text: "Ju lutem zgjidhni një file!" });
             return;
         }
 
@@ -243,12 +263,17 @@ const DorzimiProjektit = () => {
             const result = await dorezoProjektin(STUDENT_ID, lendaId, selectedFile);
             setIsDorzuar(true);
             setDorezimData(result);
-            alert("Projekti u dorëzua me sukses!");
+            setSubmitMessage({ type: "success", text: "Projekti u dorëzua me sukses!" });
             // Reload data
             await loadProjektiDorezuar();
         } catch (error) {
             console.error("Full error:", error);
-            alert("Error: " + (error.message || "Ndodhi një gabim gjatë dorëzimit"));
+            const rawMessage = error?.message || "Ndodhi një gabim gjatë dorëzimit";
+            const isHtml = typeof rawMessage === "string" && /<!doctype|<html/i.test(rawMessage);
+            setSubmitMessage({
+                type: "error",
+                text: isHtml ? "Ndodhi një gabim në server. Provoni përsëri." : `Error: ${rawMessage}`
+            });
         } finally {
             setIsLoading(false);
         }
@@ -351,6 +376,20 @@ const DorzimiProjektit = () => {
                             }}>
                                 Dorëzo Projektin
                             </h2>
+                            {submitMessage && (
+                                <div style={{
+                                    marginBottom: "1rem",
+                                    padding: "0.85rem 1rem",
+                                    borderRadius: 10,
+                                    border: submitMessage.type === "success" ? "1px solid rgba(23,199,122,0.4)" : "1px solid rgba(255,99,71,0.4)",
+                                    background: submitMessage.type === "success" ? "rgba(23,199,122,0.12)" : "rgba(255,99,71,0.12)",
+                                    color: submitMessage.type === "success" ? "#1fdc8c" : "#ff9f8d",
+                                    textAlign: "center",
+                                    fontWeight: 600
+                                }}>
+                                    {submitMessage.text}
+                                </div>
+                            )}
                             <div style={cardStyle}>
                                 <p style={{
                                     marginBottom: "1.5rem",
@@ -567,78 +606,198 @@ const DorzimiProjektit = () => {
                             }}>
                                 Instruksionet e Projektit
                             </h2>
-                            <div style={cardStyle}>
-                                <div style={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    padding: "4rem 2rem",
-                                    minHeight: "400px"
-                                }}>
-                                    {hasTemplate ? (
-                                        <>
-                                            <p style={{
-                                                fontSize: 18,
-                                                fontWeight: 600,
-                                                color: "#1fdc8c",
-                                                marginBottom: "1rem",
-                                                textAlign: "center"
-                                            }}>
-                                                📄 {templateFileName}
-                                            </p>
-                                            <p style={{
-                                                fontSize: 14,
-                                                color: "#c4f0da",
-                                                marginBottom: "2rem",
-                                                textAlign: "center",
-                                                opacity: 0.8
-                                            }}>
-                                                Template për lëndën {subject}
-                                            </p>
-                                            <button
-                                                style={{
-                                                    padding: "1rem 2rem",
-                                                    background: "linear-gradient(135deg, #17c77a 0%, #14b56d 100%)",
-                                                    border: "none",
-                                                    borderRadius: 12,
-                                                    color: "#0a1612",
-                                                    fontSize: 15,
-                                                    fontWeight: 700,
-                                                    cursor: isLoading ? "not-allowed" : "pointer",
-                                                    transition: "all 0.2s",
-                                                    boxShadow: "0 4px 12px rgba(23,199,122,0.3)",
-                                                    opacity: isLoading ? 0.6 : 1
-                                                }}
-                                                onClick={handleShkarkoTemplate}
-                                                disabled={isLoading}
-                                                onMouseEnter={(e) => {
-                                                    if (!isLoading) {
-                                                        e.target.style.transform = "translateY(-2px)";
-                                                        e.target.style.boxShadow = "0 6px 16px rgba(23,199,122,0.4)";
-                                                    }
-                                                }}
-                                                onMouseLeave={(e) => {
-                                                    e.target.style.transform = "translateY(0)";
-                                                    e.target.style.boxShadow = "0 4px 12px rgba(23,199,122,0.3)";
-                                                }}
-                                            >
-                                                {isLoading ? "Duke shkarkuar..." : "⬇ Shkarko Shabilonin"}
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <p style={{
-                                            fontSize: 18,
-                                            fontWeight: 600,
-                                            color: "#c4f0da",
-                                            textAlign: "center",
-                                            opacity: 0.7
-                                        }}>
-                                            Nuk ka template për këtë lëndë
-                                        </p>
-                                    )}
+                            {instructionsLoading ? (
+                                <div style={cardStyle}>
+                                    <div style={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        padding: "4rem 2rem",
+                                        minHeight: "300px"
+                                    }}>
+                                        <p style={{ color: "#17c77a", fontSize: 16 }}>Duke u ngarkuar instruksionet...</p>
+                                    </div>
                                 </div>
-                            </div>
+                            ) : (
+                                <>
+                                    {instructions.length === 0 && !hasTemplate ? (
+                                        <div style={cardStyle}>
+                                            <div style={{
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                padding: "4rem 2rem",
+                                                minHeight: "300px"
+                                            }}>
+                                                <p style={{
+                                                    fontSize: 16,
+                                                    fontWeight: 600,
+                                                    color: "#999"
+                                                }}>
+                                                    Nuk ka template për këtë lëndë
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                                            {instructions.map((instruction) => (
+                                                <div key={instruction.id} style={cardStyle}>
+                                                    <h3 style={{
+                                                        margin: "0 0 1rem 0",
+                                                        color: "#1fdc8c",
+                                                        fontSize: 18,
+                                                        fontWeight: 700
+                                                    }}>
+                                                        {instruction.title}
+                                                    </h3>
+                                                    <div style={{
+                                                        background: "rgba(9, 18, 12, 0.5)",
+                                                        borderRadius: 8,
+                                                        padding: "1rem",
+                                                        whiteSpace: "pre-wrap",
+                                                        wordBreak: "break-word",
+                                                        fontSize: 14,
+                                                        lineHeight: 1.6,
+                                                        color: "#e0e0e0",
+                                                        maxHeight: "300px",
+                                                        overflow: "auto",
+                                                        marginBottom: "1rem"
+                                                    }}>
+                                                        {instruction.content}
+                                                    </div>
+                                                    {instruction.files && instruction.files.length > 0 && (
+                                                        <div style={{
+                                                            background: "rgba(23, 199, 122, 0.08)",
+                                                            border: "1px solid rgba(23, 199, 122, 0.2)",
+                                                            borderRadius: 8,
+                                                            padding: "1rem"
+                                                        }}>
+                                                            <div style={{
+                                                                fontSize: 13,
+                                                                fontWeight: 600,
+                                                                color: "#17c77a",
+                                                                marginBottom: "0.75rem"
+                                                            }}>
+                                                                📎 Fajllat e Lidhur:
+                                                            </div>
+                                                            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                                                                {instruction.files.map((file, idx) => {
+                                                                    const formatFileSize = (bytes) => {
+                                                                        if (bytes === 0) return '0 B';
+                                                                        const k = 1024;
+                                                                        const sizes = ['B', 'KB', 'MB', 'GB'];
+                                                                        const i = Math.floor(Math.log(bytes) / Math.log(k));
+                                                                        return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+                                                                    };
+                                                                    return (
+                                                                        <div
+                                                                            key={idx}
+                                                                            style={{
+                                                                                display: "flex",
+                                                                                justifyContent: "space-between",
+                                                                                alignItems: "center",
+                                                                                background: "rgba(16, 24, 20, 0.6)",
+                                                                                padding: "0.75rem 1rem",
+                                                                                borderRadius: 6,
+                                                                                fontSize: 13
+                                                                            }}
+                                                                        >
+                                                                            <div style={{ color: "#e0e0e0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+                                                                                📄 {file.name} <span style={{ color: "#999", fontSize: 12 }}>({formatFileSize(file.size)})</span>
+                                                                            </div>
+                                                                            <button
+                                                                                style={{
+                                                                                    background: "#17c77a",
+                                                                                    border: "none",
+                                                                                    color: "#041407",
+                                                                                    padding: "0.4rem 0.8rem",
+                                                                                    borderRadius: 4,
+                                                                                    cursor: "pointer",
+                                                                                    fontSize: 11,
+                                                                                    fontWeight: 600,
+                                                                                    marginLeft: "0.75rem",
+                                                                                    whiteSpace: "nowrap"
+                                                                                }}
+                                                                                onClick={() => {
+                                                                                    downloadInstructionFile(STUDENT_ID, lendaId, file.name)
+                                                                                        .catch(error => alert("Error: " + (error.message || "Nuk u shkarkua fajlli")));
+                                                                                }}
+                                                                            >
+                                                                                ⬇ Shkarko
+                                                                            </button>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {hasTemplate && (
+                                        <div style={cardStyle}>
+                                            <div style={{
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                padding: "2rem"
+                                            }}>
+                                                <p style={{
+                                                    fontSize: 18,
+                                                    fontWeight: 600,
+                                                    color: "#1fdc8c",
+                                                    marginBottom: "1rem",
+                                                    textAlign: "center"
+                                                }}>
+                                                    📄 {templateFileName}
+                                                </p>
+                                                <p style={{
+                                                    fontSize: 14,
+                                                    color: "#c4f0da",
+                                                    marginBottom: "2rem",
+                                                    textAlign: "center",
+                                                    opacity: 0.8
+                                                }}>
+                                                    Template për lëndën {subject}
+                                                </p>
+                                                <button
+                                                    style={{
+                                                        padding: "1rem 2rem",
+                                                        background: "linear-gradient(135deg, #17c77a 0%, #14b56d 100%)",
+                                                        border: "none",
+                                                        borderRadius: 12,
+                                                        color: "#0a1612",
+                                                        fontSize: 15,
+                                                        fontWeight: 700,
+                                                        cursor: isLoading ? "not-allowed" : "pointer",
+                                                        transition: "all 0.2s",
+                                                        boxShadow: "0 4px 12px rgba(23,199,122,0.3)",
+                                                        opacity: isLoading ? 0.6 : 1
+                                                    }}
+                                                    onClick={handleShkarkoTemplate}
+                                                    disabled={isLoading}
+                                                    onMouseEnter={(e) => {
+                                                        if (!isLoading) {
+                                                            e.target.style.transform = "translateY(-2px)";
+                                                            e.target.style.boxShadow = "0 6px 16px rgba(23,199,122,0.4)";
+                                                        }
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.target.style.transform = "translateY(0)";
+                                                        e.target.style.boxShadow = "0 4px 12px rgba(23,199,122,0.3)";
+                                                    }}
+                                                >
+                                                    {isLoading ? "Duke shkarkuar..." : "⬇ Shkarko Shabilonin"}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )}
                         </div>
                     )}
                 </div>

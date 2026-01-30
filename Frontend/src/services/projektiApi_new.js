@@ -140,4 +140,3 @@ export const downloadInstructionFile = async (studentId, lendaId, fileName) => {
   a.remove();
   window.URL.revokeObjectURL(url);
 };
-

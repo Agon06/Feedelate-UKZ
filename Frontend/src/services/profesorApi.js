@@ -193,6 +193,38 @@ export const deleteLendaTemplate = (profesorId, lendaId) =>
     method: 'DELETE',
   });
 
+// Shto instruksione për një lëndë
+export const addInstructionTemplate = async (profesorId, lendaId, instructionData) => {
+  const formData = new FormData();
+  
+  formData.append('title', instructionData.title);
+  formData.append('content', instructionData.content);
+  
+  // Add files if any
+  if (instructionData.files && instructionData.files.length > 0) {
+    instructionData.files.forEach((file, index) => {
+      formData.append(`files`, file.data, file.name);
+    });
+  }
+
+  const response = await fetch(`${API_BASE_URL}/profesoret/${profesorId}/lendet/${lendaId}/instructions`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  return handleResponse(response);
+};
+
+// Merr instruksionet për një lëndë
+export const getInstructionTemplates = (profesorId, lendaId) =>
+  request(`/profesoret/${profesorId}/lendet/${lendaId}/instructions`);
+
+// Fshij instruksionet për një lëndë
+export const deleteInstructionTemplate = (profesorId, lendaId, instructionId) =>
+  request(`/profesoret/${profesorId}/lendet/${lendaId}/instructions/${instructionId}`, {
+    method: 'DELETE',
+  });
+
 // Shto feedback për një dorëzim studenti
 export const addFeedbackToSubmission = (profesorId, dorezimId, feedbackData) =>
   request(`/profesoret/${profesorId}/dorezime/${dorezimId}/feedback`, {
@@ -227,5 +259,8 @@ export default {
   uploadLendaTemplate,
   getLendaTemplateInfo,
   deleteLendaTemplate,
+  addInstructionTemplate,
+  getInstructionTemplates,
+  deleteInstructionTemplate,
   addFeedbackToSubmission,
 };
