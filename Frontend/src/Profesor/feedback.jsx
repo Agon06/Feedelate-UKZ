@@ -31,6 +31,7 @@ const Feedbackp = () => {
   const storageKeyIdeaFile = useMemo(() => (!ideaId && fileId) ? `profesorIdeaFileFeedback:${PROFESOR_ID}:${fileId}` : null, [ideaId, fileId]);
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [toastMessage, setToastMessage] = useState(null); // {type: 'success'|'error', text: string}
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -191,10 +192,12 @@ const Feedbackp = () => {
       setSavedAt(payload.savedAt);
 
       // Shfaq mesazh suksesi
-      alert('Feedback u ruajt me sukses!');
+      setToastMessage({ type: 'success', text: 'Feedback u ruajt me sukses!' });
+      setTimeout(() => setToastMessage(null), 4000);
     } catch (error) {
       console.error('Error saving feedback:', error);
-      alert('Gabim në ruajtjen e feedback-ut: ' + (error.message || 'Unknown error'));
+      setToastMessage({ type: 'error', text: 'Gabim: ' + (error.message || 'Nuk u ruajt feedback') });
+      setTimeout(() => setToastMessage(null), 4000);
     }
   };
 
@@ -334,8 +337,43 @@ const Feedbackp = () => {
           )}
         </div>
       </div>
+
+      {/* Toast message */}
+      {toastMessage && (
+        <div style={{
+          position: 'fixed',
+          top: 20,
+          right: 20,
+          background: toastMessage.type === 'success' ? 'rgba(25, 199, 118, 0.95)' : 'rgba(255, 82, 82, 0.95)',
+          color: '#fff',
+          padding: '1rem 1.5rem',
+          borderRadius: 12,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+          fontWeight: 600,
+          fontSize: 14,
+          maxWidth: '300px',
+          zIndex: 9999,
+          animation: 'slideIn 0.3s ease-out',
+        }}>
+          {toastMessage.type === 'success' ? '✓ ' : '✕ '}{toastMessage.text}
+        </div>
+      )}
+      
+      <style>{`
+        @keyframes slideIn {
+          from {
+            transform: translateX(400px);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+      `}</style>
     </div>
   );
 };
+
 
 export default Feedbackp;

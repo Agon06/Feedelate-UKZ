@@ -1,5 +1,6 @@
 /* Hide page scrollbar */
-html, body {
+html,
+body {
   overflow: hidden;
 }
 
@@ -27,4 +28,17 @@ html, body {
 .idea-list-scroll {
   scrollbar-color: rgba(25, 199, 118, 0.6) rgba(255, 255, 255, 0.05);
   scrollbar-width: thin;
+}
+
+/* Toast message animation */
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }

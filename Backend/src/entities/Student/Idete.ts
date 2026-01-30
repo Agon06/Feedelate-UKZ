@@ -42,6 +42,13 @@ export class Idete {
     @Column()
     viti: number;
 
+    // Feedback nga profesori
+    @Column({ type: "text", nullable: true })
+    feedback?: string;
+
+    @Column({ type: "datetime", nullable: true })
+    feedbackDate?: Date;
+
     @CreateDateColumn()
     createdAt: Date;
 

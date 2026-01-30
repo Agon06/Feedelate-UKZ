@@ -18,6 +18,7 @@ const Lendetp = () => {
   const [uploadingTemplate, setUploadingTemplate] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
   const [debugInfo, setDebugInfo] = useState(null);
+  const [confirmDialog, setConfirmDialog] = useState({ open: false, message: '', onConfirm: null });
 
   const baseSemesters = useMemo(() => {
     const parsed = Number(yearId);
@@ -372,18 +373,25 @@ const Lendetp = () => {
   };
 
   const handleDeleteTemplate = async () => {
-    if (!activeModal.subject || !confirm('A jeni të sigurt që dëshironi të fshini template-in?')) return;
-
-    try {
-      setUploadingTemplate(true);
-      await deleteLendaTemplate(PROFESOR_ID, activeModal.subject.id);
-      setTemplateInfo({ hasTemplate: false, fileName: '' });
-      alert('Template u fshi me sukses!');
-    } catch (error) {
-      alert('Error: ' + (error.message || 'Fshirja dështoi'));
-    } finally {
-      setUploadingTemplate(false);
-    }
+    if (!activeModal.subject) return;
+    
+    setConfirmDialog({
+      open: true,
+      message: 'A jeni të sigurt që dëshironi të fshini template-in?',
+      onConfirm: async () => {
+        try {
+          setUploadingTemplate(true);
+          await deleteLendaTemplate(PROFESOR_ID, activeModal.subject.id);
+          setTemplateInfo({ hasTemplate: false, fileName: '' });
+          setConfirmDialog({ open: false, message: '', onConfirm: null });
+        } catch (error) {
+          alert('Error: ' + (error.message || 'Fshirja dështoi'));
+          setConfirmDialog({ open: false, message: '', onConfirm: null });
+        } finally {
+          setUploadingTemplate(false);
+        }
+      }
+    });
   };
 
   const handleCloseModal = () => {
@@ -615,6 +623,100 @@ const Lendetp = () => {
                 onClick={handleCloseModal}
               >
                 Mbyll
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Dialog */}
+      {confirmDialog.open && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: 'rgba(0,0,0,0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1500,
+          padding: '1rem'
+        }}>
+          <div style={{
+            background: 'rgba(6,13,9,0.95)',
+            border: '1px solid rgba(23,199,122,0.4)',
+            borderRadius: 20,
+            padding: '2rem',
+            maxWidth: '400px',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+            textAlign: 'center'
+          }}>
+            <div style={{
+              fontSize: 18,
+              fontWeight: 600,
+              color: '#fff',
+              marginBottom: '2rem',
+              lineHeight: 1.5
+            }}>
+              {confirmDialog.message}
+            </div>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <button
+                onClick={() => {
+                  if (confirmDialog.onConfirm) confirmDialog.onConfirm();
+                }}
+                style={{
+                  flex: 1,
+                  padding: '0.9rem 1.8rem',
+                  borderRadius: 12,
+                  border: 'none',
+                  background: '#17c77a',
+                  color: '#041407',
+                  fontWeight: 700,
+                  fontSize: 14,
+                  cursor: 'pointer',
+                  transition: 'all 200ms ease',
+                  boxShadow: '0 4px 12px rgba(23, 199, 122, 0.3)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#14b56d';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(23, 199, 122, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#17c77a';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(23, 199, 122, 0.3)';
+                }}
+              >
+                ✓ Po
+              </button>
+              <button
+                onClick={() => {
+                  setConfirmDialog({ open: false, message: '', onConfirm: null });
+                }}
+                style={{
+                  flex: 1,
+                  padding: '0.9rem 1.8rem',
+                  borderRadius: 12,
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  background: 'transparent',
+                  color: '#c4f0da',
+                  fontWeight: 600,
+                  fontSize: 14,
+                  cursor: 'pointer',
+                  transition: 'all 200ms ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                }}
+              >
+                ✕ Jo
               </button>
             </div>
           </div>

@@ -22,6 +22,7 @@ const DorzimiProjektit = () => {
     const [instructions, setInstructions] = useState([]);
     const [instructionsLoading, setInstructionsLoading] = useState(false);
     const [submitMessage, setSubmitMessage] = useState(null);
+    const [confirmDialog, setConfirmDialog] = useState({ open: false, message: '', onConfirm: null });
 
     const student = JSON.parse(localStorage.getItem('student') || '{}');
     if (!student.id) {
@@ -293,22 +294,27 @@ const DorzimiProjektit = () => {
     };
 
     const handleFshij = async () => {
-        if (!confirm("A jeni të sigurt që dëshironi të fshini projektin e dorëzuar?")) {
-            return;
-        }
-
-        try {
-            setIsLoading(true);
-            await fshijProjektin(STUDENT_ID, lendaId);
-            setIsDorzuar(false);
-            setSelectedFile(null);
-            setDorezimData(null);
-            alert("Projekti u fshi me sukses!");
-        } catch (error) {
-            alert("Error: " + error.message);
-        } finally {
-            setIsLoading(false);
-        }
+        setConfirmDialog({
+            open: true,
+            message: "A jeni të sigurt që dëshironi të fshini projektin e dorëzuar?",
+            onConfirm: async () => {
+                try {
+                    setIsLoading(true);
+                    await fshijProjektin(STUDENT_ID, lendaId);
+                    setIsDorzuar(false);
+                    setSelectedFile(null);
+                    setDorezimData(null);
+                    setSubmitMessage({ type: 'success', text: 'Projekti u fshi me sukses!' });
+                    setTimeout(() => setSubmitMessage(null), 4000);
+                } catch (error) {
+                    setSubmitMessage({ type: 'error', text: 'Error: ' + error.message });
+                    setTimeout(() => setSubmitMessage(null), 4000);
+                } finally {
+                    setIsLoading(false);
+                    setConfirmDialog({ open: false, message: '', onConfirm: null });
+                }
+            }
+        });
     };
 
     const statusBadgeStyle = (isDorzuar) => ({
@@ -802,6 +808,100 @@ const DorzimiProjektit = () => {
                     )}
                 </div>
             </div>
+
+            {/* Confirmation Dialog */}
+            {confirmDialog.open && (
+                <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                background: 'rgba(0,0,0,0.7)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1500,
+                padding: '1rem'
+            }}>
+                <div style={{
+                    background: 'rgba(6,13,9,0.95)',
+                    border: '1px solid rgba(23,199,122,0.4)',
+                    borderRadius: 20,
+                    padding: '2rem',
+                    maxWidth: '400px',
+                    boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+                    textAlign: 'center'
+                }}>
+                    <div style={{
+                        fontSize: 18,
+                        fontWeight: 600,
+                        color: '#fff',
+                        marginBottom: '2rem',
+                        lineHeight: 1.5
+                    }}>
+                        {confirmDialog.message}
+                    </div>
+                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                        <button
+                            onClick={() => {
+                                if (confirmDialog.onConfirm) confirmDialog.onConfirm();
+                            }}
+                            style={{
+                                flex: 1,
+                                padding: '0.9rem 1.8rem',
+                                borderRadius: 12,
+                                border: 'none',
+                                background: '#17c77a',
+                                color: '#041407',
+                                fontWeight: 700,
+                                fontSize: 14,
+                                cursor: 'pointer',
+                                transition: 'all 200ms ease',
+                                boxShadow: '0 4px 12px rgba(23, 199, 122, 0.3)'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.background = '#14b56d';
+                                e.currentTarget.style.boxShadow = '0 6px 16px rgba(23, 199, 122, 0.4)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.background = '#17c77a';
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(23, 199, 122, 0.3)';
+                            }}
+                        >
+                            ✓ Po
+                        </button>
+                        <button
+                            onClick={() => {
+                                setConfirmDialog({ open: false, message: '', onConfirm: null });
+                            }}
+                            style={{
+                                flex: 1,
+                                padding: '0.9rem 1.8rem',
+                                borderRadius: 12,
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                background: 'transparent',
+                                color: '#c4f0da',
+                                fontWeight: 600,
+                                fontSize: 14,
+                                cursor: 'pointer',
+                                transition: 'all 200ms ease'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'transparent';
+                                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                            }}
+                        >
+                            ✕ Jo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
         </div>
     );
 };

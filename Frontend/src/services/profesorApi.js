@@ -73,6 +73,15 @@ export const createProfesorIdea = (profesorId, payload) =>
     body: JSON.stringify(payload),
   });
 
+export const addFeedbackToIdea = (profesorId, ideaId, feedbackData) =>
+  request(`/profesoret/${profesorId}/idet/${ideaId}/feedback`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(feedbackData),
+  });
+
 export const getProfesorProfile = (profesorId) =>
   request(`/profesoret/${profesorId}`);
 
@@ -240,6 +249,7 @@ export default {
   getProfesorYearData,
   getProfesorIdeas,
   createProfesorIdea,
+  addFeedbackToIdea,
   getProfesorProfile,
   uploadProfesorDorezim,
   getProfesorIdeaSubmission,

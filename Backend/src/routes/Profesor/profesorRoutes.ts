@@ -406,6 +406,52 @@ router.post("/:id/idet", async (req: Request, res: Response) => {
   }
 });
 
+// POST: Shto feedback për ide
+router.post("/:id/idet/:ideaId/feedback", async (req: Request, res: Response) => {
+  const profesorId = Number(req.params.id);
+  const ideaId = Number(req.params.ideaId);
+  const { feedback } = req.body;
+
+  if (Number.isNaN(profesorId) || Number.isNaN(ideaId)) {
+    return res.status(400).json({ message: "Invalid IDs" });
+  }
+
+  if (!feedback || typeof feedback !== 'string' || feedback.trim().length === 0) {
+    return res.status(400).json({ message: "Feedback text is required" });
+  }
+
+  try {
+    const idea = await ideteRepository.findOne({
+      where: { id: ideaId },
+      relations: ["profesor", "lenda"],
+    });
+
+    if (!idea) {
+      return res.status(404).json({ message: "Ide nuk u gjet" });
+    }
+
+    // Update feedback
+    idea.feedback = feedback.trim();
+    idea.feedbackDate = new Date();
+
+    await ideteRepository.save(idea);
+
+    console.log(`✓ Feedback added to idea ${ideaId} by profesor ${profesorId}`);
+
+    res.json({
+      message: "Feedback u ruajt me sukses",
+      idea: {
+        id: idea.id,
+        feedback: idea.feedback,
+        feedbackDate: idea.feedbackDate,
+      }
+    });
+  } catch (error) {
+    console.error("Error adding feedback:", error);
+    res.status(500).json({ message: "Error adding feedback", error: String(error) });
+  }
+});
+
 // Upload dorezim (Word file saved to disk)
 router.post("/:id/dorezime", upload.single("file"), async (req: Request, res: Response) => {
   console.log("=== UPLOAD ENDPOINT HIT ===");
