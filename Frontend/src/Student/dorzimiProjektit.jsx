@@ -35,25 +35,25 @@ const DorzimiProjektit = () => {
         if (lendaId) {
             loadProjektiDorezuar();
             loadTemplateInfo();
-                loadInstructions();
+            loadInstructions();
         }
     }, [lendaId]);
 
-        // Load instruction templates
-        const loadInstructions = async () => {
-            try {
-                setInstructionsLoading(true);
-                const data = await getStudentInstructions(STUDENT_ID, lendaId);
-                if (data && Array.isArray(data)) {
-                    setInstructions(data);
-                }
-            } catch (error) {
-                console.error("Error loading instructions:", error);
-                setInstructions([]);
-            } finally {
-                setInstructionsLoading(false);
+    // Load instruction templates
+    const loadInstructions = async () => {
+        try {
+            setInstructionsLoading(true);
+            const data = await getStudentInstructions(STUDENT_ID, lendaId);
+            if (data && Array.isArray(data)) {
+                setInstructions(data);
             }
-        };
+        } catch (error) {
+            console.error("Error loading instructions:", error);
+            setInstructions([]);
+        } finally {
+            setInstructionsLoading(false);
+        }
+    };
     // Auto-refresh project deadline data every 5 seconds to detect changes from profesor
     useEffect(() => {
         if (!lendaId) return;

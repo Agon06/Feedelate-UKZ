@@ -134,7 +134,7 @@ const DoreziметStudentesh = () => {
   // Load instruction templates when component mounts
   useEffect(() => {
     if (!lendaId) return;
-    
+
     const loadTemplates = async () => {
       try {
         const data = await getInstructionTemplates(PROFESOR_ID, lendaId);
@@ -734,7 +734,7 @@ const DoreziметStudentesh = () => {
                           })),
                           createdAt: new Date().toLocaleString('sq-AL')
                         };
-                        
+
                         // Save to backend
                         try {
                           await addInstructionTemplate(PROFESOR_ID, lendaId, {
@@ -742,11 +742,11 @@ const DoreziметStudentesh = () => {
                             content: templateContent,
                             files: templateFiles
                           });
-                          
+
                           // Reload templates from backend
                           const updatedTemplates = await getInstructionTemplates(PROFESOR_ID, lendaId);
                           setTemplates(updatedTemplates || []);
-                          
+
                           setTemplateTitle('');
                           setTemplateContent('');
                           setTemplateFiles([]);

@@ -196,10 +196,10 @@ export const deleteLendaTemplate = (profesorId, lendaId) =>
 // Shto instruksione për një lëndë
 export const addInstructionTemplate = async (profesorId, lendaId, instructionData) => {
   const formData = new FormData();
-  
+
   formData.append('title', instructionData.title);
   formData.append('content', instructionData.content);
-  
+
   // Add files if any
   if (instructionData.files && instructionData.files.length > 0) {
     instructionData.files.forEach((file, index) => {

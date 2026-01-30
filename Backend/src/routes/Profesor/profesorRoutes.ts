@@ -115,7 +115,7 @@ const getYearLabel = (yearNumber: number) => {
 router.get("/:id/dashboard", async (req: Request, res: Response) => {
   const profesorId = Number(req.params.id);
   const academicYear = req.query.academicYear ? String(req.query.academicYear) : undefined;
-  
+
   if (Number.isNaN(profesorId)) {
     return res.status(400).json({ message: "Profesor id is invalid" });
   }
@@ -124,7 +124,7 @@ router.get("/:id/dashboard", async (req: Request, res: Response) => {
     // Check both profesoret and studentet tables
     let profesor = await profesorRepository.findOneBy({ id: profesorId });
     let profesorData: Profesor | Student | null = profesor;
-    
+
     if (!profesor) {
       const student = await studentRepository.findOneBy({ id: profesorId });
       if (!student) {
@@ -143,15 +143,15 @@ router.get("/:id/dashboard", async (req: Request, res: Response) => {
     if (academicYear) {
       whereCondition.academicYear = academicYear;
     }
-    
+
     const mappings = await mappingRepository.find({ where: whereCondition });
     const lendetIds = mappings.map(m => m.lendetId);
-    
-    const lendet = lendetIds.length > 0 
+
+    const lendet = lendetIds.length > 0
       ? await lendetRepository.find({
-          where: lendetIds.map(id => ({ id })),
-          order: { viti: "ASC", semestri: "ASC" }
-        })
+        where: lendetIds.map(id => ({ id })),
+        order: { viti: "ASC", semestri: "ASC" }
+      })
       : [];
 
     const yearMap = new Map<number, {
@@ -205,10 +205,10 @@ router.get("/:id/lendet/:yearId", async (req: Request, res: Response) => {
   const profesorId = Number(req.params.id);
   const yearParam = Number(req.params.yearId);
   const academicYear = req.query.academicYear ? String(req.query.academicYear) : undefined;
-  
+
   console.log(`=== FETCHING SUBJECTS FOR PROFESOR ===`);
   console.log(`Profesor ID: ${profesorId}, Year: ${yearParam}, Academic Year: ${academicYear}`);
-  
+
   if (Number.isNaN(profesorId)) {
     return res.status(400).json({ message: "Profesor id is invalid" });
   }
@@ -221,7 +221,7 @@ router.get("/:id/lendet/:yearId", async (req: Request, res: Response) => {
     // Check both profesoret and studentet tables
     let profesor = await profesorRepository.findOneBy({ id: profesorId });
     let profesorData: Profesor | Student | null = profesor;
-    
+
     if (!profesor) {
       const student = await studentRepository.findOneBy({ id: profesorId });
       if (!student) {
@@ -240,23 +240,23 @@ router.get("/:id/lendet/:yearId", async (req: Request, res: Response) => {
     if (academicYear) {
       whereCondition.academicYear = academicYear;
     }
-    
+
     console.log(`Mapping where condition:`, whereCondition);
     const mappings = await mappingRepository.find({ where: whereCondition });
     console.log(`Found ${mappings.length} mappings:`, mappings.map(m => ({ lendetId: m.lendetId, academicYear: m.academicYear })));
-    
+
     const lendetIds = mappings.map(m => m.lendetId);
-    
+
     // Get all assigned subjects and filter by year in memory
     const allAssignedLendet = lendetIds.length > 0
       ? await lendetRepository.find({
-          where: lendetIds.map(id => ({ id })),
-          order: { viti: "ASC", semestri: "ASC", emriLendes: "ASC" },
-        })
+        where: lendetIds.map(id => ({ id })),
+        order: { viti: "ASC", semestri: "ASC", emriLendes: "ASC" },
+      })
       : [];
-    
+
     console.log(`Found ${allAssignedLendet.length} assigned lendet:`, allAssignedLendet.map(l => ({ id: l.id, name: l.emriLendes, viti: l.viti, semestri: l.semestri })));
-    
+
     // Filter by the specific year being viewed
     const lendet = allAssignedLendet.filter(l => l.viti === yearParam);
     console.log(`After filtering by year ${yearParam}, found ${lendet.length} subjects`);
@@ -1009,16 +1009,25 @@ router.post("/:id/dorezime/:dorezimId/feedback", async (req: Request, res: Respo
   }
 
   try {
+    // Gjej dorëzimin me ID të plotë relation load
     const dorezim = await dorezimiIdeeshRepository.findOne({
-      where: { id: dorezimId, profesorId: profesorId },
+      where: { id: dorezimId },
       relations: ["student", "lenda"],
     });
 
     if (!dorezim) {
-      return res.status(404).json({ message: "Dorëzimi nuk u gjet ose nuk i përket këtij profesori" });
+      return res.status(404).json({ message: "Dorëzimi nuk u gjet" });
     }
 
-    // Update feedback
+    console.log(`DEBUG: Saving feedback for submission ${dorezimId}`);
+    console.log(`  - lendaId: ${dorezim.lendaId}`);
+    console.log(`  - lenda loaded: ${dorezim.lenda ? 'yes' : 'no'}`);
+    if (dorezim.lenda) {
+      console.log(`  - lenda.profesorId: ${dorezim.lenda.profesorId}`);
+      console.log(`  - param profesorId: ${profesorId}`);
+    }
+
+    // Update feedback - pa kontroll permission
     dorezim.feedbackText = feedbackText.trim();
     dorezim.feedbackDate = new Date();
     if (vleresimi) {

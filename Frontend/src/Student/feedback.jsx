@@ -35,7 +35,7 @@ const Feedback = () => {
     status: "Në Pritje",
     vleresimi: null, // Will be populated from backend
     dorezime: [], // Lista e dorëzimeve
-    feedback: "Shpjegime shumë të mira dhe të qarta",
+    feedback: "Nuk ka feedback akoma",
   });
 
   const [isDeleting, setIsDeleting] = useState(false);
@@ -102,7 +102,7 @@ const Feedback = () => {
           })),
           status: dorezime[0]?.status || "Në Pritje",
           vleresimi: dorezime[0]?.vleresimi ?? null,
-          feedback: dorezime[0]?.feedbackText || prev.feedback,
+          feedback: dorezime[0]?.feedbackText || "Nuk ka feedback akoma",
         }));
       } catch (error) {
         console.error("Error fetching idea files:", error);

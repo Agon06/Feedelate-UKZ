@@ -486,6 +486,28 @@ router.post("/:id/dorezime", upload.single("file"), async (req: Request, res: Re
       console.log("⚠ PROBLEM: Lënda nuk ka profesorId të vendosur!");
     }
 
+    // Fshi dorëzimin e vjetër për këtë student dhe lëndë (mbaj vetëm të fundit)
+    const existingDorezim = await dorezimRepository.findOne({
+      where: {
+        student: { id: studentId },
+        lenda: { id: parsedLendaId },
+        isShabllon: false,
+      },
+    });
+
+    if (existingDorezim) {
+      console.log("Found existing submission, deleting old file and record...");
+      // Fshi file-in e vjetër
+      const oldFilePath = path.resolve(process.cwd(), existingDorezim.fileDorezimi);
+      if (fs.existsSync(oldFilePath)) {
+        fs.unlinkSync(oldFilePath);
+        console.log("✓ Deleted old file:", oldFilePath);
+      }
+      // Fshi recordin e vjetër
+      await dorezimRepository.remove(existingDorezim);
+      console.log("✓ Deleted old submission record");
+    }
+
     const record = dorezimRepository.create({
       student,
       lenda,
