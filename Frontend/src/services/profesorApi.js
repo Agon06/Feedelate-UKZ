@@ -74,8 +74,8 @@ export const createProfesorIdea = (profesorId, payload) =>
   });
 
 export const addFeedbackToIdea = (profesorId, ideaId, feedbackData) =>
-  request(`/profesoret/${profesorId}/idet/${ideaId}/feedback`, {
-    method: 'POST',
+  request(`/studentet/idet/${ideaId}/feedback`, {
+    method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
     },

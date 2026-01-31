@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getStudentIdeas, createStudentIdea, updateStudentIdea, deleteStudentIdea } from '../services/studentApi';
+import { getStudentIdeas, createStudentIdea, updateStudentIdea, deleteStudentIdea, getIdeaFeedback } from '../services/studentApi';
 import './Ide.css';
 
 const IdeaPage = () => {
@@ -35,6 +35,22 @@ const IdeaPage = () => {
   const [isDeletingId, setIsDeletingId] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [confirmDialog, setConfirmDialog] = useState({ open: false, message: '', onConfirm: null });
+  // Feedback modal state
+  const [feedbackModal, setFeedbackModal] = useState({ open: false, feedback: '', loading: false, error: null, idea: null });
+
+  // Fetch feedback when modal opens
+  useEffect(() => {
+    if (feedbackModal.open && feedbackModal.idea && feedbackModal.loading) {
+      (async () => {
+        try {
+          const res = await getIdeaFeedback(STUDENT_ID, feedbackModal.idea.id);
+          setFeedbackModal((prev) => ({ ...prev, feedback: res.feedback || '', loading: false, error: null }));
+        } catch (err) {
+          setFeedbackModal((prev) => ({ ...prev, feedback: '', loading: false, error: err?.message || 'Nuk u lexua feedback-u.' }));
+        }
+      })();
+    }
+  }, [feedbackModal.open, feedbackModal.idea, feedbackModal.loading, STUDENT_ID]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -397,6 +413,13 @@ const IdeaPage = () => {
                       >
                         {isDeletingId === idea.id ? 'Duke fshirë...' : 'Fshi'}
                       </button>
+                      <button
+                        type="button"
+                        style={actionButton}
+                        onClick={() => setFeedbackModal({ open: true, feedback: '', loading: true, error: null, idea })}
+                      >
+                        Feedback
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -605,7 +628,65 @@ const IdeaPage = () => {
           </div>
         </div>
       )}
-    </div>
+    {/* Feedback Modal */}
+    {feedbackModal.open && (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        background: 'rgba(0,0,0,0.6)',
+        zIndex: 2000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1rem'
+      }}>
+        <div style={{
+          background: 'rgba(6,13,9,0.97)',
+          border: '1px solid #17c77a',
+          borderRadius: 18,
+          padding: '2rem',
+          minWidth: 320,
+          maxWidth: 400,
+          width: '100%',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+          position: 'relative'
+        }}>
+          <button
+            style={{
+              position: 'absolute',
+              top: 12,
+              right: 12,
+              background: 'transparent',
+              border: 'none',
+              color: '#fff',
+              fontSize: 22,
+              cursor: 'pointer',
+              borderRadius: 20,
+              width: 36,
+              height: 36
+            }}
+            onClick={() => setFeedbackModal({ open: false, feedback: '', loading: false, error: null, idea: null })}
+            aria-label="Mbyll feedback"
+          >
+            ✕
+          </button>
+          <h3 style={{ color: '#17c77a', marginBottom: 16, fontSize: 18, textAlign: 'center' }}>Feedback nga Profesori</h3>
+          {feedbackModal.loading ? (
+            <div style={{ color: '#fff', textAlign: 'center', padding: '1.5rem 0' }}>Duke lexuar feedback...</div>
+          ) : feedbackModal.error ? (
+            <div style={{ color: '#ff5252', textAlign: 'center', padding: '1.5rem 0' }}>{feedbackModal.error}</div>
+          ) : (
+            <div style={{ color: '#c4f0da', textAlign: 'center', padding: '1.5rem 0', whiteSpace: 'pre-line' }}>
+              {feedbackModal.feedback ? feedbackModal.feedback : 'Nuk ka ende feedback të vendosur për këtë ide.'}
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+  </div>
   );
 };
 

@@ -1,3 +1,4 @@
+
 import { Router, Request, Response } from "express";
 import { FindOptionsWhere } from "typeorm";
 import { AppDataSource } from "../../data-source";
@@ -12,7 +13,6 @@ import { DorezimiIdes } from "../../entities/Student/dorezimiIdes";
 import { Projekti } from "../../entities/Student/projekti";
 import { dorzimiProjektit } from "../../entities/Student/dorzimiProjektit";
 import { MenaxhimiAfateve } from "../../entities/Student/menaxhimiAfateve";
-import { InstructionTemplate } from "../../entities/Student/InstructionTemplate";
 
 
 const router = Router();
@@ -23,7 +23,6 @@ const dorezimRepository = AppDataSource.getRepository(DorezimiIdes);
 const projektiRepository = AppDataSource.getRepository(Projekti);
 const dorezimProjektitRepository = AppDataSource.getRepository(dorzimiProjektit);
 const menaxhimiAfateveRepository = AppDataSource.getRepository(MenaxhimiAfateve);
-const instructionRepository = AppDataSource.getRepository(InstructionTemplate);
 //e thirr repositorin e testi
 
 
@@ -127,7 +126,7 @@ router.get("/:id/dashboard", async (req: Request, res: Response) => {
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
     }
-
+    
     const lendet = await lendeRepository.find();
     const yearMap = new Map<number, {
       id: string;
@@ -136,7 +135,7 @@ router.get("/:id/dashboard", async (req: Request, res: Response) => {
       totalSubjects: number;
       electiveSubjects: number;
     }>();
-
+    
     lendet.forEach((lenda) => {
       const yearNumber = lenda.viti ?? Math.max(1, Math.ceil(lenda.semestri / 2));
       if (!yearMap.has(yearNumber)) {
@@ -148,7 +147,7 @@ router.get("/:id/dashboard", async (req: Request, res: Response) => {
           electiveSubjects: 0,
         });
       }
-
+      
       const entry = yearMap.get(yearNumber)!;
       entry.totalSubjects += 1;
       if (lenda.isZgjedhore) {
@@ -159,11 +158,11 @@ router.get("/:id/dashboard", async (req: Request, res: Response) => {
         entry.semesters.sort((a, b) => a - b);
       }
     });
-
+    
     const years = Array.from(yearMap.entries())
-      .sort((a, b) => a[0] - b[0])
-      .map(([, value]) => value);
-
+    .sort((a, b) => a[0] - b[0])
+    .map(([, value]) => value);
+    
     res.json({
       student: formatStudentSummary(student),
       years,
@@ -172,6 +171,8 @@ router.get("/:id/dashboard", async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error fetching dashboard data", error });
   }
 });
+
+// ================= FEEDBACK ENDPOINTS =================
 
 // Curriculum view per year
 router.get("/:id/lendet/:yearId", async (req: Request, res: Response) => {
@@ -418,121 +419,6 @@ router.delete("/:id/idet/:ideaId", async (req: Request, res: Response) => {
   }
 });
 
-// Upload dorezim (Word file saved to disk)
-router.post("/:id/dorezime", upload.single("file"), async (req: Request, res: Response) => {
-  console.log("=== UPLOAD ENDPOINT HIT ===");
-  console.log("Params:", req.params);
-  console.log("Body:", req.body);
-  console.log("File:", req.file ? { name: req.file.originalname, size: req.file.size, path: req.file.path } : "NO FILE");
-
-  const studentId = Number(req.params.id);
-  const { lendaId } = req.body;
-
-  console.log("Student ID:", studentId, "Lenda ID:", lendaId);
-
-  if (Number.isNaN(studentId)) {
-    console.log("ERROR: Student id is invalid");
-    return res.status(400).json({ message: "Student id is invalid" });
-  }
-
-  const parsedLendaId = Number(lendaId);
-  if (!parsedLendaId || Number.isNaN(parsedLendaId)) {
-    console.log("ERROR: lendaId invalid");
-    return res.status(400).json({ message: "lendaId eshte i detyrueshem dhe duhet te jete numer" });
-  }
-
-  if (!req.file) {
-    console.log("ERROR: No file uploaded");
-    return res.status(400).json({ message: "Skedari i detyres mungon" });
-  }
-
-  try {
-    console.log("Looking for student ID:", studentId);
-    const student = await studentRepository.findOneBy({ id: studentId });
-    if (!student) {
-      console.log("ERROR: Student not found");
-      return res.status(404).json({ message: "Student not found" });
-    }
-
-    console.log("Found student:", student.emri);
-    const lenda = await lendeRepository.findOneBy({ id: parsedLendaId });
-    if (!lenda) {
-      console.log("ERROR: Lenda not found");
-      return res.status(404).json({ message: "Lenda nuk u gjet" });
-    }
-
-    console.log("Found lenda:", lenda.emriLendes);
-    console.log("Lenda details:", { id: lenda.id, name: lenda.emriLendes, profesorId: lenda.profesorId });
-
-    // Kontrollo afatin e dorëzimit të ideve (nëse është i vendosur)
-    const now = new Date();
-    if (lenda.ideaStartDate && now < lenda.ideaStartDate) {
-      return res.status(400).json({ message: "Dorëzimi i ideve nuk ka filluar ende" });
-    }
-    if (lenda.ideaDeadline && now > lenda.ideaDeadline) {
-      return res.status(400).json({ message: "Afati i dorëzimit të ideve ka mbaruar" });
-    }
-
-    // Get relative path from uploads folder
-    const filePath = path.relative(process.cwd(), req.file.path).replace(/\\/g, "/");
-    console.log("File path to save:", filePath);
-
-    // Gjej profesorin e lëndës automatikisht
-    let profesorId: number | undefined = undefined;
-    if (lenda.profesorId) {
-      profesorId = lenda.profesorId;
-      console.log("✓ Automatikisht u lidh me profesorin ID:", profesorId);
-    } else {
-      console.log("⚠ PROBLEM: Lënda nuk ka profesorId të vendosur!");
-    }
-
-    // Fshi dorëzimin e vjetër për këtë student dhe lëndë (mbaj vetëm të fundit)
-    const existingDorezim = await dorezimRepository.findOne({
-      where: {
-        student: { id: studentId },
-        lenda: { id: parsedLendaId },
-        isShabllon: false,
-      },
-    });
-
-    if (existingDorezim) {
-      console.log("Found existing submission, deleting old file and record...");
-      // Fshi file-in e vjetër
-      const oldFilePath = path.resolve(process.cwd(), existingDorezim.fileDorezimi);
-      if (fs.existsSync(oldFilePath)) {
-        fs.unlinkSync(oldFilePath);
-        console.log("✓ Deleted old file:", oldFilePath);
-      }
-      // Fshi recordin e vjetër
-      await dorezimRepository.remove(existingDorezim);
-      console.log("✓ Deleted old submission record");
-    }
-
-    const record = dorezimRepository.create({
-      student,
-      lenda,
-      profesorId: profesorId, // Vendos profesorId automatikisht
-      fileDorezimi: filePath,
-      fileName: req.file.originalname,
-      isShabllon: false,
-    });
-
-    console.log("Created record object");
-    const saved = await dorezimRepository.save(record);
-    console.log("SAVED TO DB:", saved);
-
-    res.status(201).json({
-      id: saved.id,
-      fileName: saved.fileName,
-      filePath: saved.fileDorezimi,
-      isShabllon: saved.isShabllon,
-      createdAt: saved.createdAt,
-    });
-  } catch (error) {
-    console.error("=== UPLOAD ERROR ===", error);
-    res.status(500).json({ message: "Error uploading dorezim", error: String(error) });
-  }
-});
 
 // Get template (shabllon) per nje lende
 router.get("/:id/dorezime/shabllon", async (req: Request, res: Response) => {
@@ -583,54 +469,19 @@ router.get("/:id/dorezime/shabllon", async (req: Request, res: Response) => {
   }
 });
 
-// GET: Idea deadlines (start/end) for a lenda, visible to student
-router.get("/:id/lendet/:lendaId/idea-deadline", async (req: Request, res: Response) => {
-  const studentId = Number(req.params.id);
-  const lendaId = Number(req.params.lendaId);
-
-  if (Number.isNaN(studentId) || Number.isNaN(lendaId)) {
-    return res.status(400).json({ message: "Invalid student or lenda ID" });
-  }
-
-  try {
-    const student = await studentRepository.findOneBy({ id: studentId });
-    if (!student) {
-      return res.status(404).json({ message: "Student not found" });
-    }
-
-    const lenda = await lendeRepository.findOneBy({ id: lendaId });
-    if (!lenda) {
-      return res.status(404).json({ message: "Lenda nuk u gjet" });
-    }
-
-    const formatLocalDate = (date: Date | null | undefined): string | null => {
-      if (!date) return null;
-      const pad = (n: number) => String(n).padStart(2, '0');
-      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-    };
-
-    return res.json({
-      ideaStartDate: formatLocalDate(lenda.ideaStartDate ?? null),
-      ideaDeadline: formatLocalDate(lenda.ideaDeadline ?? null),
-    });
-  } catch (error) {
-    return res.status(500).json({ message: "Error fetching idea deadline", error });
-  }
-});
-
 // Get student's submitted idea file (non-template) by lenda
 router.get("/:id/dorezime", async (req: Request, res: Response) => {
   const studentId = Number(req.params.id);
   const lendaId = req.query.lendaId ? Number(req.query.lendaId) : undefined;
-
+  
   if (Number.isNaN(studentId)) {
     return res.status(400).json({ message: "Student id is invalid" });
   }
-
+  
   if (!lendaId || Number.isNaN(lendaId)) {
     return res.status(400).json({ message: "lendaId eshte i detyrueshem" });
   }
-
+  
   try {
     const student = await studentRepository.findOneBy({ id: studentId });
     if (!student) {
@@ -650,17 +501,17 @@ router.get("/:id/dorezime", async (req: Request, res: Response) => {
       },
       order: { createdAt: "DESC" },
     });
-
+    
     if (submissions.length === 0) {
       return res.status(404).json({ message: "Nuk u gjet dorezim per kete lende" });
     }
-
+    
     const result = submissions.map(submission => {
       const normalizedPath = submission.fileDorezimi.replace(/\\/g, "/");
       const fileUrl = normalizedPath.startsWith("uploads/")
-        ? `/` + normalizedPath
-        : `/uploads/${normalizedPath}`;
-
+      ? `/` + normalizedPath
+      : `/uploads/${normalizedPath}`;
+      
       return {
         id: submission.id,
         fileName: submission.fileName,
@@ -685,11 +536,11 @@ router.get("/:id/dorezime", async (req: Request, res: Response) => {
 router.delete("/:id/dorezime/:dorezimId", async (req: Request, res: Response) => {
   const studentId = Number(req.params.id);
   const dorezimId = Number(req.params.dorezimId);
-
+  
   if (Number.isNaN(studentId) || Number.isNaN(dorezimId)) {
     return res.status(400).json({ message: "Invalid IDs" });
   }
-
+  
   try {
     const dorezim = await dorezimRepository.findOne({
       where: {
@@ -698,22 +549,102 @@ router.delete("/:id/dorezime/:dorezimId", async (req: Request, res: Response) =>
         isShabllon: false,
       },
     });
-
+    
     if (!dorezim) {
       return res.status(404).json({ message: "Dorezim nuk u gjet" });
     }
-
+    
     // Delete file from disk
     const filePath = path.resolve(process.cwd(), dorezim.fileDorezimi);
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
-
+    
     await dorezimRepository.remove(dorezim);
     res.json({ message: "Dorezim u fshi me sukses" });
   } catch (error) {
     console.error("Error deleting dorezim:", error);
     res.status(500).json({ message: "Error deleting dorezim", error: String(error) });
+  }
+});
+
+// Get all studentet
+router.get("/", async (req: Request, res: Response) => {
+  try {
+    const studentet = await studentRepository.find();
+    res.json(studentet);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching studentet", error });
+  }
+});
+
+// Get student by id 
+router.get("/:id", async (req: Request, res: Response) => {
+  try {
+    const student = await studentRepository.findOneBy({ id: parseInt(req.params.id, 10) });
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+    res.json(student);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching student", error });
+  }
+});
+
+// Create student
+router.post("/", async (req: Request, res: Response) => {
+  try {
+    const student = studentRepository.create(req.body);
+    const result = await studentRepository.save(student);
+    res.status(201).json(result);
+  } catch (error) {
+    res.status(500).json({ message: "Error creating student", error });
+  }
+});
+
+
+//router.get i merrr prej db, router.post i inserton n db, router. put/patch i updeton, dhe router.delete i fshin
+//ktu krijohen api  endpoint per me i menaxhu db. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Update student
+router.put("/:id", async (req: Request, res: Response) => {
+  try {
+    const student = await studentRepository.findOneBy({ id: parseInt(req.params.id, 10) });
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+    studentRepository.merge(student, req.body);
+    const result = await studentRepository.save(student);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ message: "Error updating student", error });
+  }
+});
+
+// Delete student
+router.delete("/:id", async (req: Request, res: Response) => {
+  try {
+    const result = await studentRepository.delete(parseInt(req.params.id, 10));
+    if (result.affected === 0) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+    res.json({ message: "Student deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting student", error });
   }
 });
 
@@ -723,11 +654,11 @@ router.delete("/:id/dorezime/:dorezimId", async (req: Request, res: Response) =>
 router.get("/:id/projekti/:lendaId", async (req: Request, res: Response) => {
   const studentId = Number(req.params.id);
   const lendaId = Number(req.params.lendaId);
-
+  
   if (Number.isNaN(studentId) || Number.isNaN(lendaId)) {
     return res.status(400).json({ message: "Invalid student or lenda ID" });
   }
-
+  
   try {
     const dorezim = await dorezimProjektitRepository.findOne({
       where: {
@@ -759,7 +690,7 @@ router.get("/:id/projekti/:lendaId", async (req: Request, res: Response) => {
         projectDeadline: formatLocalDate(projectDeadline),
       });
     }
-
+    
     res.json({
       isDorzuar: true,
       id: dorezim.id,
@@ -906,12 +837,12 @@ router.get("/:id/projekti/:lendaId/download", async (req: Request, res: Response
     if (!dorezim) {
       return res.status(404).json({ message: "Dorezimi not found" });
     }
-
+    
     const absolutePath = path.resolve(process.cwd(), dorezim.fileDorezimi);
     if (!fs.existsSync(absolutePath)) {
       return res.status(404).json({ message: "File not found on disk" });
     }
-
+    
     return res.download(absolutePath, dorezim.fileName);
   } catch (error) {
     res.status(500).json({ message: "Error downloading projekt", error });
@@ -949,64 +880,6 @@ router.get("/:id/projekti/:lendaId/template", async (req: Request, res: Response
   }
 });
 
-// GET: Merr instruksionet për një lëndë (student)
-router.get("/:id/projekti/:lendaId/instructions", async (req: Request, res: Response) => {
-  const lendaId = Number(req.params.lendaId);
-
-  if (Number.isNaN(lendaId)) {
-    return res.status(400).json({ message: "Invalid lenda ID" });
-  }
-
-  try {
-    const instructions = await instructionRepository.find({
-      where: { lendaId },
-      order: { createdAt: "DESC" },
-    });
-
-    res.json(
-      instructions.map((instruction) => ({
-        id: instruction.id,
-        title: instruction.title,
-        content: instruction.content,
-        createdAt: instruction.createdAt,
-        files: (instruction.files || []).map((f) => ({ name: f.name, size: f.size, type: f.type })),
-      }))
-    );
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching instructions", error: String(error) });
-  }
-});
-
-// DOWNLOAD: Shkarko fajllin e instruksioneve
-router.get("/:id/projekti/:lendaId/instructions/:fileName/download", async (req: Request, res: Response) => {
-  const lendaId = Number(req.params.lendaId);
-  const fileName = decodeURIComponent(req.params.fileName);
-
-  if (Number.isNaN(lendaId)) {
-    return res.status(400).json({ message: "Invalid lenda ID" });
-  }
-
-  try {
-    const instructions = await instructionRepository.find({ where: { lendaId } });
-    const matching = instructions
-      .flatMap((instruction) => instruction.files || [])
-      .find((file) => file.name === fileName);
-
-    if (!matching) {
-      return res.status(404).json({ message: "File not found" });
-    }
-
-    const absolutePath = path.resolve(process.cwd(), matching.path);
-    if (!fs.existsSync(absolutePath)) {
-      return res.status(404).json({ message: "File not found on disk" });
-    }
-
-    return res.download(absolutePath, matching.name);
-  } catch (error) {
-    res.status(500).json({ message: "Error downloading instruction file", error: String(error) });
-  }
-});
-
 // DOWNLOAD: Shkarko template-in për një lëndë
 router.get("/:id/projekti/:lendaId/template/download", async (req: Request, res: Response) => {
   const lendaId = Number(req.params.lendaId);
@@ -1033,72 +906,135 @@ router.get("/:id/projekti/:lendaId/template/download", async (req: Request, res:
   }
 });
 
-// ============ GENERIC CRUD ROUTES (MUST BE LAST) ============
-// These routes must be defined after all specific routes to avoid matching issues
-
-// Get all studentet
-router.get("/", async (req: Request, res: Response) => {
+// MERR: Feedback-un për një ide (GET /idet/:ideaId/feedback)
+router.get("/idet/:ideaId/feedback", async (req: Request, res: Response) => {
+  console.log("[API] GET /idet/:ideaId/feedback called", req.params.ideaId);
+  const ideaId = Number(req.params.ideaId);
+  if (Number.isNaN(ideaId)) {
+    return res.status(400).json({ message: "Idea id eshte i pavlefshem" });
+  }
   try {
-    const studentet = await studentRepository.find();
-    res.json(studentet);
+    const idea = await ideaRepository.findOneBy({ id: ideaId });
+    if (!idea) {
+      return res.status(404).json({ message: "Idea nuk u gjet" });
+    }
+    res.json({ feedback: idea.feedback, feedbackDate: idea.feedbackDate });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching studentet", error });
+    res.status(500).json({ message: "Error duke marrë feedback", error });
   }
 });
 
-// Create student
-router.post("/", async (req: Request, res: Response) => {
+// All students must authenticate via Google SSO with their @uni-gjilan.net email
+// SHTO: Vendos feedback për një ide (PUT /idet/:ideaId/feedback)
+router.put("/idet/:ideaId/feedback", async (req: Request, res: Response) => {
+  console.log("[API] PUT /idet/:ideaId/feedback called", req.params.ideaId);
+  const ideaId = Number(req.params.ideaId);
+  const { feedback } = req.body;
+  if (Number.isNaN(ideaId)) {
+    return res.status(400).json({ message: "Idea id eshte i pavlefshem" });
+  }
+  if (!feedback || typeof feedback !== "string") {
+    return res.status(400).json({ message: "Feedback eshte i detyrueshem" });
+  }
   try {
-    const student = studentRepository.create(req.body);
-    const result = await studentRepository.save(student);
-    res.status(201).json(result);
+    const idea = await ideaRepository.findOneBy({ id: ideaId });
+    if (!idea) {
+      return res.status(404).json({ message: "Idea nuk u gjet" });
+    }
+    idea.feedback = feedback;
+    idea.feedbackDate = new Date();
+    await ideaRepository.save(idea);
+    res.json({ message: "Feedback u shtua me sukses", feedback: idea.feedback, feedbackDate: idea.feedbackDate });
   } catch (error) {
-    res.status(500).json({ message: "Error creating student", error });
+    res.status(500).json({ message: "Error duke shtuar feedback", error });
   }
 });
 
-// Update student
-router.put("/:id", async (req: Request, res: Response) => {
+
+// Upload dorezim (Word file saved to disk)
+router.post("/:id/dorezime", upload.single("file"), async (req: Request, res: Response) => {
+  console.log("=== UPLOAD ENDPOINT HIT ===");
+  console.log("Params:", req.params);
+  console.log("Body:", req.body);
+  console.log("File:", req.file ? { name: req.file.originalname, size: req.file.size, path: req.file.path } : "NO FILE");
+
+  const studentId = Number(req.params.id);
+  const { lendaId } = req.body;
+
+  console.log("Student ID:", studentId, "Lenda ID:", lendaId);
+  
+  if (Number.isNaN(studentId)) {
+    console.log("ERROR: Student id is invalid");
+    return res.status(400).json({ message: "Student id is invalid" });
+  }
+  
+  const parsedLendaId = Number(lendaId);
+  if (!parsedLendaId || Number.isNaN(parsedLendaId)) {
+    console.log("ERROR: lendaId invalid");
+    return res.status(400).json({ message: "lendaId eshte i detyrueshem dhe duhet te jete numer" });
+  }
+  
+  if (!req.file) {
+    console.log("ERROR: No file uploaded");
+    return res.status(400).json({ message: "Skedari i detyres mungon" });
+  }
+  
   try {
-    const student = await studentRepository.findOneBy({ id: parseInt(req.params.id, 10) });
+    console.log("Looking for student ID:", studentId);
+    const student = await studentRepository.findOneBy({ id: studentId });
     if (!student) {
+      console.log("ERROR: Student not found");
       return res.status(404).json({ message: "Student not found" });
     }
-    studentRepository.merge(student, req.body);
-    const result = await studentRepository.save(student);
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ message: "Error updating student", error });
-  }
-});
 
-// Delete student
-router.delete("/:id", async (req: Request, res: Response) => {
-  try {
-    const result = await studentRepository.delete(parseInt(req.params.id, 10));
-    if (result.affected === 0) {
-      return res.status(404).json({ message: "Student not found" });
+    console.log("Found student:", student.emri);
+    const lenda = await lendeRepository.findOneBy({ id: parsedLendaId });
+    if (!lenda) {
+      console.log("ERROR: Lenda not found");
+      return res.status(404).json({ message: "Lenda nuk u gjet" });
     }
-    res.json({ message: "Student deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Error deleting student", error });
-  }
-});
 
-// Get student by id (MUST BE LAST GET ROUTE)
-router.get("/:id", async (req: Request, res: Response) => {
-  try {
-    const student = await studentRepository.findOneBy({ id: parseInt(req.params.id, 10) });
-    if (!student) {
-      return res.status(404).json({ message: "Student not found" });
+    console.log("Found lenda:", lenda.emriLendes);
+    console.log("Lenda details:", { id: lenda.id, name: lenda.emriLendes, profesorId: lenda.profesorId });
+
+    // Get relative path from uploads folder
+    const filePath = path.relative(process.cwd(), req.file.path).replace(/\\/g, "/");
+    console.log("File path to save:", filePath);
+    
+    // Gjej profesorin e lëndës automatikisht
+    let profesorId: number | undefined = undefined;
+    if (lenda.profesorId) {
+      profesorId = lenda.profesorId;
+      console.log("✓ Automatikisht u lidh me profesorin ID:", profesorId);
+    } else {
+      console.log("⚠ PROBLEM: Lënda nuk ka profesorId të vendosur!");
     }
-    res.json(student);
+
+    const record = dorezimRepository.create({
+      student,
+      lenda,
+      profesorId: profesorId, // Vendos profesorId automatikisht
+      fileDorezimi: filePath,
+      fileName: req.file.originalname,
+      isShabllon: false,
+    });
+
+    console.log("Created record object");
+    const saved = await dorezimRepository.save(record);
+    console.log("SAVED TO DB:", saved);
+
+    res.status(201).json({
+      id: saved.id,
+      fileName: saved.fileName,
+      filePath: saved.fileDorezimi,
+      isShabllon: saved.isShabllon,
+      createdAt: saved.createdAt,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching student", error });
+    console.error("=== UPLOAD ERROR ===", error);
+    res.status(500).json({ message: "Error uploading dorezim", error: String(error) });
   }
 });
 
 // SSO-only authentication - password-based login is not supported
-// All students must authenticate via Google SSO with their @uni-gjilan.net email
-
 export default router;

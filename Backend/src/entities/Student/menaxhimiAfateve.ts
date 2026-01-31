@@ -1,10 +1,10 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from "typeorm";
 import { Lendet } from "./Lendet";
 
-@Entity('menaxhimiAfateve')
-export class MenaxhimiAfateve { //entiteti per menaxhimin e afateve te dorezimit te idese dhe projektit
+@Entity('menaxhimiafateve')
+export class MenaxhimiAfateve { // entiteti per menaxhimin e afateve te dorezimit te idese dhe projektit
     @PrimaryGeneratedColumn()
-    id: number;
+    id: number; 
     
     // lidhet me lendet (afatet vendosen per lende, jo per student individual)
     @ManyToOne(() => Lendet, { onDelete: "CASCADE" })

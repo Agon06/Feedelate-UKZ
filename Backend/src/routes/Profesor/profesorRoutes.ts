@@ -341,6 +341,7 @@ router.get("/:id/idet", async (req: Request, res: Response) => {
       id: idea.id,
       title: idea.titulli,  // ✅ Uses titulli (not titullip)
       shorthand: idea.shkurtesa,  // ✅ Uses shkurtesa (not shkurtesap)
+      feedback: idea.feedback,
       subject: idea.lenda
         ? { id: idea.lenda.id, name: idea.lenda.emriLendes }  // ✅ Uses emriLendes
         : null,
@@ -406,7 +407,7 @@ router.post("/:id/idet", async (req: Request, res: Response) => {
   }
 });
 
-// POST: Shto feedback për ide
+// POST: Shto feedback për ide 
 router.post("/:id/idet/:ideaId/feedback", async (req: Request, res: Response) => {
   const profesorId = Number(req.params.id);
   const ideaId = Number(req.params.ideaId);

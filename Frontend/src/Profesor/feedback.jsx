@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getProfesorIdeas, addFeedbackToSubmission } from '../services/profesorApi';
+import { getProfesorIdeas, addFeedbackToSubmission, addFeedbackToIdea } from '../services/profesorApi';
 
 const Feedbackp = () => {
   const navigate = useNavigate();
@@ -103,6 +103,13 @@ const Feedbackp = () => {
     } catch (_) { }
   }, [storageKey, storageKeySubmission, storageKeyIdeaFile, storageKeyGeneral]);
 
+  useEffect(() => {
+    if (!ideaId || !idea) return;
+    if (typeof idea.feedback === 'string' && idea.feedback.trim().length > 0) {
+      setMessage(idea.feedback);
+    }
+  }, [ideaId, idea]);
+
   const profesorName = 'Profesor';
   const avatarLetter = 'P';
 
@@ -132,19 +139,18 @@ const Feedbackp = () => {
   const secondaryButton = { borderRadius: 12, border: '1px solid rgba(23,199,122,0.35)', background: 'transparent', color: '#c8f5e8', fontWeight: 600, padding: '0.8rem 1.6rem', cursor: 'pointer' };
   const banner = { border: '1px solid rgba(255,255,255,0.15)', borderRadius: 12, padding: '0.75rem 1rem', marginTop: 12 };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!ideaId) return;
     try {
-      const payload = {
-        ideaId: Number(ideaId),
-        lendaId: Number(lendaId),
-        subject: subjectName,
-        message: message.trim(),
-        savedAt: new Date().toISOString(),
-      };
-      localStorage.setItem(storageKey, JSON.stringify(payload));
-      setSavedAt(payload.savedAt);
-    } catch (e) { }
+      // Send feedback to backend
+      await addFeedbackToIdea(PROFESOR_ID, ideaId, { feedback: message.trim() });
+      setSavedAt(new Date().toISOString());
+      setToastMessage({ type: 'success', text: 'Feedback u ruajt në databazë!' });
+      setTimeout(() => setToastMessage(null), 4000);
+    } catch (e) {
+      setToastMessage({ type: 'error', text: 'Gabim: ' + (e.message || 'Nuk u ruajt feedback') });
+      setTimeout(() => setToastMessage(null), 4000);
+    }
   };
 
   const handleSaveSubmission = () => {
@@ -307,9 +313,10 @@ const Feedbackp = () => {
         <div style={{ ...card, marginTop: 12 }}>
           <label style={{ display: 'block', marginBottom: 8 }}>Mesazhi i feedback-ut</label>
           <textarea
+          
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Shkruaj feedback-in këtu…"
+            placeholder="Shkruaj këtu…"
             rows={8}
             style={{ width: '100%', borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(4,10,6,0.6)', color: '#fff', padding: '0.8rem' }}
           />
@@ -338,7 +345,7 @@ const Feedbackp = () => {
         </div>
       </div>
 
-      {/* Toast message */}
+      {/* Toast message */} 
       {toastMessage && (
         <div style={{
           position: 'fixed',

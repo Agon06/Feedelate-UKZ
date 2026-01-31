@@ -16,6 +16,7 @@ import { dorzimiProjektit } from "./entities/Student/dorzimiProjektit";
 import { ProfesorLendetMapping } from "./entities/Student/ProfesorLendetMapping";
 import { Test } from "./entities/test";
 import { InstructionTemplate } from "./entities/Student/InstructionTemplate";
+import { MenaxhimiAfateve } from "./entities/Student/menaxhimiAfateve";
 
 dotenv.config();
 
@@ -26,7 +27,7 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USER || "root",
   password: process.env.DB_PASSWORD || "",
   database: process.env.DB_NAME || "feedelate",
-  synchronize: true, // Enabled temporarily to create missing tables
+  synchronize: true, // Disabled to avoid automatic CREATE TABLE conflicts; use migrations or enable temporarily when intentionally syncing schema
   logging: false,
   entities: [
     User,
@@ -43,6 +44,7 @@ export const AppDataSource = new DataSource({
     ProfesorLendetMapping,
     Test,
     InstructionTemplate,
+    MenaxhimiAfateve
   ],
   migrations: ["dist/migrations/**/*.js"],
   subscribers: [],

@@ -1,7 +1,3 @@
-// Alias for clarity in lendet.jsx usage (must be after getStudentProfile is defined)
-// ...existing code...
-// (move this export to after getStudentProfile)
-// ...existing code...
 
 const API_BASE_URL = (import.meta.env?.VITE_API_URL ?? 'http://localhost:5000/api').replace(/\/$/, '');
 
@@ -21,6 +17,7 @@ const handleResponse = async (response) => {
   return payload;
 };
 
+
 const request = async (path, options = {}) => {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
@@ -29,9 +26,12 @@ const request = async (path, options = {}) => {
     },
     ...options,
   });
-
   return handleResponse(response);
 };
+// Fetch feedback for a student's idea
+export const getIdeaFeedback = (ideaId) =>
+  request(`/studentet/idet/${ideaId}/feedback`);
+// Alias for clarity in lendet.jsx usage (must be after getStudentProfile is defined)
 
 export const getStudentDashboard = (studentId) =>
   request(`/studentet/${studentId}/dashboard`);

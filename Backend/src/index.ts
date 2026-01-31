@@ -60,6 +60,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/profesoret", profesorRoutes);
 app.use("/api/projektip", projektiRoutesp);  // ✅ FIX: Mount projekt routes (was causing 404)
 app.use("/api/studentet", studentRoutes);
+
 app.use("/api/admin", adminRoutes);
 app.use("/api", setupRoutes);
 
@@ -71,6 +72,7 @@ AppDataSource.initialize()
 
 
         console.log("Database connected successfully");
+      
 
         app.listen(PORT, () => {
             console.log(`Server is running on port ${PORT}`);
