@@ -27,7 +27,7 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USER || "root",
   password: process.env.DB_PASSWORD || "",
   database: process.env.DB_NAME || "feedelate",
-  synchronize: true, // Disabled to avoid automatic CREATE TABLE conflicts; use migrations or enable temporarily when intentionally syncing schema
+  synchronize: false, // Temporarily disabled to avoid FK issues
   logging: false,
   entities: [
     User,

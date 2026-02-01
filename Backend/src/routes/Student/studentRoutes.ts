@@ -419,6 +419,91 @@ router.delete("/:id/idet/:ideaId", async (req: Request, res: Response) => {
   }
 });
 
+// Get template info për nje lende (lexo nga Lendet.templateFile)
+router.get("/:id/dorezime/template-info", async (req: Request, res: Response) => {
+  const studentId = Number(req.params.id);
+  const lendaId = req.query.lendaId ? Number(req.query.lendaId) : undefined;
+
+  if (Number.isNaN(studentId)) {
+    return res.status(400).json({ message: "Student id is invalid" });
+  }
+
+  if (!lendaId || Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "lendaId eshte i detyrueshem" });
+  }
+
+  try {
+    const student = await studentRepository.findOneBy({ id: studentId });
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const lenda = await lendeRepository.findOneBy({ id: lendaId });
+    if (!lenda) {
+      return res.status(404).json({ message: "Lenda nuk u gjet" });
+    }
+
+    if (!lenda.templateFile || !lenda.templateFileName) {
+      return res.json({
+        hasTemplate: false,
+        fileName: null,
+      });
+    }
+
+    res.json({
+      hasTemplate: true,
+      fileName: lenda.templateFileName,
+    });
+  } catch (error) {
+    console.error("Template info fetch error:", error);
+    res.status(500).json({ message: "Error fetching template info", error: String(error) });
+  }
+});
+
+// DOWNLOAD: Shkarko template-in për nje lende
+router.get("/:id/dorezime/template-download", async (req: Request, res: Response) => {
+  const studentId = Number(req.params.id);
+  const lendaId = req.query.lendaId ? Number(req.query.lendaId) : undefined;
+
+  if (Number.isNaN(studentId)) {
+    return res.status(400).json({ message: "Student id is invalid" });
+  }
+
+  if (!lendaId || Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "lendaId eshte i detyrueshem" });
+  }
+
+  try {
+    const student = await studentRepository.findOneBy({ id: studentId });
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const lenda = await lendeRepository.findOneBy({ id: lendaId });
+    if (!lenda) {
+      return res.status(404).json({ message: "Lenda nuk u gjet" });
+    }
+
+    if (!lenda.templateFile || !lenda.templateFileName) {
+      console.log(`[Template Download] Nuk ka template per Lenda ID: ${lendaId}`);
+      return res.status(404).json({ message: "Template nuk u gjet" });
+    }
+
+    const absolutePath = path.resolve(process.cwd(), lenda.templateFile);
+    console.log(`[Template Download] Lenda ID: ${lendaId}, templateFile: ${lenda.templateFile}, absolutePath: ${absolutePath}`);
+    
+    if (!fs.existsSync(absolutePath)) {
+      console.log(`[Template Download] File-i nuk ekziston: ${absolutePath}`);
+      return res.status(404).json({ message: "Template file nuk ekziston ne disk" });
+    }
+
+    console.log(`[Template Download] Shkarkimet e file-it: ${absolutePath} as ${lenda.templateFileName}`);
+    return res.download(absolutePath, lenda.templateFileName);
+  } catch (error) {
+    console.error("Template download error:", error);
+    res.status(500).json({ message: "Error downloading template", error: String(error) });
+  }
+});
 
 // Get template (shabllon) per nje lende
 router.get("/:id/dorezime/shabllon", async (req: Request, res: Response) => {
@@ -1010,6 +1095,39 @@ router.post("/:id/dorezime", upload.single("file"), async (req: Request, res: Re
       console.log("⚠ PROBLEM: Lënda nuk ka profesorId të vendosur!");
     }
 
+    const existing = await dorezimRepository.findOne({
+      where: { studentId: student.id, lendaId: lenda.id, isShabllon: false },
+    });
+
+    if (existing) {
+      console.log("Existing submission found, replacing file:", { id: existing.id, file: existing.fileDorezimi });
+      const oldPath = path.resolve(process.cwd(), existing.fileDorezimi);
+      if (fs.existsSync(oldPath)) {
+        try {
+          fs.unlinkSync(oldPath);
+          console.log("Old file deleted:", oldPath);
+        } catch (err) {
+          console.warn("Could not delete old file:", oldPath, err);
+        }
+      }
+
+      existing.fileDorezimi = filePath;
+      existing.fileName = req.file.originalname;
+      existing.profesorId = profesorId;
+
+      console.log("Updating existing record");
+      const saved = await dorezimRepository.save(existing);
+      console.log("UPDATED IN DB:", saved);
+
+      return res.status(200).json({
+        id: saved.id,
+        fileName: saved.fileName,
+        filePath: saved.fileDorezimi,
+        isShabllon: saved.isShabllon,
+        createdAt: saved.createdAt,
+      });
+    }
+
     const record = dorezimRepository.create({
       student,
       lenda,
@@ -1033,6 +1151,43 @@ router.post("/:id/dorezime", upload.single("file"), async (req: Request, res: Re
   } catch (error) {
     console.error("=== UPLOAD ERROR ===", error);
     res.status(500).json({ message: "Error uploading dorezim", error: String(error) });
+  }
+});
+
+// Merr afatin e dorëzimit të ideve për një lëndë (për studentin)
+router.get("/:id/lendet/:lendaId/idea-deadline", async (req: Request, res: Response) => {
+  const studentId = Number(req.params.id);
+  const lendaId = Number(req.params.lendaId);
+
+  if (Number.isNaN(studentId) || Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "Invalid IDs" });
+  }
+
+  const formatLocalDate = (date: Date | undefined): string | null => {
+    if (!date) return null;
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  };
+
+  try {
+    const student = await studentRepository.findOneBy({ id: studentId });
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const lenda = await lendeRepository.findOne({ where: { id: lendaId } });
+    if (!lenda) {
+      return res.status(404).json({ message: "Lënda nuk u gjet" });
+    }
+
+    res.json({
+      ideaStartDate: formatLocalDate(lenda.ideaStartDate),
+      ideaDeadline: formatLocalDate(lenda.ideaDeadline),
+      ideaTitle: lenda.ideaTitle ?? null,
+    });
+  } catch (error) {
+    console.error("Error fetching idea deadline:", error);
+    res.status(500).json({ message: "Error fetching idea deadline", error: String(error) });
   }
 });
 

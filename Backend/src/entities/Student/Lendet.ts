@@ -39,6 +39,10 @@ export class Lendet {
     @Column({ type: "datetime", nullable: true })
     ideaDeadline?: Date;
 
+    // Titulli i afatit të dorëzimit të idesë (opsional)
+    @Column({ type: "varchar", length: 255, nullable: true })
+    ideaTitle?: string;
+
     // Template/Shabllon files per projektet
     @Column({ nullable: true })
     templateFile?: string;

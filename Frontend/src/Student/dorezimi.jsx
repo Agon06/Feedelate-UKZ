@@ -23,7 +23,7 @@ const DorezimPage = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [template, setTemplate] = useState(null);
   const [templateLoading, setTemplateLoading] = useState(true);
-  const [ideaDeadline, setIdeaDeadline] = useState({ start: null, end: null });
+  const [ideaDeadline, setIdeaDeadline] = useState({ start: null, end: null, title: null });
   const [deadlineLoading, setDeadlineLoading] = useState(true);
 
   useEffect(() => {
@@ -59,9 +59,13 @@ const DorezimPage = () => {
       if (!lendaId) return;
       try {
         const data = await getStudentIdeaDeadline(STUDENT_ID, lendaId);
-        setIdeaDeadline({ start: data.ideaStartDate ?? null, end: data.ideaDeadline ?? null });
+        setIdeaDeadline({ 
+          start: data.ideaStartDate ?? null, 
+          end: data.ideaDeadline ?? null,
+          title: data.ideaTitle ?? null 
+        });
       } catch (error) {
-        setIdeaDeadline({ start: null, end: null });
+        setIdeaDeadline({ start: null, end: null, title: null });
       } finally {
         setDeadlineLoading(false);
       }
@@ -70,27 +74,35 @@ const DorezimPage = () => {
   }, [lendaId]);
 
   const handleDownloadTemplate = () => {
-    if (!template) return;
+    try {
+      if (!template || !template.hasTemplate || !STUDENT_ID || !lendaId) {
+        console.error('Missing required data:', { template, STUDENT_ID, lendaId });
+        alert('Template nuk u gjet');
+        return;
+      }
 
-    const API_BASE_URL = (import.meta.env?.VITE_API_URL ?? 'http://localhost:5000/api').replace(/\/$/, '');
-    const baseUrl = API_BASE_URL.replace('/api', '');
+      // Use simple string concatenation without replace
+      let baseUrl = import.meta.env?.VITE_API_URL || 'http://localhost:5000/api';
+      // Remove trailing slash if exists
+      if (baseUrl && baseUrl.endsWith('/')) {
+        baseUrl = baseUrl.slice(0, -1);
+      }
 
-    // Remove 'uploads/' prefix if it exists in filePath (to avoid double /uploads/)
-    const filePath = template.filePath.startsWith('uploads/')
-      ? template.filePath
-      : `uploads/${template.filePath}`;
+      const downloadUrl = `${baseUrl}/studentet/${STUDENT_ID}/dorezime/template-download?lendaId=${lendaId}`;
 
-    const downloadUrl = `${baseUrl}/${filePath}`;
+      console.log('Downloading from:', downloadUrl);
+      console.log('Template info:', { hasTemplate: template.hasTemplate, fileName: template.fileName });
 
-    console.log('Downloading:', downloadUrl);
-
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.download = template.fileName || 'template.docx';
-    link.setAttribute('download', template.fileName || 'template.docx');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = template.fileName || 'template';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Download error:', error);
+      alert('Gabim gjatë shkarkimit të template-it');
+    }
   };
 
   const handleFileChange = (event) => {
@@ -352,7 +364,9 @@ const DorezimPage = () => {
             <span>Duke u ngarkuar afatet...</span>
           ) : (ideaDeadline.start || ideaDeadline.end) ? (
             <div>
-              <div style={{ fontWeight: 700, marginBottom: 6 }}>Afati i dorëzimit të idesë</div>
+              <div style={{ fontWeight: 700, marginBottom: 6 }}>
+                {ideaDeadline.title ? `📌 ${ideaDeadline.title}` : 'Afati i dorëzimit të idesë'}
+              </div>
               <div style={{ display: 'flex', justifyContent: 'center', gap: 24, flexWrap: 'wrap' }}>
                 <div>Fillimi: <span style={{ fontWeight: 600 }}>{formatDisplay(ideaDeadline.start)}</span></div>
                 <div>Mbarimi: <span style={{ fontWeight: 600 }}>{formatDisplay(ideaDeadline.end)}</span></div>
@@ -368,7 +382,7 @@ const DorezimPage = () => {
           <div style={templateCardStyle}>
             {templateLoading ? (
               <div style={{ textAlign: 'center', opacity: 0.8 }}>Duke u ngarkuar...</div>
-            ) : template ? (
+            ) : template?.hasTemplate ? (
               <div>
                 <div style={fileIconStyle}>📄</div>
                 <h3 style={{ margin: '0.5rem 0', opacity: 0.95 }}>Template e Detyres</h3>
@@ -387,7 +401,7 @@ const DorezimPage = () => {
             <button
               style={downloadButtonStyle}
               onClick={handleDownloadTemplate}
-              disabled={!template || templateLoading}
+              disabled={!template || !template.hasTemplate || templateLoading}
             >
               ⬇ Shkarko Shabllonin
             </button>

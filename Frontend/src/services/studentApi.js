@@ -92,7 +92,7 @@ export const getStudentIdeaSubmission = (studentId, lendaId) =>
   request(`/studentet/${studentId}/dorezime?lendaId=${lendaId}`);
 
 export const getStudentTemplate = (studentId, lendaId) =>
-  request(`/studentet/${studentId}/dorezime/shabllon?lendaId=${lendaId}`);
+  request(`/studentet/${studentId}/dorezime/template-info?lendaId=${lendaId}`);
 
 export const getStudentIdeaDeadline = (studentId, lendaId) =>
   request(`/studentet/${studentId}/lendet/${lendaId}/idea-deadline`);

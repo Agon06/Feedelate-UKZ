@@ -92,45 +92,50 @@ const Idetep = () => {
 
   const calculatePeriods = () => {
     const months = ['Janar', 'Shkurt', 'Mars', 'Prill', 'Maj', 'Qershor', 'Korrik', 'Gusht', 'Shtator', 'Tetor', 'Nëntor', 'Dhjetor'];
-    const periodsMap = new Map(); // Store unique periods
+    const periodsMap = new Map();
 
-    // Load saved periods from localStorage (now storing objects with title)
-    const savedPeriods = JSON.parse(localStorage.getItem(`idea-periods-${lendaId}`) || '[]');
-
-    // Add saved periods (manually set by professor)
-    savedPeriods.forEach((periodData) => {
-      // Handle both old string format and new object format
-      const periodKey = typeof periodData === 'string' ? periodData : periodData.key;
-      const customTitle = typeof periodData === 'object' ? periodData.title : null;
-
-      const [yearStr, monthStr] = periodKey.split('-');
-      const year = parseInt(yearStr);
-      const month = parseInt(monthStr);
-
-      if (!isNaN(year) && !isNaN(month)) {
+    // ✅ Add period from database deadline if exists (with deadline dates)
+    if (ideaDeadline.start || ideaDeadline.end) {
+      const startDate = ideaDeadline.start ? new Date(ideaDeadline.start) : null;
+      const endDate = ideaDeadline.end ? new Date(ideaDeadline.end) : null;
+      
+      if (startDate && endDate) {
+        const customTitle = deadlineTitle || null;
+        // Use custom title as ID if available, otherwise use year-month
+        const id = customTitle ? `deadline-${customTitle.replace(/\s+/g, '-')}` : `${startDate.getFullYear()}-${startDate.getMonth()}`;
+        const year = startDate.getFullYear();
+        const month = startDate.getMonth();
         const endMonth = (month + 2) % 12;
         const endYear = month + 2 >= 12 ? year + 1 : year;
         const periodLabel = `${months[month]} - ${months[endMonth]} ${year}`;
-
-        const key = `${year}-${month}`;
-        if (!periodsMap.has(key)) {
-          periodsMap.set(key, {
-            id: key,
-            label: customTitle ? `📌 ${customTitle}` : `📅 ${periodLabel}`,
-            startDate: new Date(year, month, 1),
-            endDate: new Date(endYear, (endMonth + 1) % 12, 0)
-          });
-        }
+        
+        periodsMap.set(id, {
+          id: id,
+          label: customTitle ? `📌 ${customTitle}` : `📅 ${periodLabel}`,
+          startDate: startDate,
+          endDate: endDate,
+          isDeadline: true,
+          customTitle: customTitle
+        });
       }
-    });
+    }
 
-    // ✅ ALSO: Generate periods from actual idea submission dates
+    // ✅ ALSO: Generate periods from actual idea submission dates (but skip if matches deadline)
     ideas.forEach((idea) => {
       const submitDate = new Date(idea.createdAt || idea.created_at);
       const year = submitDate.getFullYear();
       const month = submitDate.getMonth();
-
       const key = `${year}-${month}`;
+      
+      // Skip if this submission falls within deadline period
+      if (ideaDeadline.start && ideaDeadline.end) {
+        const deadlineStart = new Date(ideaDeadline.start);
+        const deadlineEnd = new Date(ideaDeadline.end);
+        if (submitDate >= deadlineStart && submitDate <= deadlineEnd) {
+          return; // Skip, it's already in deadline period
+        }
+      }
+
       if (!periodsMap.has(key)) {
         const endMonth = (month + 2) % 12;
         const endYear = month + 2 >= 12 ? year + 1 : year;
@@ -140,12 +145,12 @@ const Idetep = () => {
           id: key,
           label: `📅 ${periodLabel}`,
           startDate: new Date(year, month, 1),
-          endDate: new Date(endYear, (endMonth + 1) % 12, 0)
+          endDate: new Date(endYear, (endMonth + 1) % 12, 0),
+          isDeadline: false
         });
       }
     });
 
-    // Convert map to array and set
     const periodsList = Array.from(periodsMap.values());
     setPeriods(periodsList);
   };
@@ -153,6 +158,7 @@ const Idetep = () => {
   const loadIdeaDeadline = useCallback(async () => {
     if (!lendaId) {
       setIdeaDeadline({ start: '', end: '' });
+      setDeadlineTitle('');
       setDeadlineStatus({ loading: false, saving: false, error: null, message: null });
       return;
     }
@@ -162,7 +168,9 @@ const Idetep = () => {
       const response = await getIdeaDeadline(PROFESOR_ID, lendaId);
       const startValue = response.lenda?.ideaStartDate ? response.lenda.ideaStartDate.slice(0, 16) : '';
       const endValue = response.lenda?.ideaDeadline ? response.lenda.ideaDeadline.slice(0, 16) : '';
+      const titleValue = response.lenda?.ideaTitle || '';
       setIdeaDeadline({ start: startValue, end: endValue });
+      setDeadlineTitle(titleValue);
       setDeadlineStatus({ loading: false, saving: false, error: null, message: null });
     } catch (error) {
       setDeadlineStatus({ loading: false, saving: false, error: error?.message ?? 'Nuk u lexuan afatet.', message: null });
@@ -234,28 +242,28 @@ const Idetep = () => {
   }, [ideaDeadline, ideas, files]);
 
   const filteredIdeas = useMemo(() => {
-    // If nothing selected or "all" is selected, show all
     if (!selectedPeriod || selectedPeriod === 'all') return ideas;
+    const period = periods.find(p => p.id === selectedPeriod);
+    if (!period) return ideas;
+    
     return ideas.filter(idea => {
       const submitDate = new Date(idea.createdAt || idea.created_at);
-      const submitYear = submitDate.getFullYear();
-      const submitMonth = submitDate.getMonth();
-      const submitKey = `${submitYear}-${submitMonth}`;
-      return submitKey === selectedPeriod;
+      // Always use deadline date ranges for accurate filtering
+      return submitDate >= period.startDate && submitDate <= period.endDate;
     });
-  }, [ideas, selectedPeriod]);
+  }, [ideas, selectedPeriod, periods]);
 
   const filteredFiles = useMemo(() => {
-    // If nothing selected or "all" is selected, show all
     if (!selectedPeriod || selectedPeriod === 'all') return files;
+    const period = periods.find(p => p.id === selectedPeriod);
+    if (!period) return files;
+    
     return files.filter(file => {
       const submitDate = new Date(file.createdAt);
-      const submitYear = submitDate.getFullYear();
-      const submitMonth = submitDate.getMonth();
-      const submitKey = `${submitYear}-${submitMonth}`;
-      return submitKey === selectedPeriod;
+      // Always use deadline date ranges for accurate filtering
+      return submitDate >= period.startDate && submitDate <= period.endDate;
     });
-  }, [files, selectedPeriod]);
+  }, [files, selectedPeriod, periods]);
 
   const triggerDownload = (blob, filename) => {
     const url = URL.createObjectURL(blob);
@@ -386,6 +394,7 @@ const Idetep = () => {
     const payload = {
       ideaStartDate: normalizeDateInput(ideaDeadline.start),
       ideaDeadline: normalizeDateInput(ideaDeadline.end),
+      ideaTitle: deadlineTitle.trim() || null,
     };
 
     if (payload.ideaStartDate && payload.ideaDeadline && payload.ideaStartDate > payload.ideaDeadline) {
@@ -398,39 +407,17 @@ const Idetep = () => {
       const response = await updateIdeaDeadline(PROFESOR_ID, lendaId, payload);
       const startValue = response.lenda?.ideaStartDate ? response.lenda.ideaStartDate.slice(0, 16) : '';
       const endValue = response.lenda?.ideaDeadline ? response.lenda.ideaDeadline.slice(0, 16) : '';
+      const titleValue = response.lenda?.ideaTitle || '';
       setIdeaDeadline({ start: startValue, end: endValue });
+      setDeadlineTitle(titleValue);
 
-      // Save periods to localStorage with custom title
-      if (startValue || endValue) {
-        const savedPeriods = JSON.parse(localStorage.getItem(`idea-periods-${lendaId}`) || '[]');
-        if (startValue && endValue) {
-          const startDate = new Date(startValue);
-          const periodKey = `${startDate.getFullYear()}-${startDate.getMonth()}`;
-
-          // Check if period already exists (handle both old string and new object format)
-          const exists = savedPeriods.some(p =>
-            (typeof p === 'string' && p === periodKey) ||
-            (typeof p === 'object' && p.key === periodKey)
-          );
-
-          if (!exists) {
-            // Save as object with key and title
-            savedPeriods.push({
-              key: periodKey,
-              title: deadlineTitle.trim() || null
-            });
-            localStorage.setItem(`idea-periods-${lendaId}`, JSON.stringify(savedPeriods));
-          }
-        }
-      }
+      // Reload data to update periods
+      calculatePeriods();
 
       setDeadlineStatus({ loading: false, saving: false, error: null, message: 'Afati u ruajt me sukses.' });
 
-      // Reset form fields to default (00:00)
-      setTimeout(() => {
-        setIdeaDeadline({ start: '', end: '' });
-        setDeadlineTitle('');
-      }, 1500);
+      // ✅ NUK zbrazim formin - le të qëndrojnë vlerat e ruajtura
+      // Kjo siguron që calculatePeriods() të punojë saktë me vlerat e marra nga DB
     } catch (error) {
       setDeadlineStatus({ loading: false, saving: false, error: error?.message ?? 'Nuk u ruajt afati.', message: null });
     }
@@ -748,7 +735,7 @@ const Idetep = () => {
             style={tabButtonStyle(activeTab === 'template')}
             onClick={() => setActiveTab('template')}
           >
-            📄 Template/Instruksionet
+            📄 Template
           </button>
           <button
             style={tabButtonStyle(activeTab === 'ideas')}
@@ -1225,15 +1212,22 @@ const Idetep = () => {
                 <button
                   style={{ ...primaryButton, flex: 1 }}
                   onClick={() => {
-                    const rows = filteredIdeas.map(i => ({
-                      Titulli: i.title,
-                      Shkurtesa: i.shorthand,
-                      Lenda: i.subject?.name ?? '',
-                      Student: i.studentName ?? 'Profesor',
-                      Tipi: i.type === 'student' ? 'Student' : 'Profesor'
-                    }));
-                    const header = ['Titulli', 'Shkurtesa', 'Lenda', 'Student', 'Tipi'];
-                    const csv = [header.join(','), ...rows.map(r => header.map(h => `"${String(r[h] ?? '').replace(/"/g, '""')}"`).join(','))].join('\n');
+                    // Build data with one idea per row (vertical columns)
+                    const header = ['Emri Studentit', 'ID', 'Titulli', 'Shkurtesa'];
+                    const rows = filteredIdeas.map(i => [
+                      i.studentName ?? 'Profesor',
+                      i.id ?? '',
+                      i.title,
+                      i.shorthand
+                    ]);
+                    
+                    // Create CSV with header first, then data rows
+                    const csvRows = [
+                      header.map(h => `"${h}"`).join(','),
+                      ...rows.map(r => r.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','))
+                    ];
+                    const csv = csvRows.join('\n');
+                    
                     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');

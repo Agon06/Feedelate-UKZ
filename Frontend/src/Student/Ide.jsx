@@ -43,7 +43,7 @@ const IdeaPage = () => {
     if (feedbackModal.open && feedbackModal.idea && feedbackModal.loading) {
       (async () => {
         try {
-          const res = await getIdeaFeedback(STUDENT_ID, feedbackModal.idea.id);
+          const res = await getIdeaFeedback(feedbackModal.idea.id);
           setFeedbackModal((prev) => ({ ...prev, feedback: res.feedback || '', loading: false, error: null }));
         } catch (err) {
           setFeedbackModal((prev) => ({ ...prev, feedback: '', loading: false, error: err?.message || 'Nuk u lexua feedback-u.' }));

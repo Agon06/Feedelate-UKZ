@@ -799,6 +799,7 @@ router.get("/:id/lendet/:lendaId/idea-deadline", async (req: Request, res: Respo
         name: lenda.emriLendes,
         ideaStartDate: formatLocalDate(lenda.ideaStartDate),
         ideaDeadline: formatLocalDate(lenda.ideaDeadline),
+        ideaTitle: lenda.ideaTitle ?? null,
       },
     });
   } catch (error) {
@@ -811,7 +812,7 @@ router.get("/:id/lendet/:lendaId/idea-deadline", async (req: Request, res: Respo
 router.put("/:id/lendet/:lendaId/idea-deadline", async (req: Request, res: Response) => {
   const profesorId = Number(req.params.id);
   const lendaId = Number(req.params.lendaId);
-  const { ideaStartDate, ideaDeadline } = req.body;
+  const { ideaStartDate, ideaDeadline, ideaTitle } = req.body;
 
   if (Number.isNaN(profesorId) || Number.isNaN(lendaId)) {
     return res.status(400).json({ message: "Invalid IDs" });
@@ -851,10 +852,11 @@ router.put("/:id/lendet/:lendaId/idea-deadline", async (req: Request, res: Respo
 
     lenda.ideaStartDate = start ?? undefined;
     lenda.ideaDeadline = end ?? undefined;
+    lenda.ideaTitle = ideaTitle?.trim() || undefined;
 
     await lendetRepository.save(lenda);
 
-    console.log(`✓ Idea deadline set for lenda ${lendaId} by profesor ${profesorId}: start=${start?.toISOString() ?? 'null'} end=${end?.toISOString() ?? 'null'}`);
+    console.log(`✓ Idea deadline set for lenda ${lendaId} by profesor ${profesorId}: start=${start?.toISOString() ?? 'null'} end=${end?.toISOString() ?? 'null'} title=${ideaTitle ?? 'null'}`);
 
     const formatLocalDate = (date: Date | undefined): string | null => {
       if (!date) return null;
@@ -869,6 +871,7 @@ router.put("/:id/lendet/:lendaId/idea-deadline", async (req: Request, res: Respo
         name: lenda.emriLendes,
         ideaStartDate: formatLocalDate(lenda.ideaStartDate),
         ideaDeadline: formatLocalDate(lenda.ideaDeadline),
+        ideaTitle: lenda.ideaTitle ?? null,
       },
     });
   } catch (error) {
