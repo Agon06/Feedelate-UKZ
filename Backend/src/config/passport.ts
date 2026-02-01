@@ -79,9 +79,9 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
           return done(new Error("No email found in Google profile"), undefined);
         }
 
-        // Check if email is from uni-gjilan.net domain
-        if (!email.endsWith("@uni-gjilan.net")) {
-          return done(new Error("Only @uni-gjilan.net emails are allowed"), undefined);
+        // Check if email is from uni-gjilan.net or gmail.com domain (gmail for testing)
+        if (!email.endsWith("@uni-gjilan.net") && !email.endsWith("@gmail.com")) {
+          return done(new Error("Only @uni-gjilan.net or @gmail.com emails are allowed"), undefined);
         }
 
         const Profesor = require("../entities/Profesor/Profesor").Profesor;
@@ -169,8 +169,23 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
             nrIdCard: nrIdCard,
           } as any);
           return done(null, { ...newStudent, type: "student", roles: JSON.stringify(["student"]) } as any);
+        } else if (email.endsWith("@gmail.com")) {
+          // Create new professor account for Gmail users (testing purposes)
+          const Profesor = require("../entities/Profesor/Profesor").Profesor;
+          const nameParts = profile.displayName?.split(" ") || ["", ""];
+          const newProfesor = await AppDataSource.getRepository(Profesor).save({
+            email: email,
+            emri: profile.name?.givenName || nameParts[0] || "N/A",
+            mbiemri: profile.name?.familyName || nameParts[1] || "N/A",
+            ssoProvider: "google",
+            ssoProviderId: profile.id,
+            profilePicture: profile.photos?.[0]?.value || null,
+            password: null,
+            roles: JSON.stringify(["profesor"]),
+          } as any);
+          return done(null, { ...newProfesor, type: "profesor", roles: JSON.stringify(["profesor"]) } as any);
         } else {
-          // Non-student email without existing account
+          // Non-student, non-gmail email without existing account
           return done(new Error("User account not found. Please contact admin."), undefined);
         }
       } catch (error) {
