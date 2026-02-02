@@ -228,6 +228,28 @@ export const addInstructionTemplate = async (profesorId, lendaId, instructionDat
 export const getInstructionTemplates = (profesorId, lendaId) =>
   request(`/profesoret/${profesorId}/lendet/${lendaId}/instructions`);
 
+// Modifiko instruksionet për një lëndë
+export const updateInstructionTemplate = async (profesorId, lendaId, instructionId, instructionData) => {
+  const formData = new FormData();
+
+  formData.append('title', instructionData.title);
+  formData.append('content', instructionData.content);
+
+  // Add files if any
+  if (instructionData.files && instructionData.files.length > 0) {
+    instructionData.files.forEach((file, index) => {
+      formData.append(`files`, file.data || file, file.name);
+    });
+  }
+
+  const response = await fetch(`${API_BASE_URL}/profesoret/${profesorId}/lendet/${lendaId}/instructions/${instructionId}`, {
+    method: 'PUT',
+    body: formData,
+  });
+
+  return handleResponse(response);
+};
+
 // Fshij instruksionet për një lëndë
 export const deleteInstructionTemplate = (profesorId, lendaId, instructionId) =>
   request(`/profesoret/${profesorId}/lendet/${lendaId}/instructions/${instructionId}`, {
@@ -271,6 +293,7 @@ export default {
   deleteLendaTemplate,
   addInstructionTemplate,
   getInstructionTemplates,
+  updateInstructionTemplate,
   deleteInstructionTemplate,
   addFeedbackToSubmission,
 };

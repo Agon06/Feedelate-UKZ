@@ -1317,6 +1317,61 @@ router.get("/:id/lendet/:lendaId/instructions", async (req: Request, res: Respon
   }
 });
 
+// PUT: Modifiko instruksionet për një lëndë
+router.put("/:id/lendet/:lendaId/instructions/:instructionId", uploadInstructions.array("files", 10), async (req: Request, res: Response) => {
+  const instructionId = Number(req.params.instructionId);
+  const title = (req.body?.title ?? "Instruksione").toString().trim() || "Instruksione";
+  const content = (req.body?.content ?? "").toString();
+
+  if (Number.isNaN(instructionId)) {
+    return res.status(400).json({ message: "Invalid instruction ID" });
+  }
+
+  try {
+    const instruction = await instructionRepository.findOneBy({ id: instructionId });
+    if (!instruction) {
+      return res.status(404).json({ message: "Instruction not found" });
+    }
+
+    // Update title and content
+    instruction.title = title;
+    instruction.content = content;
+
+    // Handle new files if uploaded
+    const uploadedFiles = (req.files as Express.Multer.File[]) || [];
+    if (uploadedFiles.length > 0) {
+      // Delete old files
+      (instruction.files || []).forEach((file) => {
+        const absolutePath = path.resolve(process.cwd(), file.path);
+        if (fs.existsSync(absolutePath)) {
+          fs.unlinkSync(absolutePath);
+        }
+      });
+
+      // Add new files
+      const filesPayload = uploadedFiles.map((file) => ({
+        name: file.originalname,
+        size: file.size,
+        type: file.mimetype,
+        path: path.relative(process.cwd(), file.path),
+      }));
+      instruction.files = filesPayload;
+    }
+
+    const updated = await instructionRepository.save(instruction);
+
+    res.json({
+      id: updated.id,
+      title: updated.title,
+      content: updated.content,
+      createdAt: updated.createdAt,
+      files: (updated.files || []).map((f) => ({ name: f.name, size: f.size, type: f.type })),
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating instruction", error: String(error) });
+  }
+});
+
 // DELETE: Fshij instruksionet për një lëndë
 router.delete("/:id/lendet/:lendaId/instructions/:instructionId", async (req: Request, res: Response) => {
   const instructionId = Number(req.params.instructionId);
