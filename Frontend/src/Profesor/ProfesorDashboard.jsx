@@ -251,18 +251,7 @@ const ProfesorDashboard = () => {
 
       <div style={{width: '100%', boxSizing: 'border-box'}}>
         <div style={titleStyle}>
-          {academicYear && (
-            <button
-              onClick={handleBackClick}
-              style={backButtonStyle}
-              onMouseEnter={(e) => e.currentTarget.style.color = '#0e6b3d'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#17c77a'}
-              aria-label="Kthehu"
-            >
-              ←
-            </button>
-          )}
-          <h2 style={{margin: 0}}>Universiteti Publik Kadri Zeka {academicYear && `(${academicYear})`}</h2>
+          <h2 style={{margin: 0}}>Universiteti Publik Kadri Zeka</h2>
         </div>
       </div>
 
