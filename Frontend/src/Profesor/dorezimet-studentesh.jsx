@@ -588,22 +588,22 @@ const DoreziметStudentesh = () => {
         {/* Left Sidebar */}
         <div style={leftPanelStyle}>
           <button
+            style={tabButtonStyle(activeTab === 'deadline')}
+            onClick={() => setActiveTab('deadline')}
+          >
+            🗓️ Afati i Dorëzimit
+          </button>
+          <button
             style={tabButtonStyle(activeTab === 'templates')}
             onClick={() => setActiveTab('templates')}
           >
-            📋 Template/Instruksione
+            📋 Template
           </button>
           <button
             style={tabButtonStyle(activeTab === 'projects')}
             onClick={() => setActiveTab('projects')}
           >
-            📁 Projektet
-          </button>
-          <button
-            style={tabButtonStyle(activeTab === 'deadline')}
-            onClick={() => setActiveTab('deadline')}
-          >
-            🗓️ Afati i Dorëzimit
+            📁 Lista e Projekteve
           </button>
           <button
             style={tabButtonStyle(activeTab === 'grades')}
@@ -1027,7 +1027,7 @@ const DoreziметStudentesh = () => {
           {/* PROJECTS TAB */}
           {activeTab === 'projects' && (
             <div>
-              <h2 style={{ margin: '0 0 1.5rem 0', color: '#1fdc8c' }}>📁 Projektet - {subject || 'Lënda'}</h2>
+              <h2 style={{ margin: '0 0 1.5rem 0', color: '#1fdc8c' }}>📁 Lista e Projekteve - {subject || 'Lënda'}</h2>
               {status.loading && (
                 <div style={{ textAlign: 'center', padding: '2rem', color: '#17c77a' }}>
                   Duke u ngarkuar projektet...
