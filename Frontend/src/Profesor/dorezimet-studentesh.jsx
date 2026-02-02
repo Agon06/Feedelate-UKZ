@@ -315,14 +315,32 @@ const DoreziметStudentesh = () => {
 
   const filteredSubmissions = useMemo(() => {
     if (!selectedPeriod) return submissions;
+    const selectedPeriodInfo = periods.find(p => {
+      const pKey = typeof p === 'string' ? p : p.key;
+      return pKey === selectedPeriod;
+    });
+    const isNamedPeriod = selectedPeriodInfo && typeof selectedPeriodInfo !== 'string' && selectedPeriodInfo.title;
+
+    if (isNamedPeriod) {
+      const start = parseDateParts(deadlineStartDate, deadlineStartHour, deadlineStartMinute, deadlineStartSecond);
+      const end = parseDateParts(deadlineEndDate, deadlineEndHour, deadlineEndMinute, deadlineEndSecond);
+      if (start && end) {
+        return submissions.filter(sub => {
+          const submitDate = new Date(sub.createdAt);
+          if (Number.isNaN(submitDate.getTime())) return false;
+          return submitDate >= start && submitDate <= end;
+        });
+      }
+      return submissions;
+    }
+
     return submissions.filter(sub => {
       const submitDate = new Date(sub.createdAt);
-      const submitYear = submitDate.getFullYear();
-      const submitMonth = submitDate.getMonth();
-      const submitKey = `${submitYear}-${submitMonth}`;
+      if (Number.isNaN(submitDate.getTime())) return false;
+      const submitKey = `${submitDate.getFullYear()}-${submitDate.getMonth()}`;
       return submitKey === selectedPeriod;
     });
-  }, [submissions, selectedPeriod]);
+  }, [submissions, selectedPeriod, periods, deadlineStartDate, deadlineStartHour, deadlineStartMinute, deadlineStartSecond, deadlineEndDate, deadlineEndHour, deadlineEndMinute, deadlineEndSecond]);
 
   const handleSetDeadline = async () => {
     const startDate = parseDateParts(deadlineStartDate, deadlineStartHour, deadlineStartMinute, deadlineStartSecond);
@@ -486,7 +504,10 @@ const DoreziметStudentesh = () => {
     borderRadius: 18,
     padding: '2rem',
     border: '1px solid rgba(23,199,122,0.15)',
-    minHeight: '500px'
+    minHeight: '500px',
+    maxHeight: 'calc(100vh - 140px)',
+    overflowY: 'auto',
+    overflowX: 'hidden'
   };
 
   const tabButtonStyle = (isActive) => ({
