@@ -13,7 +13,6 @@ import { DorezimiIdes } from "../../entities/Student/dorezimiIdes";
 import { Projekti } from "../../entities/Student/projekti";
 import { dorzimiProjektit } from "../../entities/Student/dorzimiProjektit";
 import { MenaxhimiAfateve } from "../../entities/Student/menaxhimiAfateve";
-import { InstructionTemplate } from "../../entities/Student/InstructionTemplate";
 
 
 const router = Router();
@@ -24,7 +23,6 @@ const dorezimRepository = AppDataSource.getRepository(DorezimiIdes);
 const projektiRepository = AppDataSource.getRepository(Projekti);
 const dorezimProjektitRepository = AppDataSource.getRepository(dorzimiProjektit);
 const menaxhimiAfateveRepository = AppDataSource.getRepository(MenaxhimiAfateve);
-const instructionRepository = AppDataSource.getRepository(InstructionTemplate);
 //e thirr repositorin e testi
 
 
@@ -606,24 +604,19 @@ router.get("/:id/projekti/:lendaId/instructions", async (req: Request, res: Resp
       return res.status(404).json({ message: "Lenda nuk u gjet" });
     }
 
-    const instructions = await instructionRepository.find({
-      where: { lendaId },
-      order: { createdAt: "DESC" },
-    });
+    if (!lenda.projectInstructions) {
+      return res.json([]);
+    }
 
-    res.json(
-      instructions.map((instruction) => ({
-        id: instruction.id,
-        title: instruction.title,
-        content: instruction.content,
-        createdAt: instruction.createdAt,
-        files: (instruction.files || []).map((f) => ({
-          name: f.name,
-          size: f.size,
-          type: f.type,
-        })),
-      }))
-    );
+    res.json([
+      {
+        id: lenda.id,
+        title: "Instruksione",
+        content: lenda.projectInstructions,
+        createdAt: lenda.updatedAt,
+        files: [],
+      },
+    ]);
   } catch (error) {
     console.error("Error fetching instructions:", error);
     res.status(500).json({ message: "Error fetching instructions", error: String(error) });
@@ -632,47 +625,7 @@ router.get("/:id/projekti/:lendaId/instructions", async (req: Request, res: Resp
 
 // DOWNLOAD: Shkarko një fajll të instruksioneve
 router.get("/:id/projekti/:lendaId/instructions/:fileName/download", async (req: Request, res: Response) => {
-  const studentId = Number(req.params.id);
-  const lendaId = Number(req.params.lendaId);
-  const fileName = decodeURIComponent(req.params.fileName || "");
-
-  if (Number.isNaN(studentId)) {
-    return res.status(400).json({ message: "Student id is invalid" });
-  }
-
-  if (Number.isNaN(lendaId)) {
-    return res.status(400).json({ message: "lendaId eshte i pavlefshem" });
-  }
-
-  if (!fileName) {
-    return res.status(400).json({ message: "fileName eshte i pavlefshem" });
-  }
-
-  try {
-    const student = await studentRepository.findOneBy({ id: studentId });
-    if (!student) {
-      return res.status(404).json({ message: "Student not found" });
-    }
-
-    const instructions = await instructionRepository.find({ where: { lendaId } });
-    const match = instructions
-      .flatMap((instruction) => instruction.files || [])
-      .find((f) => f.name === fileName);
-
-    if (!match) {
-      return res.status(404).json({ message: "Fajlli nuk u gjet" });
-    }
-
-    const absolutePath = path.resolve(process.cwd(), match.path);
-    if (!fs.existsSync(absolutePath)) {
-      return res.status(404).json({ message: "Fajlli nuk ekziston ne disk" });
-    }
-
-    return res.download(absolutePath, match.name);
-  } catch (error) {
-    console.error("Instruction file download error:", error);
-    res.status(500).json({ message: "Error downloading instruction file", error: String(error) });
-  }
+  return res.status(404).json({ message: "Instruksionet ruhen vetëm si tekst" });
 });
 
 // Get template (shabllon) per nje lende

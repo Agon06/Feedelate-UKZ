@@ -12,7 +12,6 @@ import { Lendet } from "../../entities/Student/Lendet";
 import { Idete } from "../../entities/Student/Idete";
 import { dorzimiProjektit } from "../../entities/Student/dorzimiProjektit";
 import { ProfesorLendetMapping } from "../../entities/Student/ProfesorLendetMapping";
-import { InstructionTemplate } from "../../entities/Student/InstructionTemplate";
 
 const router = Router();
 const profesorRepository = AppDataSource.getRepository(Profesor);
@@ -22,7 +21,6 @@ const dorezimiIdeeshRepository = AppDataSource.getRepository(DorezimiIdes);
 const studentRepository = AppDataSource.getRepository(Student);
 const dorezimProjektitRepository = AppDataSource.getRepository(dorzimiProjektit);
 const mappingRepository = AppDataSource.getRepository(ProfesorLendetMapping);
-const instructionRepository = AppDataSource.getRepository(InstructionTemplate);
 
 // Multer config for file upload (disk storage)
 const uploadDir = path.resolve(process.cwd(), "uploads", "dorezime");
@@ -1247,7 +1245,6 @@ router.get("/:id/lendet/:lendaId/template", async (req: Request, res: Response) 
 // POST: Shto instruksione për një lëndë
 router.post("/:id/lendet/:lendaId/instructions", uploadInstructions.array("files", 10), async (req: Request, res: Response) => {
   const lendaId = Number(req.params.lendaId);
-  const title = (req.body?.title ?? "Instruksione").toString().trim() || "Instruksione";
   const content = (req.body?.content ?? "").toString();
 
   if (Number.isNaN(lendaId)) {
@@ -1260,30 +1257,19 @@ router.post("/:id/lendet/:lendaId/instructions", uploadInstructions.array("files
       return res.status(404).json({ message: "Lenda not found" });
     }
 
+    // Remove uploaded files (instructions are stored as text on lendet)
     const uploadedFiles = (req.files as Express.Multer.File[]) || [];
-    const filesPayload = uploadedFiles.map((file) => ({
-      name: file.originalname,
-      size: file.size,
-      type: file.mimetype,
-      path: path.relative(process.cwd(), file.path),
-    }));
-
-    const instruction = instructionRepository.create({
-      lendaId,
-      title,
-      content,
-      files: filesPayload.length ? filesPayload : undefined,
+    uploadedFiles.forEach((file) => {
+      const absolutePath = path.resolve(process.cwd(), file.path);
+      if (fs.existsSync(absolutePath)) {
+        fs.unlinkSync(absolutePath);
+      }
     });
 
-    const saved = await instructionRepository.save(instruction);
+    lenda.projectInstructions = content;
+    await lendetRepository.save(lenda);
 
-    res.json({
-      id: saved.id,
-      title: saved.title,
-      content: saved.content,
-      createdAt: saved.createdAt,
-      files: (saved.files || []).map((f) => ({ name: f.name, size: f.size, type: f.type })),
-    });
+    res.json([{ id: lenda.id, title: "Instruksione", content: lenda.projectInstructions, createdAt: lenda.updatedAt, files: [] }]);
   } catch (error) {
     res.status(500).json({ message: "Error saving instructions", error: String(error) });
   }
@@ -1298,20 +1284,24 @@ router.get("/:id/lendet/:lendaId/instructions", async (req: Request, res: Respon
   }
 
   try {
-    const instructions = await instructionRepository.find({
-      where: { lendaId },
-      order: { createdAt: "DESC" },
-    });
+    const lenda = await lendetRepository.findOneBy({ id: lendaId });
+    if (!lenda) {
+      return res.status(404).json({ message: "Lenda not found" });
+    }
 
-    res.json(
-      instructions.map((instruction) => ({
-        id: instruction.id,
-        title: instruction.title,
-        content: instruction.content,
-        createdAt: instruction.createdAt,
-        files: (instruction.files || []).map((f) => ({ name: f.name, size: f.size, type: f.type })),
-      }))
-    );
+    if (!lenda.projectInstructions) {
+      return res.json([]);
+    }
+
+    res.json([
+      {
+        id: lenda.id,
+        title: "Instruksione",
+        content: lenda.projectInstructions,
+        createdAt: lenda.updatedAt,
+        files: [],
+      },
+    ]);
   } catch (error) {
     res.status(500).json({ message: "Error fetching instructions", error: String(error) });
   }
@@ -1320,7 +1310,6 @@ router.get("/:id/lendet/:lendaId/instructions", async (req: Request, res: Respon
 // PUT: Modifiko instruksionet për një lëndë
 router.put("/:id/lendet/:lendaId/instructions/:instructionId", uploadInstructions.array("files", 10), async (req: Request, res: Response) => {
   const instructionId = Number(req.params.instructionId);
-  const title = (req.body?.title ?? "Instruksione").toString().trim() || "Instruksione";
   const content = (req.body?.content ?? "").toString();
 
   if (Number.isNaN(instructionId)) {
@@ -1328,44 +1317,31 @@ router.put("/:id/lendet/:lendaId/instructions/:instructionId", uploadInstruction
   }
 
   try {
-    const instruction = await instructionRepository.findOneBy({ id: instructionId });
-    if (!instruction) {
-      return res.status(404).json({ message: "Instruction not found" });
+    const lenda = await lendetRepository.findOneBy({ id: Number(req.params.lendaId) });
+    if (!lenda) {
+      return res.status(404).json({ message: "Lenda not found" });
     }
 
-    // Update title and content
-    instruction.title = title;
-    instruction.content = content;
-
-    // Handle new files if uploaded
+    // Remove uploaded files (instructions are stored as text on lendet)
     const uploadedFiles = (req.files as Express.Multer.File[]) || [];
     if (uploadedFiles.length > 0) {
-      // Delete old files
-      (instruction.files || []).forEach((file) => {
+      uploadedFiles.forEach((file) => {
         const absolutePath = path.resolve(process.cwd(), file.path);
         if (fs.existsSync(absolutePath)) {
           fs.unlinkSync(absolutePath);
         }
       });
-
-      // Add new files
-      const filesPayload = uploadedFiles.map((file) => ({
-        name: file.originalname,
-        size: file.size,
-        type: file.mimetype,
-        path: path.relative(process.cwd(), file.path),
-      }));
-      instruction.files = filesPayload;
     }
 
-    const updated = await instructionRepository.save(instruction);
+    lenda.projectInstructions = content;
+    await lendetRepository.save(lenda);
 
     res.json({
-      id: updated.id,
-      title: updated.title,
-      content: updated.content,
-      createdAt: updated.createdAt,
-      files: (updated.files || []).map((f) => ({ name: f.name, size: f.size, type: f.type })),
+      id: lenda.id,
+      title: "Instruksione",
+      content: lenda.projectInstructions,
+      createdAt: lenda.updatedAt,
+      files: [],
     });
   } catch (error) {
     res.status(500).json({ message: "Error updating instruction", error: String(error) });
@@ -1381,19 +1357,13 @@ router.delete("/:id/lendet/:lendaId/instructions/:instructionId", async (req: Re
   }
 
   try {
-    const instruction = await instructionRepository.findOneBy({ id: instructionId });
-    if (!instruction) {
-      return res.status(404).json({ message: "Instruction not found" });
+    const lenda = await lendetRepository.findOneBy({ id: Number(req.params.lendaId) });
+    if (!lenda) {
+      return res.status(404).json({ message: "Lenda not found" });
     }
 
-    (instruction.files || []).forEach((file) => {
-      const absolutePath = path.resolve(process.cwd(), file.path);
-      if (fs.existsSync(absolutePath)) {
-        fs.unlinkSync(absolutePath);
-      }
-    });
-
-    await instructionRepository.delete(instructionId);
+    lenda.projectInstructions = undefined;
+    await lendetRepository.save(lenda);
     res.json({ message: "Instruction deleted" });
   } catch (error) {
     res.status(500).json({ message: "Error deleting instruction", error: String(error) });

@@ -50,6 +50,10 @@ export class Lendet {
     @Column({ nullable: true })
     templateFileName?: string;
 
+    // Instruksionet për projektin (ruhen si tekst i vetëm)
+    @Column({ type: "text", nullable: true })
+    projectInstructions?: string;
+
     // Relacioni me Profesorin - nje profesor mund te ketë shumë lëndë
     @ManyToOne(() => Profesor, (profesor) => profesor.lendet, { onDelete: "SET NULL", nullable: true })
     @JoinColumn({ name: "profesorId" })
