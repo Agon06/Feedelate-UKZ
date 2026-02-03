@@ -85,7 +85,7 @@ router.get("/profesors/all", async (req: Request, res: Response) => {
     try {
         // Get all from Profesor table
         const profesores = await profesorRepository.find({
-            select: ["id", "emri", "mbiemri", "email", "departamenti", "grada", "telefoni", "roles", "createdAt"]
+            select: ["id", "emri", "mbiemri", "email", "roles", "createdAt"]
         });
 
         // Get all from Student table and filter by profesor role
@@ -104,9 +104,6 @@ router.get("/profesors/all", async (req: Request, res: Response) => {
                 emri: student.emri,
                 mbiemri: student.mbiemri,
                 email: student.email,
-                departamenti: null,
-                grada: null,
-                telefoni: null,
                 roles: student.roles,
                 createdAt: student.createdAt
             }));
@@ -147,7 +144,7 @@ router.get("/profesors/:id", async (req: Request, res: Response) => {
 router.put("/profesors/:id", async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const { emri, mbiemri, email, departamenti, grada, telefoni, roles } = req.body;
+        const { emri, mbiemri, email, roles } = req.body;
 
         // Try to find in Profesor table first
         let profesor = await profesorRepository.findOneBy({ id: parseInt(id) });
@@ -157,9 +154,6 @@ router.put("/profesors/:id", async (req: Request, res: Response) => {
             if (emri) profesor.emri = emri;
             if (mbiemri) profesor.mbiemri = mbiemri;
             if (email) profesor.email = email;
-            if (departamenti) profesor.departamenti = departamenti;
-            if (grada) profesor.grada = grada;
-            if (telefoni) profesor.telefoni = telefoni;
             if (roles) profesor.roles = roles;
             const result = await profesorRepository.save(profesor);
             return res.json(result);
@@ -322,18 +316,14 @@ router.delete("/:id", async (req: Request, res: Response) => {
 });
 
 // ========== ASSIGN LENDET TO PROFESOR ==========
-// Assign subjects to a professor using mapping table with academic year
+// Assign subjects to a professor using mapping table
 router.post("/assign-lendet/:profesorId", async (req: Request, res: Response) => {
     try {
         const profesorId = parseInt(req.params.profesorId);
-        const { lendetIds, academicYear } = req.body; // Array of subject IDs and academic year
+        const { lendetIds } = req.body; // Array of subject IDs
 
         if (!lendetIds || !Array.isArray(lendetIds)) {
             return res.status(400).json({ message: "lendetIds must be an array" });
-        }
-
-        if (!academicYear || typeof academicYear !== 'string') {
-            return res.status(400).json({ message: "academicYear must be provided (e.g., '2023/2024')" });
         }
 
         // Verify profesor exists (can be in either profesoret or studentet table)
@@ -350,11 +340,11 @@ router.post("/assign-lendet/:profesorId", async (req: Request, res: Response) =>
             }
         }
 
-        console.log(`Assigning ${lendetIds.length} lendet to profesor ${profesorId} (${profesorName}) for academic year ${academicYear}`);
+        console.log(`Assigning ${lendetIds.length} lendet to profesor ${profesorId} (${profesorName})`);
 
-        // First, delete all existing assignments for this profesor and academic year
-        await mappingRepository.delete({ profesorId, academicYear });
-        console.log(`Cleared previous assignments for profesor ${profesorId} in academic year ${academicYear}`);
+        // First, delete all existing assignments for this profesor
+        await mappingRepository.delete({ profesorId });
+        console.log(`Cleared previous assignments for profesor ${profesorId}`);
 
         // Then create new assignments
         let successCount = 0;
@@ -369,14 +359,13 @@ router.post("/assign-lendet/:profesorId", async (req: Request, res: Response) =>
                     continue;
                 }
 
-                // Create mapping entry with academic year
+                // Create mapping entry
                 const mapping = mappingRepository.create({
                     profesorId,
-                    lendetId,
-                    academicYear
+                    lendetId
                 });
                 await mappingRepository.save(mapping);
-                console.log(`Created mapping: profesor ${profesorId} -> lendet ${lendetId} (${academicYear})`);
+                console.log(`Created mapping: profesor ${profesorId} -> lendet ${lendetId}`);
                 successCount++;
             } catch (err) {
                 console.error(`Error assigning lendet ${lendetId}:`, err);
@@ -385,7 +374,7 @@ router.post("/assign-lendet/:profesorId", async (req: Request, res: Response) =>
         }
 
         res.json({
-            message: `Successfully assigned ${successCount} lendet to profesor ${profesorName} for ${academicYear}`,
+            message: `Successfully assigned ${successCount} lendet to profesor ${profesorName}`,
             assignedCount: successCount,
             failedIds: failedIds.length > 0 ? failedIds : undefined
         });
@@ -395,29 +384,22 @@ router.post("/assign-lendet/:profesorId", async (req: Request, res: Response) =>
     }
 });
 
-// Get assignments for a professor for a specific academic year
+// Get assignments for a professor
 router.get("/profesor-assignments/:profesorId", async (req: Request, res: Response) => {
     try {
         const profesorId = parseInt(req.params.profesorId);
-        const academicYear = req.query.academicYear ? String(req.query.academicYear) : undefined;
 
         if (Number.isNaN(profesorId)) {
             return res.status(400).json({ message: "Profesor id is invalid" });
         }
 
         // Get mappings for this profesor
-        const whereCondition: any = { profesorId };
-        if (academicYear) {
-            whereCondition.academicYear = academicYear;
-        }
-
-        const mappings = await mappingRepository.find({ where: whereCondition });
+        const mappings = await mappingRepository.find({ where: { profesorId } });
         
-        console.log(`Found ${mappings.length} assignments for profesor ${profesorId}${academicYear ? ` for academic year ${academicYear}` : ''}`);
+        console.log(`Found ${mappings.length} assignments for profesor ${profesorId}`);
 
         res.json({
             profesorId,
-            academicYear: academicYear || null,
             assignedLendetIds: mappings.map(m => m.lendetId)
         });
     } catch (error) {

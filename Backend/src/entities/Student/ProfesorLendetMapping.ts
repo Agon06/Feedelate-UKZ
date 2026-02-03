@@ -2,7 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, Jo
 import { Lendet } from "./Lendet";
 
 @Entity("profesor_lendet_mapping")
-@Unique(["profesorId", "lendetId", "academicYear"])
+@Unique(["profesorId", "lendetId"])
 export class ProfesorLendetMapping {
     @PrimaryGeneratedColumn()
     id: number;
@@ -12,9 +12,6 @@ export class ProfesorLendetMapping {
 
     @Column({ type: "int" })
     lendetId: number;
-
-    @Column({ type: "varchar", length: 9 })
-    academicYear: string; // e.g., "2023/2024", "2024/2025"
 
     @ManyToOne(() => Lendet, (lendet) => lendet.id, { onDelete: "CASCADE" })
     @JoinColumn({ name: "lendetId" })

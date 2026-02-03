@@ -22,14 +22,6 @@ const AdminProfessorManagement = () => {
     const [lendaSearchQuery, setLendaSearchQuery] = useState(''); // Search query for lendet
     const [selectedLendetIds, setSelectedLendetIds] = useState([]); // Track selected subject IDs for assignment
     const [assigningLendet, setAssigningLendet] = useState(false); // Loading state for assignment
-    
-    // Initialize academic year in short format (24/25, 25/26, etc.)
-    const [selectedAcademicYear, setSelectedAcademicYear] = useState(() => {
-        const currentYear = new Date().getFullYear();
-        const currentMonth = new Date().getMonth();
-        const academicStartYear = currentMonth >= 8 ? currentYear : currentYear - 1;
-        return `${String(academicStartYear).slice(-2)}/${String(academicStartYear + 1).slice(-2)}`;
-    });
 
     useEffect(() => {
         // Load user data from localStorage
@@ -241,9 +233,6 @@ const AdminProfessorManagement = () => {
             emri: professor.emri,
             mbiemri: professor.mbiemri,
             email: professor.email,
-            departamenti: professor.departamenti || '',
-            grada: professor.grada || '',
-            telefoni: professor.telefoni || '',
             roles: {
                 student: professorRoles.includes('student'),
                 profesor: professorRoles.includes('profesor'),
@@ -265,9 +254,6 @@ const AdminProfessorManagement = () => {
                 emri: editData.emri,
                 mbiemri: editData.mbiemri,
                 email: editData.email,
-                departamenti: editData.departamenti,
-                grada: editData.grada,
-                telefoni: editData.telefoni,
                 roles: JSON.stringify(selectedRoles)
             };
 
@@ -316,56 +302,12 @@ const AdminProfessorManagement = () => {
         navigate('/admin');
     };
 
-    const handleAcademicYearChange = async (year) => {
-        console.log('Changing academic year to:', year);
-        setSelectedAcademicYear(year);
-        
-        // Fetch assignments for the new academic year
-        if (selectedProfessor) {
-            try {
-                // Convert format: 24/25 -> 2024/2025
-                const [start, end] = year.split('/');
-                const startYear = parseInt(start, 10);
-                const endYear = parseInt(end, 10);
-                const fullStartYear = startYear < 100 ? 2000 + startYear : startYear;
-                const fullEndYear = endYear < 100 ? 2000 + endYear : endYear;
-                const academicYearStr = `${fullStartYear}/${fullEndYear}`;
-                
-                const assignmentUrl = `http://localhost:5000/api/admin/profesor-assignments/${selectedProfessor.id}?academicYear=${encodeURIComponent(academicYearStr)}`;
-                console.log(`Fetching assignments for year ${academicYearStr} from: ${assignmentUrl}`);
-                const response = await fetch(assignmentUrl, {
-                    method: 'GET',
-                    credentials: 'include'
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('Assignments for new year:', data);
-                    setSelectedLendetIds(data.assignedLendetIds || []);
-                } else {
-                    console.warn('Could not fetch assignments for new year');
-                    setSelectedLendetIds([]);
-                }
-            } catch (err) {
-                console.error('Error fetching assignments:', err);
-                setSelectedLendetIds([]);
-            }
-        }
-    };
-
     const handleOpenLendaModal = async (professor) => {
         console.log('Opening lendet modal for professor:', professor);
         setSelectedProfessor(professor);
         setIsLendaModalOpen(true);
         setLendaFilters([]); // Reset filters
         setLendaSearchQuery(''); // Reset search query
-        
-        // Reset to current academic year in short format (24/25, etc.)
-        const currentYear = new Date().getFullYear();
-        const currentMonth = new Date().getMonth();
-        const academicStartYear = currentMonth >= 8 ? currentYear : currentYear - 1;
-        const defaultYear = `${String(academicStartYear).slice(-2)}/${String(academicStartYear + 1).slice(-2)}`;
-        setSelectedAcademicYear(defaultYear);
         
         setFetchedLendet([]); // Reset lendet
         setSelectedLendetIds([]); // Reset selected IDs
@@ -418,17 +360,9 @@ const AdminProfessorManagement = () => {
             console.log('All lendet:', allLendet);
             setFetchedLendet(allLendet);
             
-            // Fetch assignments for this professor for the selected academic year
-            // Convert format: 24/25 -> 2024/2025
-            const [start, end] = defaultYear.split('/');
-            const startYear = parseInt(start, 10);
-            const endYear = parseInt(end, 10);
-            const fullStartYear = startYear < 100 ? 2000 + startYear : startYear;
-            const fullEndYear = endYear < 100 ? 2000 + endYear : endYear;
-            const academicYearStr = `${fullStartYear}/${fullEndYear}`;
-            
+            // Fetch assignments for this professor
             try {
-                const assignmentUrl = `http://localhost:5000/api/admin/profesor-assignments/${professor.id}?academicYear=${encodeURIComponent(academicYearStr)}`;
+                const assignmentUrl = `http://localhost:5000/api/admin/profesor-assignments/${professor.id}`;
                 console.log(`Fetching assignments from: ${assignmentUrl}`);
                 const assignmentResponse = await fetch(assignmentUrl, {
                     method: 'GET',
@@ -467,15 +401,6 @@ const AdminProfessorManagement = () => {
             setAssigningLendet(true);
             console.log('Saving assignments for professor:', selectedProfessor.id, selectedProfessor);
             console.log('Selected lendet IDs:', selectedLendetIds);
-            console.log('Selected academic year:', selectedAcademicYear);
-            
-            // Convert format: 24/25 -> 2024/2025
-            const [start, end] = selectedAcademicYear.split('/');
-            const startYear = parseInt(start, 10);
-            const endYear = parseInt(end, 10);
-            const fullStartYear = startYear < 100 ? 2000 + startYear : startYear;
-            const fullEndYear = endYear < 100 ? 2000 + endYear : endYear;
-            const academicYearStr = `${fullStartYear}/${fullEndYear}`;
             
             const response = await fetch(`http://localhost:5000/api/admin/assign-lendet/${selectedProfessor.id}`, {
                 method: 'POST',
@@ -484,8 +409,7 @@ const AdminProfessorManagement = () => {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ 
-                    lendetIds: selectedLendetIds,
-                    academicYear: academicYearStr
+                    lendetIds: selectedLendetIds
                 })
             });
             
@@ -494,7 +418,7 @@ const AdminProfessorManagement = () => {
                 console.log('Assignment saved successfully:', result);
                 setNotification({
                     type: 'success',
-                    message: `U caktuan ${selectedLendetIds.length} lëndë për profesorin (${academicYearStr})`
+                    message: `U caktuan ${selectedLendetIds.length} lëndë për profesorin`
                 });
                 setTimeout(() => {
                     setIsLendaModalOpen(false);
@@ -619,9 +543,6 @@ const AdminProfessorManagement = () => {
                                 <tr>
                                     <th style={thStyle}>Emri</th>
                                     <th style={thStyle}>Email</th>
-                                    <th style={thStyle}>Departamenti</th>
-                                    <th style={thStyle}>Grada</th>
-                                    <th style={thStyle}>Telefoni</th>
                                     <th style={{ ...thStyle, textAlign: 'right' }}>Veprime</th>
                                 </tr>
                             </thead>
@@ -641,9 +562,6 @@ const AdminProfessorManagement = () => {
                                             <strong>{professor.emri} {professor.mbiemri}</strong>
                                         </td>
                                         <td style={tdStyle}>{professor.email}</td>
-                                        <td style={tdStyle}>{professor.departamenti || '-'}</td>
-                                        <td style={tdStyle}>{professor.grada || '-'}</td>
-                                        <td style={tdStyle}>{professor.telefoni || '-'}</td>
                                         <td style={{ ...tdStyle, textAlign: 'right' }}>
                                             <button
                                                 style={modifyButtonStyle}
@@ -767,69 +685,6 @@ const AdminProfessorManagement = () => {
                                 type="email"
                                 value={editData.email || ''}
                                 onChange={(e) => setEditData({ ...editData, email: e.target.value })}
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem',
-                                    borderRadius: 8,
-                                    border: '1px solid rgba(255,255,255,0.2)',
-                                    background: 'rgba(255,255,255,0.05)',
-                                    color: '#fff',
-                                    fontSize: '14px',
-                                    boxSizing: 'border-box'
-                                }}
-                            />
-                        </div>
-
-                        <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '14px', color: '#17c77a' }}>
-                                Departamenti
-                            </label>
-                            <input
-                                type="text"
-                                value={editData.departamenti || ''}
-                                onChange={(e) => setEditData({ ...editData, departamenti: e.target.value })}
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem',
-                                    borderRadius: 8,
-                                    border: '1px solid rgba(255,255,255,0.2)',
-                                    background: 'rgba(255,255,255,0.05)',
-                                    color: '#fff',
-                                    fontSize: '14px',
-                                    boxSizing: 'border-box'
-                                }}
-                            />
-                        </div>
-
-                        <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '14px', color: '#17c77a' }}>
-                                Grada
-                            </label>
-                            <input
-                                type="text"
-                                value={editData.grada || ''}
-                                onChange={(e) => setEditData({ ...editData, grada: e.target.value })}
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem',
-                                    borderRadius: 8,
-                                    border: '1px solid rgba(255,255,255,0.2)',
-                                    background: 'rgba(255,255,255,0.05)',
-                                    color: '#fff',
-                                    fontSize: '14px',
-                                    boxSizing: 'border-box'
-                                }}
-                            />
-                        </div>
-
-                        <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '14px', color: '#17c77a' }}>
-                                Telefoni
-                            </label>
-                            <input
-                                type="text"
-                                value={editData.telefoni || ''}
-                                onChange={(e) => setEditData({ ...editData, telefoni: e.target.value })}
                                 style={{
                                     width: '100%',
                                     padding: '0.75rem',
@@ -1095,48 +950,6 @@ const AdminProfessorManagement = () => {
                             >
                                 ✕
                             </button>
-                        </div>
-
-                        {/* Academic Year Selection */}
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '13px', fontWeight: 600, color: '#17c77a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                Viti Akademik
-                            </label>
-                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                {['23/24', '24/25', '25/26', '26/27'].map((year) => (
-                                    <button
-                                        key={year}
-                                        onClick={() => handleAcademicYearChange(year)}
-                                        style={{
-                                            padding: '0.5rem 1rem',
-                                            background: selectedAcademicYear === year 
-                                                ? 'linear-gradient(135deg, rgba(23,199,122,0.3) 0%, rgba(23,199,122,0.2) 100%)' 
-                                                : 'rgba(255,255,255,0.03)',
-                                            color: selectedAcademicYear === year ? '#17c77a' : '#fff',
-                                            border: selectedAcademicYear === year 
-                                                ? '1px solid rgba(23,199,122,0.5)' 
-                                                : '1px solid rgba(255,255,255,0.04)',
-                                            borderRadius: 8,
-                                            cursor: 'pointer',
-                                            fontWeight: 700,
-                                            fontSize: 13,
-                                            transition: 'all 200ms ease'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            if (selectedAcademicYear !== year) {
-                                                e.target.style.background = 'rgba(255,255,255,0.05)';
-                                            }
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            if (selectedAcademicYear !== year) {
-                                                e.target.style.background = 'rgba(255,255,255,0.03)';
-                                            }
-                                        }}
-                                    >
-                                        {year}
-                                    </button>
-                                ))}
-                            </div>
                         </div>
 
                         {/* Filter buttons - Multi-select */}

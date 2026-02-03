@@ -5,27 +5,8 @@ import RoleSwitcher from '../components/RoleSwitcher';
 
 const ProfesorDashboard = () => {
   const navigate = useNavigate();
-  const [academicYear, setAcademicYear] = useState('');
   const [profesorName, setProfessorName] = useState('Profesor');
   const [avatarLetter, setAvatarLetter] = useState('P');
-
-  useEffect(() => {
-    // Lexo vitin akademik nga localStorage
-    const savedAcademicYear = localStorage.getItem('profesorAcademicYear');
-    if (savedAcademicYear) {
-      setAcademicYear(savedAcademicYear);
-    } else {
-      // Set default academic year if not saved (23/24, 24/25, or 25/26 format)
-      const currentDate = new Date();
-      const currentYear = currentDate.getFullYear();
-      const currentMonth = currentDate.getMonth();
-      const academicStartYear = currentMonth >= 8 ? currentYear : currentYear - 1;
-      const defaultYear = `${String(academicStartYear).slice(-2)}/${String(academicStartYear + 1).slice(-2)}`;
-      localStorage.setItem('profesorAcademicYear', defaultYear);
-      setAcademicYear(defaultYear);
-      console.log('Set default academic year:', defaultYear);
-    }
-  }, [navigate]);
 
   useEffect(() => {
     // Load user data from localStorage
@@ -213,13 +194,8 @@ const ProfesorDashboard = () => {
   ), [isMobile]);
 
   const handleNavigate = useCallback((yearId) => {
-    // Save academic year to localStorage before navigating
-    if (academicYear) {
-      localStorage.setItem('profesorAcademicYear', academicYear);
-      console.log('Saved academic year to localStorage:', academicYear);
-    }
     navigate(`/profesor/lendet/${yearId}`);
-  }, [navigate, academicYear]);
+  }, [navigate]);
 
   const handleKeyDown = useCallback((event, yearId) => {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -229,8 +205,6 @@ const ProfesorDashboard = () => {
   }, [handleNavigate]);
 
   const handleBackClick = useCallback(() => {
-    // Pastro vitin akademik të ruajtur
-    localStorage.removeItem('profesorAcademicYear');
     navigate('/profesor');
   }, [navigate]);
 

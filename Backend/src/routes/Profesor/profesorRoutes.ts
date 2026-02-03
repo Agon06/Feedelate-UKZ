@@ -109,10 +109,8 @@ const getYearLabel = (yearNumber: number) => {
 
 // Dashboard snapshot for a profesor
 // ✅ ALIGNED WITH STUDENT: Uses ProfesorLendetMapping to get assigned subjects
-// ✅ NOW FILTERS BY ACADEMIC YEAR
 router.get("/:id/dashboard", async (req: Request, res: Response) => {
   const profesorId = Number(req.params.id);
-  const academicYear = req.query.academicYear ? String(req.query.academicYear) : undefined;
 
   if (Number.isNaN(profesorId)) {
     return res.status(400).json({ message: "Profesor id is invalid" });
@@ -136,13 +134,7 @@ router.get("/:id/dashboard", async (req: Request, res: Response) => {
     }
 
     // ✅ UNIFIED: Get lendet assigned to this profesor via mapping table
-    // ✅ FILTER BY ACADEMIC YEAR if provided
-    const whereCondition: any = { profesorId };
-    if (academicYear) {
-      whereCondition.academicYear = academicYear;
-    }
-
-    const mappings = await mappingRepository.find({ where: whereCondition });
+    const mappings = await mappingRepository.find({ where: { profesorId } });
     const lendetIds = mappings.map(m => m.lendetId);
 
     const lendet = lendetIds.length > 0
@@ -198,14 +190,12 @@ router.get("/:id/dashboard", async (req: Request, res: Response) => {
 
 // Curriculum view per year
 // ✅ PERFECTLY ALIGNED WITH STUDENT: Same endpoint structure, same data format
-// ✅ NOW FILTERS BY ACADEMIC YEAR
 router.get("/:id/lendet/:yearId", async (req: Request, res: Response) => {
   const profesorId = Number(req.params.id);
   const yearParam = Number(req.params.yearId);
-  const academicYear = req.query.academicYear ? String(req.query.academicYear) : undefined;
 
   console.log(`=== FETCHING SUBJECTS FOR PROFESOR ===`);
-  console.log(`Profesor ID: ${profesorId}, Year: ${yearParam}, Academic Year: ${academicYear}`);
+  console.log(`Profesor ID: ${profesorId}, Year: ${yearParam}`);
 
   if (Number.isNaN(profesorId)) {
     return res.status(400).json({ message: "Profesor id is invalid" });
@@ -233,15 +223,8 @@ router.get("/:id/lendet/:yearId", async (req: Request, res: Response) => {
     }
 
     // ✅ UNIFIED: Get lendet assigned to this profesor via mapping table
-    // ✅ FILTER BY ACADEMIC YEAR if provided
-    const whereCondition: any = { profesorId };
-    if (academicYear) {
-      whereCondition.academicYear = academicYear;
-    }
-
-    console.log(`Mapping where condition:`, whereCondition);
-    const mappings = await mappingRepository.find({ where: whereCondition });
-    console.log(`Found ${mappings.length} mappings:`, mappings.map(m => ({ lendetId: m.lendetId, academicYear: m.academicYear })));
+    const mappings = await mappingRepository.find({ where: { profesorId } });
+    console.log(`Found ${mappings.length} mappings:`, mappings.map(m => ({ lendetId: m.lendetId })));
 
     const lendetIds = mappings.map(m => m.lendetId);
 
