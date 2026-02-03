@@ -43,6 +43,10 @@ export class Lendet {
     @Column({ type: "varchar", length: 255, nullable: true })
     ideaTitle?: string;
 
+    // Lista e afateve të ideve (ruhet si JSON)
+    @Column({ type: "json", nullable: true })
+    ideaDeadlinesJson?: any;
+
     // Template/Shabllon files per projektet
     @Column({ nullable: true })
     templateFile?: string;
