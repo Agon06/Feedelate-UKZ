@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { uploadStudentDorezim, getStudentTemplate, getStudentIdeaDeadline } from '../services/studentApi';
+import './StudentTheme.css';
 
 const DorezimPage = () => {
   const location = useLocation();
@@ -155,8 +156,8 @@ const DorezimPage = () => {
 
   const pageStyle = {
     minHeight: '100vh',
-    background: 'linear-gradient(180deg, rgba(10,18,12,1) 0%, rgba(14,28,20,1) 60%, rgba(10,18,12,1) 100%)',
-    color: '#fff',
+    background: 'linear-gradient(180deg, #4F7C82 0%, #0B2E33 60%, #0B2E33 100%)',
+    color: '#B8E3E9',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -166,9 +167,9 @@ const DorezimPage = () => {
 
   const modalStyle = {
     width: 'min(900px, 100%)',
-    background: 'rgba(6,13,9,0.95)',
+    background: '#0B2E33',
     borderRadius: 28,
-    border: '1px solid rgba(23,199,122,0.4)',
+    border: '1px solid rgba(184,227,233,0.2)',
     boxShadow: '0 30px 80px rgba(0,0,0,0.6)',
     padding: isMobile ? '1.5rem' : '2rem',
     position: 'relative'
@@ -179,11 +180,11 @@ const DorezimPage = () => {
     right: 24,
     top: 20,
     background: 'transparent',
-    border: '1px solid rgba(255,255,255,0.2)',
+    border: '1px solid rgba(184,227,233,0.25)',
     borderRadius: 20,
     width: 38,
     height: 38,
-    color: '#fff',
+    color: '#B8E3E9',
     cursor: 'pointer',
     fontSize: 20
   };
@@ -196,9 +197,9 @@ const DorezimPage = () => {
   };
 
   const columnCard = {
-    background: 'rgba(9,18,12,0.9)',
+    background: '#0B2E33',
     borderRadius: 20,
-    border: '1px solid rgba(23,199,122,0.25)',
+    border: '1px solid rgba(184,227,233,0.2)',
     padding: '1.5rem',
     minHeight: 380,
     display: 'flex',
@@ -224,8 +225,8 @@ const DorezimPage = () => {
   const downloadButtonStyle = {
     borderRadius: 12,
     border: 'none',
-    background: '#19c776',
-    color: '#041407',
+    background: '#4F7C82',
+    color: '#B8E3E9',
     fontWeight: 700,
     padding: '0.8rem 1.6rem',
     cursor: 'pointer',
@@ -245,23 +246,23 @@ const DorezimPage = () => {
     fontSize: 13,
     fontWeight: 600,
     opacity: 0.9,
-    color: '#d0f5e5'
+    color: '#B8E3E9'
   };
 
   const inputStyle = {
     width: '100%',
     borderRadius: 14,
-    border: '1px solid rgba(255,255,255,0.12)',
+    border: '1px solid rgba(184,227,233,0.2)',
     padding: '0.7rem 0.9rem',
-    background: 'rgba(4,10,6,0.6)',
-    color: '#fff',
+    background: 'rgba(11,46,51,0.8)',
+    color: '#B8E3E9',
     fontFamily: 'Inter, system-ui, sans-serif'
   };
 
   const infoBoxStyle = {
-    background: 'rgba(23,199,122,0.08)',
+    background: 'rgba(79,124,130,0.35)',
     borderRadius: 12,
-    border: '1px solid rgba(23,199,122,0.25)',
+    border: '1px solid rgba(184,227,233,0.25)',
     padding: '0.9rem',
     marginBottom: '1.75rem',
     fontSize: 13,
@@ -280,8 +281,8 @@ const DorezimPage = () => {
   const primaryButton = {
     borderRadius: 12,
     border: 'none',
-    background: '#19c776',
-    color: '#041407',
+    background: '#4F7C82',
+    color: '#B8E3E9',
     fontWeight: 700,
     padding: '0.8rem 1.6rem',
     cursor: 'pointer',
@@ -290,9 +291,9 @@ const DorezimPage = () => {
 
   const secondaryButton = {
     borderRadius: 12,
-    border: '1px solid rgba(23,199,122,0.35)',
+    border: '1px solid rgba(184,227,233,0.25)',
     background: 'transparent',
-    color: '#c8f5e8',
+    color: '#B8E3E9',
     fontWeight: 600,
     padding: '0.8rem 1.6rem',
     cursor: 'pointer'
@@ -307,9 +308,9 @@ const DorezimPage = () => {
   };
 
   const deadlineBoxStyle = {
-    background: 'rgba(23,199,122,0.08)',
+    background: 'rgba(79,124,130,0.35)',
     borderRadius: 12,
-    border: '1px solid rgba(23,199,122,0.25)',
+    border: '1px solid rgba(184,227,233,0.25)',
     padding: '0.9rem',
     marginBottom: '1.5rem',
     fontSize: 13,
@@ -343,7 +344,7 @@ const DorezimPage = () => {
   })();
 
   return (
-    <div style={pageStyle}>
+    <div style={pageStyle} className="student-theme dorezimi-page">
       <div style={modalStyle}>
         <button
           style={closeButtonStyle}
@@ -354,8 +355,8 @@ const DorezimPage = () => {
         </button>
 
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <h2 style={{ marginTop: 0, marginBottom: '0.35rem' }}>Dorëzo Detyren</h2>
-          <p style={{ margin: 0, opacity: 0.8 }}>Shkarko shabllonin, plotëso dhe dorëzo</p>
+          <h2 style={{ marginTop: 0, marginBottom: '0.35rem' }}>Dorëzo Detyren e parë</h2>
+        
         </div>
 
         {/* Idea Deadline Banner - positioned under header and above columns */}
@@ -416,7 +417,6 @@ const DorezimPage = () => {
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: isMobile ? '16px' : '20px' }}>
               <div style={formField}>
-                <label style={labelStyle}>Ngarko Detyrën (një file - ZIP, RAR, Word, Excel, PDF, etj.) *</label>
                 <input
                   style={inputStyle}
                   type="file"
@@ -444,7 +444,7 @@ const DorezimPage = () => {
                 <div
                   style={{
                     ...bannerStyle,
-                    background: formFeedback.type === 'error' ? 'rgba(255,82,82,0.12)' : 'rgba(23,199,122,0.15)',
+                    background: formFeedback.type === 'error' ? 'rgba(255,82,82,0.12)' : 'rgba(79,124,130,0.35)',
                     border: '1px solid rgba(255,255,255,0.1)',
                   }}
                 >
@@ -486,13 +486,7 @@ const DorezimPage = () => {
         </div>
 
         <div style={footerStyle}>
-          <button
-            style={secondaryButton}
-            type="button"
-            onClick={() => navigate(-1)}
-          >
-            Anulo
-          </button>
+       
         </div>
       </div>
     </div>

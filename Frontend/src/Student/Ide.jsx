@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getStudentIdeas, createStudentIdea, updateStudentIdea, deleteStudentIdea, getIdeaFeedback } from '../services/studentApi';
+import { getStudentIdeas, createStudentIdea, updateStudentIdea, deleteStudentIdea } from '../services/studentApi';
 import './Ide.css';
+import './StudentTheme.css';
 
 const IdeaPage = () => {
   const location = useLocation();
@@ -35,22 +36,6 @@ const IdeaPage = () => {
   const [isDeletingId, setIsDeletingId] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [confirmDialog, setConfirmDialog] = useState({ open: false, message: '', onConfirm: null });
-  // Feedback modal state
-  const [feedbackModal, setFeedbackModal] = useState({ open: false, feedback: '', loading: false, error: null, idea: null });
-
-  // Fetch feedback when modal opens
-  useEffect(() => {
-    if (feedbackModal.open && feedbackModal.idea && feedbackModal.loading) {
-      (async () => {
-        try {
-          const res = await getIdeaFeedback(feedbackModal.idea.id);
-          setFeedbackModal((prev) => ({ ...prev, feedback: res.feedback || '', loading: false, error: null }));
-        } catch (err) {
-          setFeedbackModal((prev) => ({ ...prev, feedback: '', loading: false, error: err?.message || 'Nuk u lexua feedback-u.' }));
-        }
-      })();
-    }
-  }, [feedbackModal.open, feedbackModal.idea, feedbackModal.loading, STUDENT_ID]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -182,8 +167,8 @@ const IdeaPage = () => {
 
   const pageStyle = {
     minHeight: '100vh',
-    background: 'linear-gradient(180deg, rgba(10,18,12,1) 0%, rgba(14,28,20,1) 60%, rgba(10,18,12,1) 100%)',
-    color: '#fff',
+    background: 'linear-gradient(180deg, #4F7C82 0%, #0B2E33 60%, #0B2E33 100%)',
+    color: '#B8E3E9',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -194,9 +179,9 @@ const IdeaPage = () => {
 
   const modalStyle = {
     width: 'min(1050px, 100%)',
-    background: 'rgba(6,13,9,0.95)',
+    background: 'linear-gradient(180deg, #4F7C82 0%, #0B2E33 50%, #0B2E33 30%)',
     borderRadius: 28,
-    border: '1px solid rgba(23,199,122,0.4)',
+    border: '1px solid rgba(184,227,233,0.2)',
     boxShadow: '0 30px 80px rgba(0,0,0,0.6)',
     padding: '2rem',
     position: 'relative'
@@ -207,11 +192,11 @@ const IdeaPage = () => {
     right: 24,
     top: 20,
     background: 'transparent',
-    border: '1px solid rgba(255,255,255,0.2)',
+    border: '1px solid rgba(184,227,233,0.25)',
     borderRadius: 20,
     width: 38,
     height: 38,
-    color: '#fff',
+    color: '#B8E3E9',
     cursor: 'pointer'
   };
 
@@ -224,9 +209,9 @@ const IdeaPage = () => {
   };
 
   const columnCard = {
-    background: 'rgba(9,18,12,0.9)',
+    background: '#0B2E33',
     borderRadius: 20,
-    border: '1px solid rgba(23,199,122,0.25)',
+    border: '1px solid rgba(184,227,233,0.2)',
     padding: '1.25rem',
     minHeight: 360,
     minWidth: 0,
@@ -237,9 +222,9 @@ const IdeaPage = () => {
     width: '100%',
     padding: '0.75rem 0.9rem',
     borderRadius: 14,
-    border: '1px solid rgba(255,255,255,0.1)',
-    background: 'rgba(4,10,6,0.6)',
-    color: '#fff',
+    border: '1px solid rgba(184,227,233,0.2)',
+    background: 'rgba(11,46,51,0.8)',
+    color: '#B8E3E9',
     marginBottom: '1rem'
   };
 
@@ -260,16 +245,16 @@ const IdeaPage = () => {
     gap: '0.75rem',
     padding: '0.75rem 0.9rem',
     borderRadius: 14,
-    background: 'rgba(5,12,8,0.8)',
-    border: '1px solid rgba(255,255,255,0.05)'
+    background: 'rgba(11,46,51,0.85)',
+    border: '1px solid rgba(184,227,233,0.12)'
   };
 
   const tagStyle = {
     fontSize: 12,
     borderRadius: 999,
     padding: '0.25rem 0.7rem',
-    border: '1px solid rgba(255,255,255,0.2)',
-    color: '#d0f5e5'
+    border: '1px solid rgba(184,227,233,0.25)',
+    color: '#B8E3E9'
   };
 
   const formField = {
@@ -282,10 +267,10 @@ const IdeaPage = () => {
   const inputStyle = {
     width: '100%',
     borderRadius: 14,
-    border: '1px solid rgba(255,255,255,0.12)',
+    border: '1px solid rgba(184,227,233,0.2)',
     padding: '0.7rem 0.9rem',
-    background: 'rgba(4,10,6,0.6)',
-    color: '#fff'
+    background: 'rgba(11,46,51,0.8)',
+    color: '#B8E3E9'
   };
 
   const footerStyle = {
@@ -296,9 +281,9 @@ const IdeaPage = () => {
 
   const actionButton = {
     borderRadius: 8,
-    border: '1px solid rgba(255,255,255,0.12)',
-    background: 'rgba(255,255,255,0.06)',
-    color: '#e6f4ee',
+    border: '1px solid rgba(184,227,233,0.2)',
+    background: 'rgba(79,124,130,0.3)',
+    color: '#B8E3E9',
     fontSize: 12,
     padding: '0.35rem 0.65rem',
     cursor: 'pointer'
@@ -326,8 +311,8 @@ const IdeaPage = () => {
   const primaryButton = {
     borderRadius: 12,
     border: 'none',
-    background: '#17c77a',
-    color: '#fff',
+    background: '#4F7C82',
+    color: '#B8E3E9',
     padding: '0.7rem 1.2rem',
     fontSize: 14,
     fontWeight: 600,
@@ -337,9 +322,9 @@ const IdeaPage = () => {
 
   const secondaryButton = {
     borderRadius: 12,
-    border: '1px solid rgba(23,199,122,0.5)',
+    border: '1px solid rgba(184,227,233,0.25)',
     background: 'transparent',
-    color: '#17c77a',
+    color: '#B8E3E9',
     padding: '0.7rem 1.2rem',
     fontSize: 14,
     fontWeight: 600,
@@ -348,7 +333,7 @@ const IdeaPage = () => {
   };
 
   return (
-    <div style={pageStyle}>
+    <div style={pageStyle} className="student-theme">
       <div style={modalStyle}>
         <button style={closeButtonStyle} onClick={() => navigate(-1)} aria-label="Mbyll">✕</button>
         <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
@@ -413,13 +398,6 @@ const IdeaPage = () => {
                       >
                         {isDeletingId === idea.id ? 'Duke fshirë...' : 'Fshi'}
                       </button>
-                      <button
-                        type="button"
-                        style={actionButton}
-                        onClick={() => setFeedbackModal({ open: true, feedback: '', loading: true, error: null, idea })}
-                      >
-                        Feedback
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -437,8 +415,8 @@ const IdeaPage = () => {
           {/* Right column - forma */}
           <div style={columnCard}>
             <div style={formField}>
-              <label>Lënda</label>
-              <input style={inputStyle} value={subjectName} disabled />
+              <label></label>
+             
             </div>
 
             {/* Info mesazh për limitin */}
@@ -446,9 +424,9 @@ const IdeaPage = () => {
               <div
                 style={{
                   ...bannerStyle,
-                  background: 'rgba(33,150,243,0.15)',
-                  border: '1px solid rgba(33,150,243,0.3)',
-                  color: '#64b5f6',
+                  background: 'rgba(79,124,130,0.35)',
+                  border: '1px solid rgba(184,227,233,0.25)',
+                  color: '#B8E3E9',
                   marginBottom: '1rem',
                   marginTop: 0
                 }}
@@ -484,7 +462,7 @@ const IdeaPage = () => {
                 <div
                   style={{
                     ...bannerStyle,
-                    background: formFeedback.type === 'error' ? 'rgba(255,82,82,0.12)' : 'rgba(23,199,122,0.15)',
+                    background: formFeedback.type === 'error' ? 'rgba(255,82,82,0.12)' : 'rgba(79,124,130,0.35)',
                     border: '1px solid rgba(255,255,255,0.1)',
                   }}
                 >
@@ -551,8 +529,8 @@ const IdeaPage = () => {
           padding: '1rem'
         }}>
           <div style={{
-            background: 'rgba(6,13,9,0.95)',
-            border: '1px solid rgba(23,199,122,0.4)',
+            background: '#0B2E33',
+            border: '1px solid rgba(184,227,233,0.2)',
             borderRadius: 20,
             padding: '2rem',
             maxWidth: '400px',
@@ -562,7 +540,7 @@ const IdeaPage = () => {
             <div style={{
               fontSize: 18,
               fontWeight: 600,
-              color: '#fff',
+              color: '#B8E3E9',
               marginBottom: '2rem',
               lineHeight: 1.5
             }}>
@@ -578,21 +556,21 @@ const IdeaPage = () => {
                   padding: '0.9rem 1.8rem',
                   borderRadius: 12,
                   border: 'none',
-                  background: '#17c77a',
-                  color: '#041407',
+                  background: '#4F7C82',
+                  color: '#B8E3E9',
                   fontWeight: 700,
                   fontSize: 14,
                   cursor: 'pointer',
                   transition: 'all 200ms ease',
-                  boxShadow: '0 4px 12px rgba(23, 199, 122, 0.3)'
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.35)'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#14b56d';
-                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(23, 199, 122, 0.4)';
+                  e.currentTarget.style.background = '#0B2E33';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.45)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#17c77a';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(23, 199, 122, 0.3)';
+                  e.currentTarget.style.background = '#4F7C82';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.35)';
                 }}
               >
                 ✓ Po
@@ -605,9 +583,9 @@ const IdeaPage = () => {
                   flex: 1,
                   padding: '0.9rem 1.8rem',
                   borderRadius: 12,
-                  border: '1px solid rgba(255,255,255,0.2)',
+                  border: '1px solid rgba(184,227,233,0.2)',
                   background: 'transparent',
-                  color: '#c4f0da',
+                  color: '#B8E3E9',
                   fontWeight: 600,
                   fontSize: 14,
                   cursor: 'pointer',
@@ -615,11 +593,11 @@ const IdeaPage = () => {
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)';
+                  e.currentTarget.style.borderColor = 'rgba(184,227,233,0.4)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                  e.currentTarget.style.borderColor = 'rgba(184,227,233,0.2)';
                 }}
               >
                 ✕ Jo
@@ -628,65 +606,7 @@ const IdeaPage = () => {
           </div>
         </div>
       )}
-    {/* Feedback Modal */}
-    {feedbackModal.open && (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        background: 'rgba(0,0,0,0.6)',
-        zIndex: 2000,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '1rem'
-      }}>
-        <div style={{
-          background: 'rgba(6,13,9,0.97)',
-          border: '1px solid #17c77a',
-          borderRadius: 18,
-          padding: '2rem',
-          minWidth: 320,
-          maxWidth: 400,
-          width: '100%',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-          position: 'relative'
-        }}>
-          <button
-            style={{
-              position: 'absolute',
-              top: 12,
-              right: 12,
-              background: 'transparent',
-              border: 'none',
-              color: '#fff',
-              fontSize: 22,
-              cursor: 'pointer',
-              borderRadius: 20,
-              width: 36,
-              height: 36
-            }}
-            onClick={() => setFeedbackModal({ open: false, feedback: '', loading: false, error: null, idea: null })}
-            aria-label="Mbyll feedback"
-          >
-            ✕
-          </button>
-          <h3 style={{ color: '#17c77a', marginBottom: 16, fontSize: 18, textAlign: 'center' }}>Feedback nga Profesori</h3>
-          {feedbackModal.loading ? (
-            <div style={{ color: '#fff', textAlign: 'center', padding: '1.5rem 0' }}>Duke lexuar feedback...</div>
-          ) : feedbackModal.error ? (
-            <div style={{ color: '#ff5252', textAlign: 'center', padding: '1.5rem 0' }}>{feedbackModal.error}</div>
-          ) : (
-            <div style={{ color: '#c4f0da', textAlign: 'center', padding: '1.5rem 0', whiteSpace: 'pre-line' }}>
-              {feedbackModal.feedback ? feedbackModal.feedback : 'Nuk ka ende feedback të vendosur për këtë ide.'}
-            </div>
-          )}
-        </div>
-      </div>
-    )}
-  </div>
+    </div>
   );
 };
 

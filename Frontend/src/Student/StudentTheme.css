@@ -1,0 +1,74 @@
+.student-theme {
+  --st-1: #B8D8D8;
+  --st-2: #7A9E9F;
+  --st-3: #4F6367;
+  --st-text: #E8F2F2;
+  --st-text-dark: #0F1A1C;
+  --st-border: rgba(184, 216, 216, 0.2);
+
+  min-height: 100vh;
+  background: linear-gradient(180deg, var(--st-2) 0%, var(--st-3) 70%);
+  color: var(--st-text);
+  font-family: Inter, system-ui, Arial, sans-serif;
+}
+
+.student-theme.dorezimi-page {
+  background: linear-gradient(180deg, #4F7C82 0%, #0B2E33 60%, #0B2E33 100%) !important;
+}
+
+.student-theme * {
+  color: inherit;
+}
+
+.student-theme h1,
+.student-theme h2,
+.student-theme h3,
+.student-theme h4,
+.student-theme h5,
+.student-theme h6 {
+  color: var(--st-1);
+}
+
+.student-theme .card,
+.student-theme [class*="card"],
+.student-theme [class*="Card"],
+.student-theme .panel,
+.student-theme [class*="panel"],
+.student-theme [class*="Panel"],
+.student-theme .box,
+.student-theme [class*="box"],
+.student-theme .tile,
+.student-theme [class*="tile"] {
+  background: rgba(79, 99, 103, 0.9);
+  border: 1px solid var(--st-border);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
+  border-radius: 12px;
+}
+
+.student-theme button,
+.student-theme .btn,
+.student-theme [class*="button"],
+.student-theme [class*="Button"] {
+  background: var(--st-3);
+  color: var(--st-text);
+  border: 1px solid var(--st-border);
+}
+
+.student-theme input,
+.student-theme select,
+.student-theme textarea {
+  background: rgba(79, 99, 103, 0.8);
+  color: var(--st-text);
+  border: 1px solid var(--st-border);
+}
+
+.student-theme a {
+  color: var(--st-1);
+}
+
+.student-theme .badge,
+.student-theme [class*="badge"],
+.student-theme [class*="Badge"] {
+  background: var(--st-2);
+  color: var(--st-text-dark);
+}

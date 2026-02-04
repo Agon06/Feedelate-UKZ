@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getStudentYearData, getStudentById } from '../services/studentApi';
+import './StudentTheme.css';
 
 const Lendet = () => {
   // thisYear: format MM/YYYY
@@ -173,9 +174,9 @@ const Lendet = () => {
   const avatarLetter = yearData?.student?.emri?.[0]?.toUpperCase() ?? 'S';
 
   const pageStyle = {
-    color: '#fff',
+    color: '#B8E3E9',
     minHeight: '100vh',
-    background: 'linear-gradient(180deg, rgba(10,18,12,1) 0%, rgba(14,28,20,1) 50%, rgba(12,30,18,1) 100%)',
+    background: 'linear-gradient(180deg,  #4F7C82 0%, #0B2E33 60%, #0B2E33 100%)',
     fontFamily: 'Inter, system-ui, Arial, sans-serif'
   };
 
@@ -183,11 +184,13 @@ const Lendet = () => {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: isMobile ? '0.85rem 1.5rem' : '1rem 2.5rem'
+    padding: isMobile ? '0.85rem 1.5rem' : '1rem 2.5rem',
+    position: 'relative',
+    background: 'linear-gradient(180deg,  #4F7C82 10%, #0B2E33 90%, #0B2E33 100%)',
   };
 
   const brandStyle = {
-    color: '#17c77a',
+    color: 'var(--st-1)',
     fontWeight: 800,
     fontSize: isMobile ? 18 : 22,
     letterSpacing: 0.6
@@ -212,24 +215,24 @@ const Lendet = () => {
     width: 40,
     height: 40,
     borderRadius: 20,
-    background: 'rgba(23, 199, 122, 0.12)',
-    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'rgba(122, 158, 159, 0.25)',
+    border: '1px solid var(--st-border)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     fontSize: 18,
-    color: '#fbd38d'
+    color: 'var(--st-1)'
   };
 
   const avatarStyle = {
     width: 42,
     height: 42,
     borderRadius: 21,
-    background: '#0e6b3d',
+    background: 'var(--st-2)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#fff',
+    color: 'var(--st-text-dark)',
     fontWeight: 700
   };
 
@@ -245,8 +248,8 @@ const Lendet = () => {
   };
 
   const backButton = {
-    border: '1px solid rgba(23, 199, 122, 0.5)',
-    color: '#17c77a',
+    border: '1px solid var(--st-border)',
+    color: 'var(--st-1)',
     background: 'transparent',
     padding: '0.4rem 0.9rem',
     borderRadius: 999,
@@ -266,8 +269,8 @@ const Lendet = () => {
   };
 
   const semesterCard = {
-    background: 'rgba(13, 30, 19, 0.85)',
-    border: '1px solid rgba(23, 199, 122, 0.35)',
+    background: '#0B2E33',
+    border: '1px solid rgba(184,227,233,0.2)',
     borderRadius: 18,
     padding: isMobile ? '1rem' : '1.25rem',
     position: 'relative',
@@ -275,7 +278,7 @@ const Lendet = () => {
   };
 
   const semesterTitle = {
-    color: '#1fdc8c',
+    color: '#B8E3E9',
     fontSize: 18,
     fontWeight: 700,
     marginBottom: 16
@@ -290,28 +293,28 @@ const Lendet = () => {
   const emptySubjectsStyle = {
     gridColumn: '1 / -1',
     textAlign: 'center',
-    border: '1px dashed rgba(255,255,255,0.25)',
+    border: '1px dashed rgba(184,227,233,0.25)',
     borderRadius: 12,
     padding: '1rem',
-    color: '#c4f0da',
+    color: '#B8E3E9',
     fontStyle: 'italic'
   };
 
   const subjectItem = {
-    background: 'rgba(9,18,12,0.85)',
+    background: '#0B2E33',
     borderRadius: 12,
     padding: '0.9rem 1rem',
-    border: '1px solid rgba(255,255,255,0.05)',
+    border: '1px solid rgba(184,227,233,0.12)',
     textAlign: 'center',
     fontWeight: 600,
     fontSize: 15,
-    color: '#e1f8ed'
+    color: '#B8E3E9'
   };
 
   const electiveButton = {
-    border: '1px solid rgba(23, 199, 122, 0.5)',
-    color: '#17c77a',
-    background: 'rgba(9,18,12,0.9)',
+    border: '1px solid rgba(184,227,233,0.25)',
+    color: '#B8E3E9',
+    background: '#0B2E33',
     padding: '0.35rem 1rem',
     borderRadius: 999,
     cursor: 'pointer',
@@ -327,10 +330,10 @@ const Lendet = () => {
     zIndex: 5,
     top: '110%',
     left: 0,
-    background: 'rgba(5,10,7,0.95)',
+    background: '#0B2E33',
     borderRadius: 14,
     padding: '0.85rem',
-    border: '1px solid rgba(255,255,255,0.12)',
+    border: '1px solid rgba(184,227,233,0.2)',
     width: 240,
     boxShadow: '0 16px 38px rgba(0,0,0,0.55)'
   };
@@ -343,7 +346,7 @@ const Lendet = () => {
 
   const smallHint = {
     fontSize: 12,
-    color: '#9bf3c8',
+    color: '#B8E3E9',
     marginTop: 6
   };
 
@@ -357,10 +360,10 @@ const Lendet = () => {
 
   const selectedContainer = {
     marginTop: 32,
-    background: 'rgba(5, 12, 8, 0.92)',
+    background: '#0B2E33',
     borderRadius: 20,
     padding: isMobile ? '1rem' : '1.5rem',
-    border: '1px solid rgba(23, 199, 122, 0.35)',
+    border: '1px solid rgba(184,227,233,0.2)',
     boxShadow: '0 18px 36px rgba(0,0,0,0.4)'
   };
 
@@ -374,8 +377,8 @@ const Lendet = () => {
   const selectedPill = {
     padding: '0.45rem 0.9rem',
     borderRadius: 999,
-    background: 'rgba(23,199,122,0.12)',
-    border: '1px solid rgba(23,199,122,0.35)',
+    background: 'rgba(79,124,130,0.35)',
+    border: '1px solid rgba(184,227,233,0.2)',
     fontWeight: 600,
     fontSize: 14
   };
@@ -392,24 +395,28 @@ const Lendet = () => {
 
   const modalCardStyle = {
     width: isMobile ? '90%' : 420,
-    background: 'rgba(7,16,11,0.95)',
+    background: '#0B2E33',
     borderRadius: 20,
-    border: '1px solid rgba(23,199,122,0.4)',
+    border: '1px solid rgba(184,227,233,0.2)',
     padding: '1.5rem',
     boxShadow: '0 25px 60px rgba(0,0,0,0.55)'
   };
 
   const modalHeaderStyle = {
     display: 'flex',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16
+    marginBottom: 16,
+    position: 'relative'
   };
 
   const closeButtonStyle = {
+    position: 'absolute',
+    right: -18,
+    top: -18, 
     background: 'transparent',
-    border: '1px solid rgba(255,255,255,0.2)',
-    color: '#fff',
+    border: '1px solid rgba(184,227,233,0.25)',
+    color: '#B8E3E9',
     width: 36,
     height: 36,
     borderRadius: 18,
@@ -424,21 +431,16 @@ const Lendet = () => {
 
   const modalOptionStyle = {
     borderRadius: 12,
-    border: '2px solid rgba(23,199,122,0.5)',
-    background: 'linear-gradient(135deg, rgba(23,199,122,0.15) 0%, rgba(23,199,122,0.05) 100%)',
-    color: '#17c77a',
+    border: '2px solid rgba(184,227,233,0.25)',
+    background: 'linear-gradient(135deg, rgba(79,124,130,0.35) 0%, rgba(11,46,51,0.2) 100%)',
+    color: '#B8E3E9',
     fontWeight: 700,
     padding: '1.2rem 2.5rem',
     cursor: 'pointer',
     fontSize: '1rem',
     transition: 'all 0.3s ease',
     minWidth: '150px',
-    textAlign: 'center',
-    '&:hover': {
-      background: 'linear-gradient(135deg, rgba(23,199,122,0.25) 0%, rgba(23,199,122,0.15) 100%)',
-      boxShadow: '0 0 15px rgba(23,199,122,0.3)',
-      transform: 'translateY(-2px)'
-    }
+    textAlign: 'center'
   };
 
   const handleElectiveToggle = useCallback((course) => {
@@ -488,7 +490,7 @@ const Lendet = () => {
   const renderStateBanner = () => {
     if (status.loading) {
       return (
-        <div style={{ ...bannerStyle, background: 'rgba(23,199,122,0.15)', borderColor: 'rgba(23,199,122,0.45)' }}>
+        <div style={{ ...bannerStyle, background: 'rgba(79,124,130,0.35)', borderColor: 'rgba(184,227,233,0.25)' }}>
           Po ngarkohen të dhënat...
         </div>
       );
@@ -514,23 +516,22 @@ const Lendet = () => {
   };
 
   return (
-    <div style={pageStyle}>
+    <div style={pageStyle} className="student-theme">
       {/* TEST: Shfaq vitiStudimeve */}
-      <div style={{ background: '#1fdc8c', color: '#222', padding: '0.5rem 1rem', borderRadius: 8, margin: '1rem auto', maxWidth: 320, textAlign: 'center', fontWeight: 700 }}>
-        Viti i studimeve (test): {vitiStudimeve}
-      </div>
+     
       <div style={topBarStyle}>
         <div style={brandStyle}>Feedelate</div>
-        <div style={{ flex: 1, textAlign: 'center', fontWeight: 600, letterSpacing: 0.6 }}>Universiteti Publik Kadri Zeka</div>
+        <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', textAlign: 'center', fontWeight: 900, letterSpacing: 0.6, fontSize: 25 }}>Universiteti Publik Kadri Zeka</div>
         <div style={actionsStyle}>
-          <div style={bellStyle} aria-label="notifications" role="img">🔔</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 600 }}>
             <div style={avatarStyle}>{avatarLetter}</div>
             <span>{studentName}</span>
           </div>
         </div>
       </div>
-
+ <div style={{ background: '#0B2E33', color: '#B8E3E9', padding: '0.5rem 1rem', borderRadius: 8, margin: '1rem auto', maxWidth: 320, textAlign: 'center', fontWeight: 700 }}>
+        Viti i studimeve : {vitiStudimeve}
+      </div>
       <div style={layoutStyle}>
         <div style={headerRow}>
           <h1 style={{ margin: 0 }}>{yearData?.year?.title ?? 'Viti Akademik'}</h1>
@@ -561,8 +562,8 @@ const Lendet = () => {
                         style={{
                           ...subjectItem,
                           marginBottom: 8,
-                          border: picked ? '1px solid rgba(23,199,122,0.7)' : '1px solid rgba(23,199,122,0.25)',
-                          color: picked ? '#1fdc8c' : '#c5f5df',
+                          border: picked ? '1px solid rgba(184,227,233,0.6)' : '1px solid rgba(184,227,233,0.25)',
+                          color: '#B8E3E9',
                           cursor: 'pointer'
                         }}
                         role="button"
@@ -576,7 +577,7 @@ const Lendet = () => {
                         }}
                       >
                         {elective.name}
-                        {picked && <span style={{ display: 'block', fontSize: 12, marginTop: 4, color: '#9bf3c8' }}>E zgjedhur</span>}
+                        {picked && <span style={{ display: 'block', fontSize: 12, marginTop: 4, color: '#B8E3E9' }}>E zgjedhur</span>}
                       </div>
                     );
                   })}
@@ -611,8 +612,8 @@ const Lendet = () => {
                           key={`${semester.id}-${subject.id}`}
                           style={{
                             ...subjectItem,
-                            border: isSelected ? '1px solid rgba(23,199,122,0.65)' : subjectItem.border,
-                            color: isSelected ? '#1fdc8c' : subjectItem.color,
+                            border: isSelected ? '1px solid rgba(184,227,233,0.6)' : subjectItem.border,
+                            color: isSelected ? '#B8E3E9' : subjectItem.color,
                             cursor: canInteract ? 'pointer' : 'not-allowed',
                             opacity: canInteract ? 1 : 0.6
                           }}
@@ -650,8 +651,8 @@ const Lendet = () => {
                   key={course.id}
                   style={{
                     ...subjectItem,
-                    border: '1px solid rgba(23,199,122,0.65)',
-                    color: '#1fdc8c',
+                    border: '1px solid rgba(184,227,233,0.6)',
+                    color: '#B8E3E9',
                     cursor: 'pointer'
                   }}
                   role="button"
@@ -665,7 +666,7 @@ const Lendet = () => {
                   }}
                 >
                   {course.name}
-                  <span style={{ fontSize: 12, display: 'block', marginTop: 4, color: '#9bf3c8' }}>Zgjedhore</span>
+                  <span style={{ fontSize: 12, display: 'block', marginTop: 4, color: '#B8E3E9' }}>Zgjedhore</span>
                 </div>
               ))}
             </div>
@@ -677,15 +678,14 @@ const Lendet = () => {
         <div style={modalOverlayStyle}>
           <div style={modalCardStyle}>
             <header style={modalHeaderStyle}>
-              <div>
-                <p style={{ margin: 0, color: '#8bf0c1', fontSize: 12 }}>Lënda</p>
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ margin: 0, color: '#B8E3E9', fontSize: 12 }}>Lënda</p>
                 <h3 style={{ margin: 0 }}>{activeModal.subject?.name}</h3>
               </div>
               <button style={closeButtonStyle} onClick={closeSubjectModal} aria-label="Mbyll">
                 ✕
               </button>
             </header>
-            <p style={{ opacity: 0.8, fontSize: 14 }}>Zgjidh veprimin që dëshiron të ndjekësh.</p>
             <div style={optionGridStyle}>
               <button style={modalOptionStyle} onClick={() => handleModalChoice('idea')}>
                 Ideja

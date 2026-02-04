@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getProjektiDorezuar, dorezoProjektin, fshijProjektin, shkarkoProjektin, getTemplateInfo, shkarkoTemplate, getStudentInstructions, downloadInstructionFile } from "../services/projektiApi";
+import "./StudentTheme.css";
 
 const DorzimiProjektit = () => {
     const location = useLocation();
@@ -124,14 +125,14 @@ const DorzimiProjektit = () => {
 
     const pageStyle = {
         minHeight: "100vh",
-        background: "linear-gradient(135deg, #0a1612 0%, #050a08 100%)",
-        color: "#e8f8f0",
+        background: "linear-gradient(180deg, var(--st-2) 0%, var(--st-3) 70%)",
+        color: "var(--st-text)",
         fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     };
 
     const topBarStyle = {
-        background: "rgba(5,12,8,0.95)",
-        borderBottom: "1px solid rgba(23,199,122,0.25)",
+        background: "rgba(79, 99, 103, 0.9)",
+        borderBottom: "1px solid var(--st-border)",
         padding: "1rem 2rem",
         display: "flex",
         alignItems: "center",
@@ -142,7 +143,7 @@ const DorzimiProjektit = () => {
     const brandStyle = {
         fontSize: 22,
         fontWeight: 800,
-        color: "#17c77a",
+        color: "var(--st-1)",
         letterSpacing: 0.5,
     };
 
@@ -157,8 +158,8 @@ const DorzimiProjektit = () => {
 
     const leftPanelStyle = {
         flex: "0 0 280px",
-        background: "rgba(9,18,12,0.85)",
-        border: "1px solid rgba(23,199,122,0.35)",
+        background: "rgba(79, 99, 103, 0.85)",
+        border: "1px solid var(--st-border)",
         borderRadius: 18,
         padding: "2rem 1.5rem",
         height: "rem, fit-content",
@@ -168,8 +169,8 @@ const DorzimiProjektit = () => {
 
     const rightPanelStyle = {
         flex: 1,
-        background: "rgba(9,18,12,0.85)",
-        border: "1px solid rgba(23,199,122,0.35)",
+        background: "rgba(79, 99, 103, 0.85)",
+        border: "1px solid var(--st-border)",
         borderRadius: 18,
         padding: "1rem",
     };
@@ -177,7 +178,7 @@ const DorzimiProjektit = () => {
     const subjectTitleStyle = {
         fontSize: 24,
         fontWeight: 700,
-        color: "#1fdc8c",
+        color: "var(--st-1)",
         marginBottom: "1.5rem",
         textAlign: "center",
         letterSpacing: 1,
@@ -331,7 +332,7 @@ const DorzimiProjektit = () => {
     });
 
     return (
-        <div style={pageStyle}>
+        <div style={pageStyle} className="student-theme">
             <div style={topBarStyle}>
                 <div style={brandStyle}>Feedelate</div>
                 <div style={{ fontWeight: 600, letterSpacing: 0.6 }}>

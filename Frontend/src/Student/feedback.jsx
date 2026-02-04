@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import "./feedback.css";
+import "./StudentTheme.css";
 import { getStudentIdeaSubmission, deleteStudentDorezim } from "../services/studentApi";
 
 // Backend origin used for static file access (uploads)
@@ -31,8 +32,7 @@ const Feedback = () => {
   // Data coming from backend
   const [feedbackData, setFeedbackData] = useState({
     lenda: selectedLenda,
-    profesor: "Prof. Xhavit Rama",
-    status: "Në Pritje",
+ 
     vleresimi: null, // Will be populated from backend
     dorezime: [], // Lista e dorëzimeve
     feedback: "Nuk ka feedback akoma",
@@ -129,10 +129,10 @@ const Feedback = () => {
   // Shto stile të reja para return statement
   const backButtonStyle = {
     background: "rgba(255,255,255,0.05)",
-    border: "1px solid rgba(255,255,255,0.15)",
+    border: "1px solid rgba(184,227,233,0.25)",
     borderRadius: 10,
     padding: "0.6rem 1.2rem",
-    color: "#c4f0da",
+    color: "#B8E3E9",
     fontSize: 13,
     fontWeight: 600,
     cursor: "pointer",
@@ -141,25 +141,16 @@ const Feedback = () => {
   };
 
   return (
-    <div className="feedback-container">
+    <div className="feedback-container student-theme">
       <header className="feedback-header">
         <div className="logo">Feedelate</div>
         <nav className="feedback-nav">
           <span className="nav-text"><strong>Lenda:</strong> {feedbackData.lenda}</span>
-          <span className="nav-text"><strong>Proti:</strong> {feedbackData.profesor}</span>
+         
         </nav>
       </header>
 
       <div className="feedback-content">
-        <div className="status-bar">
-          <div className="status-info">
-            <span className="status-label"><strong>Statusi:</strong> {feedbackData.status}</span>
-            {feedbackData.vleresimi && (
-              <span className="vleresimi-label"><strong>Vleresimi:</strong> {feedbackData.vleresimi}/10</span>
-            )}
-          </div>
-        </div>
-
         <div className="feedback-display">
           <div className="display-row">
             <div className="display-group ideja-group">
@@ -198,9 +189,9 @@ const Feedback = () => {
                             style={{
                               padding: '0.6rem 1.1rem',
                               borderRadius: '8px',
-                              border: '1px solid rgba(255,82,82,0.5)',
-                              background: 'rgba(255,82,82,0.15)',
-                              color: '#ff5252',
+                              border: '1px solid rgba(184,227,233,0.25)',
+                              background: 'rgba(79,124,130,0.35)',
+                              color: '#B8E3E9',
                               cursor: isDeleting ? 'not-allowed' : 'pointer',
                               fontSize: '13px',
                               fontWeight: 600,
@@ -219,7 +210,9 @@ const Feedback = () => {
 
             <div className="display-group feedback-group">
               <label>Feedback</label>
-              <div className="display-box">{feedbackData.feedback}</div>
+              <div className="display-box feedback-box">
+                <span className="feedback-empty">{feedbackData.feedback}</span>
+              </div>
             </div>
           </div>
 
@@ -249,8 +242,8 @@ const Feedback = () => {
           padding: '1rem'
         }}>
           <div style={{
-            background: 'rgba(6,13,9,0.95)',
-            border: '1px solid rgba(23,199,122,0.4)',
+            background: '#0B2E33',
+            border: '1px solid rgba(184,227,233,0.2)',
             borderRadius: 20,
             padding: '2rem',
             maxWidth: '400px',
@@ -260,7 +253,7 @@ const Feedback = () => {
             <div style={{
               fontSize: 18,
               fontWeight: 600,
-              color: '#fff',
+              color: '#B8E3E9',
               marginBottom: '2rem',
               lineHeight: 1.5
             }}>
@@ -276,21 +269,21 @@ const Feedback = () => {
                   padding: '0.9rem 1.8rem',
                   borderRadius: 12,
                   border: 'none',
-                  background: '#17c77a',
-                  color: '#041407',
+                  background: '#4F7C82',
+                  color: '#B8E3E9',
                   fontWeight: 700,
                   fontSize: 14,
                   cursor: 'pointer',
                   transition: 'all 200ms ease',
-                  boxShadow: '0 4px 12px rgba(23, 199, 122, 0.3)'
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.35)'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#14b56d';
-                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(23, 199, 122, 0.4)';
+                  e.currentTarget.style.background = '#0B2E33';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.45)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#17c77a';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(23, 199, 122, 0.3)';
+                  e.currentTarget.style.background = '#4F7C82';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.35)';
                 }}
               >
                 ✓ Po
@@ -303,9 +296,9 @@ const Feedback = () => {
                   flex: 1,
                   padding: '0.9rem 1.8rem',
                   borderRadius: 12,
-                  border: '1px solid rgba(255,255,255,0.2)',
+                  border: '1px solid rgba(184,227,233,0.2)',
                   background: 'transparent',
-                  color: '#c4f0da',
+                  color: '#B8E3E9',
                   fontWeight: 600,
                   fontSize: 14,
                   cursor: 'pointer',
@@ -313,11 +306,11 @@ const Feedback = () => {
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)';
+                  e.currentTarget.style.borderColor = 'rgba(184,227,233,0.4)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                  e.currentTarget.style.borderColor = 'rgba(184,227,233,0.2)';
                 }}
               >
                 ✕ Jo

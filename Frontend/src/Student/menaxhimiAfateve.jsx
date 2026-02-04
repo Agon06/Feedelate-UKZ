@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import "./StudentTheme.css";
 
 const MenaxhimiAfateve = () => {
     const location = useLocation();
@@ -46,8 +47,8 @@ const MenaxhimiAfateve = () => {
 
     const pageStyle = {
         minHeight: '100vh',
-        background: 'linear-gradient(180deg, rgba(10,18,12,1) 0%, rgba(14,28,20,1) 60%, rgba(10,18,12,1) 100%)',
-        color: '#fff',
+        background: 'linear-gradient(180deg, var(--st-2) 0%, var(--st-3) 70%)',
+        color: 'var(--st-text)',
         fontFamily: 'Inter, system-ui, sans-serif',
         padding: '2rem'
     };
@@ -70,9 +71,9 @@ const MenaxhimiAfateve = () => {
     };
 
     const cardStyle = (isActive) => ({
-        background: isActive ? 'rgba(23,199,122,0.15)' : 'rgba(9,18,12,0.9)',
+        background: isActive ? 'rgba(122,158,159,0.2)' : 'rgba(79,99,103,0.9)',
         borderRadius: 20,
-        border: `1px solid ${isActive ? 'rgba(23,199,122,0.5)' : 'rgba(23,199,122,0.25)'}`,
+        border: `1px solid ${isActive ? 'var(--st-2)' : 'var(--st-border)'}`,
         padding: '1.5rem',
         position: 'relative'
     });
@@ -85,9 +86,9 @@ const MenaxhimiAfateve = () => {
         borderRadius: 999,
         fontSize: 12,
         fontWeight: 700,
-        background: isActive ? 'rgba(23,199,122,0.3)' : 'rgba(255,255,255,0.1)',
-        color: isActive ? '#1fdc8c' : '#c4f0da',
-        border: `1px solid ${isActive ? '#1fdc8c' : 'rgba(255,255,255,0.2)'}`
+        background: isActive ? 'rgba(122,158,159,0.35)' : 'rgba(255,255,255,0.1)',
+        color: isActive ? 'var(--st-1)' : 'var(--st-text)',
+        border: `1px solid ${isActive ? 'var(--st-2)' : 'rgba(255,255,255,0.2)'}`
     });
 
     const typeIconStyle = {
@@ -103,23 +104,18 @@ const MenaxhimiAfateve = () => {
         fontSize: 14
     };
 
-    const labelStyle = {
-        opacity: 0.7,
-        fontWeight: 600
-    };
-
     const valueStyle = {
         fontWeight: 600,
-        color: '#1fdc8c'
+        color: 'var(--st-1)'
     };
 
     const buttonStyle = {
         marginTop: '2rem',
         padding: '0.8rem 1.5rem',
         borderRadius: 12,
-        border: '1px solid rgba(23,199,122,0.35)',
+        border: '1px solid var(--st-border)',
         background: 'transparent',
-        color: '#c8f5e8',
+        color: 'var(--st-1)',
         fontWeight: 600,
         cursor: 'pointer',
         fontSize: 14
@@ -127,21 +123,21 @@ const MenaxhimiAfateve = () => {
 
     if (loading) {
         return (
-            <div style={pageStyle}>
+            <div style={pageStyle} className="student-theme">
                 <div style={containerStyle}>
                     <div style={{ textAlign: 'center', padding: '3rem', opacity: 0.8 }}>
                         Duke u ngarkuar...
+                        </div>
                     </div>
-                </div>
             </div>
         );
     }
 
     return (
-        <div style={pageStyle}>
+        <div style={pageStyle} className="student-theme">
             <div style={containerStyle}>
                 <div style={headerStyle}>
-                    <h1 style={{ margin: '0 0 0.5rem 0', fontSize: 32, color: '#1fdc8c' }}>
+                    <h1 style={{ margin: '0 0 0.5rem 0', fontSize: 32, color: 'var(--st-1)' }}>
                         Afatet e Dorëzimit
                     </h1>
                     <p style={{ margin: 0, opacity: 0.8, fontSize: 16 }}>
@@ -168,9 +164,9 @@ const MenaxhimiAfateve = () => {
                         textAlign: 'center', 
                         padding: '3rem', 
                         opacity: 0.7,
-                        background: 'rgba(9,18,12,0.9)',
+                        background: 'rgba(79,99,103,0.9)',
                         borderRadius: 20,
-                        border: '1px solid rgba(23,199,122,0.25)'
+                        border: '1px solid var(--st-border)'
                     }}>
                         <p style={{ fontSize: 18 }}>Nuk ka afate të vendosura për këtë lëndë</p>
                     </div>
@@ -186,7 +182,7 @@ const MenaxhimiAfateve = () => {
                                     <div style={typeIconStyle}>
                                         {afati.tipi === 'ide' ? '💡' : '📦'}
                                     </div>
-                                    <h3 style={{ margin: 0, fontSize: 22, color: '#1fdc8c' }}>
+                                    <h3 style={{ margin: 0, fontSize: 22, color: 'var(--st-1)' }}>
                                         Dorëzimi i {afati.tipi === 'ide' ? 'Idesë' : 'Projektit'}
                                     </h3>
                                 </div>

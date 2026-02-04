@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { getStudentProfile } from '../services/studentApi';
 import { useNavigate } from 'react-router-dom';
+import './StudentTheme.css';
 
 const StudentProfile = () => {
     const navigate = useNavigate();
@@ -40,13 +41,13 @@ const StudentProfile = () => {
 
     if (loading) {
         return (
-            <div style={{
+            <div className="student-theme" style={{
                 minHeight: '100vh',
-                background: 'linear-gradient(180deg, rgba(10,18,12,1) 0%, rgba(14,28,20,1) 50%, rgba(12,30,18,1) 100%)',
+                background: 'linear-gradient(180deg, var(--st-2) 0%, var(--st-3) 70%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#17c77a',
+                color: 'var(--st-1)',
                 fontSize: isMobile ? 16 : 18
             }}>
                 Loading...
@@ -56,9 +57,9 @@ const StudentProfile = () => {
 
     if (error) {
         return (
-            <div style={{
+            <div className="student-theme" style={{
                 minHeight: '100vh',
-                background: 'linear-gradient(180deg, rgba(10,18,12,1) 0%, rgba(14,28,20,1) 50%, rgba(12,30,18,1) 100%)',
+                background: 'linear-gradient(180deg, var(--st-2) 0%, var(--st-3) 70%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -73,18 +74,18 @@ const StudentProfile = () => {
     }
 
     return (
-        <div style={{
+        <div className="student-theme" style={{
             minHeight: '100vh',
-            background: 'linear-gradient(180deg, rgba(10,18,12,1) 0%, rgba(14,28,20,1) 50%, rgba(12,30,18,1) 100%)',
-            color: '#fff',
+            background: 'linear-gradient(180deg, var(--st-2) 0%, var(--st-3) 70%)',
+            color: 'var(--st-text)',
             padding: isMobile ? '1.5rem' : '2.5rem',
             fontFamily: 'Inter, system-ui, Arial, sans-serif'
         }}>
             <div style={{
                 maxWidth: 800,
                 margin: '0 auto',
-                background: 'rgba(16, 24, 20, 0.6)',
-                border: '1px solid rgba(23, 199, 122, 0.3)',
+                background: 'rgba(79, 99, 103, 0.6)',
+                border: '1px solid var(--st-border)',
                 borderRadius: isMobile ? 12 : 16,
                 padding: isMobile ? '1.5rem' : '2rem'
             }}>
@@ -94,14 +95,14 @@ const StudentProfile = () => {
                     gap: '1rem',
                     marginBottom: '2rem',
                     paddingBottom: '1.5rem',
-                    borderBottom: '1px solid rgba(23, 199, 122, 0.2)'
+                    borderBottom: '1px solid var(--st-border)'
                 }}>
                     <button
                         onClick={() => navigate(-1)}
                         style={{
                             background: 'transparent',
-                            border: '1px solid rgba(23, 199, 122, 0.5)',
-                            color: '#17c77a',
+                            border: '1px solid var(--st-border)',
+                            color: 'var(--st-1)',
                             padding: '0.5rem 1rem',
                             borderRadius: 8,
                             cursor: 'pointer',
@@ -115,46 +116,46 @@ const StudentProfile = () => {
                         margin: 0,
                         fontSize: isMobile ? 24 : 32,
                         fontWeight: 800,
-                        color: '#17c77a'
+                        color: 'var(--st-1)'
                     }}>Profili i Studentit</h1>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                     <div style={{
-                        background: 'rgba(23, 199, 122, 0.05)',
+                        background: 'rgba(122, 158, 159, 0.15)',
                         padding: isMobile ? '1rem' : '1.25rem',
                         borderRadius: 10,
-                        border: '1px solid rgba(23, 199, 122, 0.2)'
+                        border: '1px solid var(--st-border)'
                     }}>
                         <p style={{ margin: 0, fontSize: 14, opacity: 0.7, marginBottom: '0.5rem' }}>Emri</p>
                         <p style={{ margin: 0, fontSize: isMobile ? 18 : 20, fontWeight: 600 }}>{studentData.emri}</p>
                     </div>
 
                     <div style={{
-                        background: 'rgba(23, 199, 122, 0.05)',
+                        background: 'rgba(122, 158, 159, 0.15)',
                         padding: isMobile ? '1rem' : '1.25rem',
                         borderRadius: 10,
-                        border: '1px solid rgba(23, 199, 122, 0.2)'
+                        border: '1px solid var(--st-border)'
                     }}>
                         <p style={{ margin: 0, fontSize: 14, opacity: 0.7, marginBottom: '0.5rem' }}>Mbiemri</p>
                         <p style={{ margin: 0, fontSize: isMobile ? 18 : 20, fontWeight: 600 }}>{studentData.mbiemri}</p>
                     </div>
 
                     <div style={{
-                        background: 'rgba(23, 199, 122, 0.05)',
+                        background: 'rgba(122, 158, 159, 0.15)',
                         padding: isMobile ? '1rem' : '1.25rem',
                         borderRadius: 10,
-                        border: '1px solid rgba(23, 199, 122, 0.2)'
+                        border: '1px solid var(--st-border)'
                     }}>
                         <p style={{ margin: 0, fontSize: 14, opacity: 0.7, marginBottom: '0.5rem' }}>Email</p>
                         <p style={{ margin: 0, fontSize: isMobile ? 16 : 18, fontWeight: 600, wordBreak: 'break-all' }}>{studentData.email}</p>
                     </div>
 
                     <div style={{
-                        background: 'rgba(23, 199, 122, 0.05)',
+                        background: 'rgba(122, 158, 159, 0.15)',
                         padding: isMobile ? '1rem' : '1.25rem',
                         borderRadius: 10,
-                        border: '1px solid rgba(23, 199, 122, 0.2)'
+                        border: '1px solid var(--st-border)'
                     }}>
                         <p style={{ margin: 0, fontSize: 14, opacity: 0.7, marginBottom: '0.5rem' }}>Nr ID Card</p>
                         <p style={{ margin: 0, fontSize: isMobile ? 18 : 20, fontWeight: 600 }}>{studentData.nrIdCard || 'N/A'}</p>

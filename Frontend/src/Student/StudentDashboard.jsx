@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserMenu from '../components/UserMenu';
-import RoleSwitcher from '../components/RoleSwitcher';
+import './StudentTheme.css';
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
@@ -25,13 +25,32 @@ const StudentDashboard = () => {
   const avatarLetter = (student.emri && student.emri.length > 0) ? student.emri[0].toUpperCase() : 'S';
 
   const pageStyle = {
-    color: '#fff',
+    color: '#B8E3E9',
     minHeight: '100vh',
-    background: 'linear-gradient(180deg, rgba(10,18,12,1) 0%, rgba(14,28,20,1) 50%, rgba(12,30,18,1) 100%)',
+    background: 'linear-gradient(180deg, #4F7C82 0%, #0B2E33 60%, #0B2E33 100%)',
     padding: 0,
     margin: 0,
     fontFamily: 'Inter, system-ui, Arial, sans-serif',
     boxSizing: 'border-box'
+  };
+   
+
+  const cardBase = {
+    position: 'absolute',
+    width: isMobile ? 160 : 260,
+    height: isMobile ? 160 : 260,
+    background: '#0B2E33',
+    color: '#B8E3E9',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 14,
+    boxShadow: '0 18px 36px rgba(0,0,0,0.45)',
+    fontSize: isMobile ? 16 : 22,
+    fontWeight: 800,
+    cursor: 'pointer',
+    transition: 'transform 180ms ease, box-shadow 180ms ease',
+    border: '1px solid rgba(184,227,233,0.2)'
   };
 
   const topBarStyle = {
@@ -39,13 +58,12 @@ const StudentDashboard = () => {
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: isMobile ? '0.85rem 1.5rem' : '1rem 2.5rem',
-    minHeight: 64,
-    width: '100%',
-    boxSizing: 'border-box'
+    position: 'relative',
+    background: 'linear-gradient(180deg,  #4F7C82 10%, #0B2E33 90%, #0B2E33 100%)',
   };
 
   const brandStyle = {
-    color: '#17c77a',
+    color: '#B8E3E9',
     fontWeight: 800,
     fontSize: isMobile ? 18 : 22,
     letterSpacing: 0.6
@@ -56,7 +74,8 @@ const StudentDashboard = () => {
     fontSize: isMobile ? 16 : 19,
     marginTop: isMobile ? 10 : 6,
     opacity: 0.95,
-    letterSpacing: 0.5
+    letterSpacing: 0.5,
+    color: '#B8E3E9'
   };
 
   const actionsStyle = {
@@ -69,31 +88,32 @@ const StudentDashboard = () => {
     width: 40,
     height: 40,
     borderRadius: 20,
-    background: 'rgba(23, 199, 122, 0.12)',
-    border: '1px solid rgba(255,255,255,0.08)',
+    background: '#8e8e8e',
+    border: '1px solid rgba(0,0,0,0.15)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     fontSize: 18,
-    color: '#fbd38d'
+    color: '#111'
   };
 
   const studentBadge = {
     display: 'flex',
     alignItems: 'center',
     gap: 10,
-    fontWeight: 600
+    fontWeight: 600,
+    color: '#B8E3E9'
   };
 
   const avatarStyle = {
     width: 42,
     height: 42,
     borderRadius: 21,
-    background: '#0e6b3d',
+    background: '#525252',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#fff',
+    color: '#f2f2f2',
     fontWeight: 700,
     letterSpacing: 0.8
   };
@@ -104,23 +124,6 @@ const StudentDashboard = () => {
     width: '100%',
     display: 'block',
     overflow: 'visible'
-  };
-
-  const cardBase = {
-    position: 'absolute',
-    width: isMobile ? 160 : 260,
-    height: isMobile ? 160 : 260,
-    background: 'rgba(16, 24, 20, 0.85)',
-    color: '#fff',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 14,
-    boxShadow: '0 14px 30px rgba(0,0,0,0.6)',
-    fontSize: isMobile ? 16 : 22,
-    fontWeight: 800,
-    cursor: 'pointer',
-    transition: 'transform 180ms ease, box-shadow 180ms ease'
   };
 
   const positions = useMemo(() => (
@@ -149,24 +152,21 @@ const StudentDashboard = () => {
   }, [handleNavigate]);
 
   return (
-    <div className="student-dashboard" style={pageStyle}>
+    <div className="student-dashboard student-theme" style={pageStyle}>
       {/* Top bar - uses full available width (no negative margins) */}
       <div style={topBarStyle}>
         <div style={brandStyle}>Feedelate</div>
         <div style={{flex: 1}} />
+           <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', textAlign: 'center', fontWeight: 900, letterSpacing: 0.6, fontSize: 25 }}>Universiteti Publik Kadri Zeka</div>
         <div style={actionsStyle}>
-          <RoleSwitcher currentRole="student" />
-          <div style={bellStyle} aria-label="notifications" role="img">
-            🔔
+          <div style={studentBadge}>
+            <UserMenu userName={studentName} userType="student" />
           </div>
-          <UserMenu userName={studentName} userType="student" />
         </div>
       </div>
 
       <div style={{width: '100%', boxSizing: 'border-box'}}>
-        <div style={titleStyle}>
-          <h2 style={{margin: 0}}>Universiteti Publik Kadri Zeka</h2>
-        </div>
+       
       </div>
 
       <main style={{...layoutContainer, width: '100%', boxSizing: 'border-box'}}>

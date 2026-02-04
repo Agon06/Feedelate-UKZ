@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getStudentProjects, createStudentProject, deleteStudentProject } from "../services/studentApi";
+import "./StudentTheme.css";
 
 const Projekti = () => {
   const student = JSON.parse(localStorage.getItem('student') || '{}');
@@ -85,7 +86,7 @@ const Projekti = () => {
   if (loading) return <div style={{ padding: "2rem" }}>Po ngarkohen projektet...</div>;
 
   return (
-    <div style={{ padding: "2rem", color: "#fff" }}>
+    <div className="student-theme" style={{ padding: "2rem", color: "var(--st-text)" }}>
       <h1>Projektet e Mia</h1>
 
       {error && (
@@ -98,8 +99,8 @@ const Projekti = () => {
         onClick={() => setShowForm(!showForm)}
         style={{
           padding: "0.5rem 1rem",
-          background: "#17c77a",
-          color: "#fff",
+          background: "var(--st-2)",
+          color: "var(--st-text-dark)",
           border: "none",
           borderRadius: "6px",
           cursor: "pointer",
@@ -113,11 +114,11 @@ const Projekti = () => {
         <form
           onSubmit={handleSubmit}
           style={{
-            background: "rgba(13, 30, 19, 0.85)",
+            background: "rgba(79, 99, 103, 0.85)",
             padding: "1.5rem",
             borderRadius: "12px",
             marginBottom: "2rem",
-            border: "1px solid rgba(23, 199, 122, 0.35)",
+            border: "1px solid var(--st-border)",
           }}
         >
           <div style={{ marginBottom: "1rem" }}>
@@ -133,9 +134,9 @@ const Projekti = () => {
               style={{
                 width: "100%",
                 padding: "0.75rem",
-                background: "rgba(5,12,8,0.8)",
-                color: "#fff",
-                border: "1px solid rgba(255,255,255,0.1)",
+                background: "rgba(79,99,103,0.8)",
+                color: "var(--st-text)",
+                border: "1px solid var(--st-border)",
                 borderRadius: "6px",
               }}
             />
@@ -153,9 +154,9 @@ const Projekti = () => {
               style={{
                 width: "100%",
                 padding: "0.75rem",
-                background: "rgba(5,12,8,0.8)",
-                color: "#fff",
-                border: "1px solid rgba(255,255,255,0.1)",
+                background: "rgba(79,99,103,0.8)",
+                color: "var(--st-text)",
+                border: "1px solid var(--st-border)",
                 borderRadius: "6px",
                 minHeight: "100px",
               }}
@@ -174,9 +175,9 @@ const Projekti = () => {
               style={{
                 width: "100%",
                 padding: "0.75rem",
-                background: "rgba(5,12,8,0.8)",
-                color: "#fff",
-                border: "1px solid rgba(255,255,255,0.1)",
+                background: "rgba(79,99,103,0.8)",
+                color: "var(--st-text)",
+                border: "1px solid var(--st-border)",
                 borderRadius: "6px",
               }}
             />
@@ -186,8 +187,8 @@ const Projekti = () => {
             type="submit"
             style={{
               padding: "0.75rem 1.5rem",
-              background: "#17c77a",
-              color: "#fff",
+              background: "var(--st-2)",
+              color: "var(--st-text-dark)",
               border: "none",
               borderRadius: "6px",
               cursor: "pointer",
