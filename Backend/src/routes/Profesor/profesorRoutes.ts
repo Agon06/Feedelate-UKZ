@@ -12,7 +12,6 @@ import { Lendet } from "../../entities/Student/Lendet";
 import { Idete } from "../../entities/Student/Idete";
 import { dorzimiProjektit } from "../../entities/Student/dorzimiProjektit";
 import { ProfesorLendetMapping } from "../../entities/Student/ProfesorLendetMapping";
-import { InstructionTemplate } from "../../entities/Student/InstructionTemplate";
 
 const router = Router();
 const profesorRepository = AppDataSource.getRepository(Profesor);
@@ -22,7 +21,6 @@ const dorezimiIdeeshRepository = AppDataSource.getRepository(DorezimiIdes);
 const studentRepository = AppDataSource.getRepository(Student);
 const dorezimProjektitRepository = AppDataSource.getRepository(dorzimiProjektit);
 const mappingRepository = AppDataSource.getRepository(ProfesorLendetMapping);
-const instructionRepository = AppDataSource.getRepository(InstructionTemplate);
 
 // Multer config for file upload (disk storage)
 const uploadDir = path.resolve(process.cwd(), "uploads", "dorezime");
@@ -111,10 +109,8 @@ const getYearLabel = (yearNumber: number) => {
 
 // Dashboard snapshot for a profesor
 // ✅ ALIGNED WITH STUDENT: Uses ProfesorLendetMapping to get assigned subjects
-// ✅ NOW FILTERS BY ACADEMIC YEAR
 router.get("/:id/dashboard", async (req: Request, res: Response) => {
   const profesorId = Number(req.params.id);
-  const academicYear = req.query.academicYear ? String(req.query.academicYear) : undefined;
 
   if (Number.isNaN(profesorId)) {
     return res.status(400).json({ message: "Profesor id is invalid" });
@@ -138,13 +134,7 @@ router.get("/:id/dashboard", async (req: Request, res: Response) => {
     }
 
     // ✅ UNIFIED: Get lendet assigned to this profesor via mapping table
-    // ✅ FILTER BY ACADEMIC YEAR if provided
-    const whereCondition: any = { profesorId };
-    if (academicYear) {
-      whereCondition.academicYear = academicYear;
-    }
-
-    const mappings = await mappingRepository.find({ where: whereCondition });
+    const mappings = await mappingRepository.find({ where: { profesorId } });
     const lendetIds = mappings.map(m => m.lendetId);
 
     const lendet = lendetIds.length > 0
@@ -200,14 +190,12 @@ router.get("/:id/dashboard", async (req: Request, res: Response) => {
 
 // Curriculum view per year
 // ✅ PERFECTLY ALIGNED WITH STUDENT: Same endpoint structure, same data format
-// ✅ NOW FILTERS BY ACADEMIC YEAR
 router.get("/:id/lendet/:yearId", async (req: Request, res: Response) => {
   const profesorId = Number(req.params.id);
   const yearParam = Number(req.params.yearId);
-  const academicYear = req.query.academicYear ? String(req.query.academicYear) : undefined;
 
   console.log(`=== FETCHING SUBJECTS FOR PROFESOR ===`);
-  console.log(`Profesor ID: ${profesorId}, Year: ${yearParam}, Academic Year: ${academicYear}`);
+  console.log(`Profesor ID: ${profesorId}, Year: ${yearParam}`);
 
   if (Number.isNaN(profesorId)) {
     return res.status(400).json({ message: "Profesor id is invalid" });
@@ -235,15 +223,8 @@ router.get("/:id/lendet/:yearId", async (req: Request, res: Response) => {
     }
 
     // ✅ UNIFIED: Get lendet assigned to this profesor via mapping table
-    // ✅ FILTER BY ACADEMIC YEAR if provided
-    const whereCondition: any = { profesorId };
-    if (academicYear) {
-      whereCondition.academicYear = academicYear;
-    }
-
-    console.log(`Mapping where condition:`, whereCondition);
-    const mappings = await mappingRepository.find({ where: whereCondition });
-    console.log(`Found ${mappings.length} mappings:`, mappings.map(m => ({ lendetId: m.lendetId, academicYear: m.academicYear })));
+    const mappings = await mappingRepository.find({ where: { profesorId } });
+    console.log(`Found ${mappings.length} mappings:`, mappings.map(m => ({ lendetId: m.lendetId })));
 
     const lendetIds = mappings.map(m => m.lendetId);
 
@@ -800,6 +781,7 @@ router.get("/:id/lendet/:lendaId/idea-deadline", async (req: Request, res: Respo
         ideaStartDate: formatLocalDate(lenda.ideaStartDate),
         ideaDeadline: formatLocalDate(lenda.ideaDeadline),
         ideaTitle: lenda.ideaTitle ?? null,
+        ideaDeadlinesJson: lenda.ideaDeadlinesJson ?? null,
       },
     });
   } catch (error) {
@@ -812,7 +794,7 @@ router.get("/:id/lendet/:lendaId/idea-deadline", async (req: Request, res: Respo
 router.put("/:id/lendet/:lendaId/idea-deadline", async (req: Request, res: Response) => {
   const profesorId = Number(req.params.id);
   const lendaId = Number(req.params.lendaId);
-  const { ideaStartDate, ideaDeadline, ideaTitle } = req.body;
+  const { ideaStartDate, ideaDeadline, ideaTitle, ideaDeadlinesJson } = req.body;
 
   if (Number.isNaN(profesorId) || Number.isNaN(lendaId)) {
     return res.status(400).json({ message: "Invalid IDs" });
@@ -853,6 +835,9 @@ router.put("/:id/lendet/:lendaId/idea-deadline", async (req: Request, res: Respo
     lenda.ideaStartDate = start ?? undefined;
     lenda.ideaDeadline = end ?? undefined;
     lenda.ideaTitle = ideaTitle?.trim() || undefined;
+    if (ideaDeadlinesJson !== undefined) {
+      lenda.ideaDeadlinesJson = Array.isArray(ideaDeadlinesJson) ? ideaDeadlinesJson : null;
+    }
 
     await lendetRepository.save(lenda);
 
@@ -872,6 +857,7 @@ router.put("/:id/lendet/:lendaId/idea-deadline", async (req: Request, res: Respo
         ideaStartDate: formatLocalDate(lenda.ideaStartDate),
         ideaDeadline: formatLocalDate(lenda.ideaDeadline),
         ideaTitle: lenda.ideaTitle ?? null,
+        ideaDeadlinesJson: lenda.ideaDeadlinesJson ?? null,
       },
     });
   } catch (error) {
@@ -1247,7 +1233,6 @@ router.get("/:id/lendet/:lendaId/template", async (req: Request, res: Response) 
 // POST: Shto instruksione për një lëndë
 router.post("/:id/lendet/:lendaId/instructions", uploadInstructions.array("files", 10), async (req: Request, res: Response) => {
   const lendaId = Number(req.params.lendaId);
-  const title = (req.body?.title ?? "Instruksione").toString().trim() || "Instruksione";
   const content = (req.body?.content ?? "").toString();
 
   if (Number.isNaN(lendaId)) {
@@ -1260,30 +1245,19 @@ router.post("/:id/lendet/:lendaId/instructions", uploadInstructions.array("files
       return res.status(404).json({ message: "Lenda not found" });
     }
 
+    // Remove uploaded files (instructions are stored as text on lendet)
     const uploadedFiles = (req.files as Express.Multer.File[]) || [];
-    const filesPayload = uploadedFiles.map((file) => ({
-      name: file.originalname,
-      size: file.size,
-      type: file.mimetype,
-      path: path.relative(process.cwd(), file.path),
-    }));
-
-    const instruction = instructionRepository.create({
-      lendaId,
-      title,
-      content,
-      files: filesPayload.length ? filesPayload : undefined,
+    uploadedFiles.forEach((file) => {
+      const absolutePath = path.resolve(process.cwd(), file.path);
+      if (fs.existsSync(absolutePath)) {
+        fs.unlinkSync(absolutePath);
+      }
     });
 
-    const saved = await instructionRepository.save(instruction);
+    lenda.projectInstructions = content;
+    await lendetRepository.save(lenda);
 
-    res.json({
-      id: saved.id,
-      title: saved.title,
-      content: saved.content,
-      createdAt: saved.createdAt,
-      files: (saved.files || []).map((f) => ({ name: f.name, size: f.size, type: f.type })),
-    });
+    res.json([{ id: lenda.id, title: "Instruksione", content: lenda.projectInstructions, createdAt: lenda.updatedAt, files: [] }]);
   } catch (error) {
     res.status(500).json({ message: "Error saving instructions", error: String(error) });
   }
@@ -1298,22 +1272,67 @@ router.get("/:id/lendet/:lendaId/instructions", async (req: Request, res: Respon
   }
 
   try {
-    const instructions = await instructionRepository.find({
-      where: { lendaId },
-      order: { createdAt: "DESC" },
-    });
+    const lenda = await lendetRepository.findOneBy({ id: lendaId });
+    if (!lenda) {
+      return res.status(404).json({ message: "Lenda not found" });
+    }
 
-    res.json(
-      instructions.map((instruction) => ({
-        id: instruction.id,
-        title: instruction.title,
-        content: instruction.content,
-        createdAt: instruction.createdAt,
-        files: (instruction.files || []).map((f) => ({ name: f.name, size: f.size, type: f.type })),
-      }))
-    );
+    if (!lenda.projectInstructions) {
+      return res.json([]);
+    }
+
+    res.json([
+      {
+        id: lenda.id,
+        title: "Instruksione",
+        content: lenda.projectInstructions,
+        createdAt: lenda.updatedAt,
+        files: [],
+      },
+    ]);
   } catch (error) {
     res.status(500).json({ message: "Error fetching instructions", error: String(error) });
+  }
+});
+
+// PUT: Modifiko instruksionet për një lëndë
+router.put("/:id/lendet/:lendaId/instructions/:instructionId", uploadInstructions.array("files", 10), async (req: Request, res: Response) => {
+  const instructionId = Number(req.params.instructionId);
+  const content = (req.body?.content ?? "").toString();
+
+  if (Number.isNaN(instructionId)) {
+    return res.status(400).json({ message: "Invalid instruction ID" });
+  }
+
+  try {
+    const lenda = await lendetRepository.findOneBy({ id: Number(req.params.lendaId) });
+    if (!lenda) {
+      return res.status(404).json({ message: "Lenda not found" });
+    }
+
+    // Remove uploaded files (instructions are stored as text on lendet)
+    const uploadedFiles = (req.files as Express.Multer.File[]) || [];
+    if (uploadedFiles.length > 0) {
+      uploadedFiles.forEach((file) => {
+        const absolutePath = path.resolve(process.cwd(), file.path);
+        if (fs.existsSync(absolutePath)) {
+          fs.unlinkSync(absolutePath);
+        }
+      });
+    }
+
+    lenda.projectInstructions = content;
+    await lendetRepository.save(lenda);
+
+    res.json({
+      id: lenda.id,
+      title: "Instruksione",
+      content: lenda.projectInstructions,
+      createdAt: lenda.updatedAt,
+      files: [],
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating instruction", error: String(error) });
   }
 });
 
@@ -1326,19 +1345,13 @@ router.delete("/:id/lendet/:lendaId/instructions/:instructionId", async (req: Re
   }
 
   try {
-    const instruction = await instructionRepository.findOneBy({ id: instructionId });
-    if (!instruction) {
-      return res.status(404).json({ message: "Instruction not found" });
+    const lenda = await lendetRepository.findOneBy({ id: Number(req.params.lendaId) });
+    if (!lenda) {
+      return res.status(404).json({ message: "Lenda not found" });
     }
 
-    (instruction.files || []).forEach((file) => {
-      const absolutePath = path.resolve(process.cwd(), file.path);
-      if (fs.existsSync(absolutePath)) {
-        fs.unlinkSync(absolutePath);
-      }
-    });
-
-    await instructionRepository.delete(instructionId);
+    lenda.projectInstructions = undefined;
+    await lendetRepository.save(lenda);
     res.json({ message: "Instruction deleted" });
   } catch (error) {
     res.status(500).json({ message: "Error deleting instruction", error: String(error) });

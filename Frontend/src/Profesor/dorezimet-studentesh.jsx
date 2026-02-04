@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import JSZip from 'jszip';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { getStudentProjectSubmissions, updateProjectGrade, updateProjectMaxPoints, updateProjectDeadline, addInstructionTemplate, getInstructionTemplates, deleteInstructionTemplate } from '../services/profesorApi';
+import { getStudentProjectSubmissions, updateProjectGrade, updateProjectMaxPoints, updateProjectDeadline, addInstructionTemplate, getInstructionTemplates, updateInstructionTemplate, deleteInstructionTemplate, uploadLendaTemplate, getLendaTemplateInfo, deleteLendaTemplate } from '../services/profesorApi';
 
 const DoreziметStudentesh = () => {
   const navigate = useNavigate();
@@ -37,7 +37,10 @@ const DoreziметStudentesh = () => {
   const [showTemplateForm, setShowTemplateForm] = useState(false);
   const [templateTitle, setTemplateTitle] = useState('');
   const [templateContent, setTemplateContent] = useState('');
-  const [templateFiles, setTemplateFiles] = useState([]);
+  const [editingTemplateId, setEditingTemplateId] = useState(null);
+  const [templateInfo, setTemplateInfo] = useState({ hasTemplate: false, fileName: '' });
+  const [templateUploadFile, setTemplateUploadFile] = useState(null);
+  const [uploadingTemplate, setUploadingTemplate] = useState(false);
 
   const pad2 = (num) => String(num).padStart(2, '0');
   const formatDateDisplay = (isoString) => {
@@ -130,6 +133,20 @@ const DoreziметStudentesh = () => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lendaId]);
+
+  useEffect(() => {
+    if (!lendaId) return;
+    const loadTemplateInfo = async () => {
+      try {
+        const data = await getLendaTemplateInfo(PROFESOR_ID, lendaId);
+        setTemplateInfo(data?.hasTemplate ? { hasTemplate: true, fileName: data.fileName } : { hasTemplate: false, fileName: '' });
+      } catch (error) {
+        console.error('Error loading template info:', error);
+        setTemplateInfo({ hasTemplate: false, fileName: '' });
+      }
+    };
+    loadTemplateInfo();
+  }, [lendaId, PROFESOR_ID]);
 
   // Load instruction templates when component mounts
   useEffect(() => {
@@ -314,14 +331,32 @@ const DoreziметStudentesh = () => {
 
   const filteredSubmissions = useMemo(() => {
     if (!selectedPeriod) return submissions;
+    const selectedPeriodInfo = periods.find(p => {
+      const pKey = typeof p === 'string' ? p : p.key;
+      return pKey === selectedPeriod;
+    });
+    const isNamedPeriod = selectedPeriodInfo && typeof selectedPeriodInfo !== 'string' && selectedPeriodInfo.title;
+
+    if (isNamedPeriod) {
+      const start = parseDateParts(deadlineStartDate, deadlineStartHour, deadlineStartMinute, deadlineStartSecond);
+      const end = parseDateParts(deadlineEndDate, deadlineEndHour, deadlineEndMinute, deadlineEndSecond);
+      if (start && end) {
+        return submissions.filter(sub => {
+          const submitDate = new Date(sub.createdAt);
+          if (Number.isNaN(submitDate.getTime())) return false;
+          return submitDate >= start && submitDate <= end;
+        });
+      }
+      return submissions;
+    }
+
     return submissions.filter(sub => {
       const submitDate = new Date(sub.createdAt);
-      const submitYear = submitDate.getFullYear();
-      const submitMonth = submitDate.getMonth();
-      const submitKey = `${submitYear}-${submitMonth}`;
+      if (Number.isNaN(submitDate.getTime())) return false;
+      const submitKey = `${submitDate.getFullYear()}-${submitDate.getMonth()}`;
       return submitKey === selectedPeriod;
     });
-  }, [submissions, selectedPeriod]);
+  }, [submissions, selectedPeriod, periods, deadlineStartDate, deadlineStartHour, deadlineStartMinute, deadlineStartSecond, deadlineEndDate, deadlineEndHour, deadlineEndMinute, deadlineEndSecond]);
 
   const handleSetDeadline = async () => {
     const startDate = parseDateParts(deadlineStartDate, deadlineStartHour, deadlineStartMinute, deadlineStartSecond);
@@ -485,7 +520,10 @@ const DoreziметStudentesh = () => {
     borderRadius: 18,
     padding: '2rem',
     border: '1px solid rgba(23,199,122,0.15)',
-    minHeight: '500px'
+    minHeight: '500px',
+    maxHeight: 'calc(100vh - 140px)',
+    overflowY: 'auto',
+    overflowX: 'hidden'
   };
 
   const tabButtonStyle = (isActive) => ({
@@ -550,22 +588,22 @@ const DoreziметStudentesh = () => {
         {/* Left Sidebar */}
         <div style={leftPanelStyle}>
           <button
+            style={tabButtonStyle(activeTab === 'deadline')}
+            onClick={() => setActiveTab('deadline')}
+          >
+            🗓️ Afati i Dorëzimit
+          </button>
+          <button
             style={tabButtonStyle(activeTab === 'templates')}
             onClick={() => setActiveTab('templates')}
           >
-            📋 Template/Instruksione
+            📋 Template
           </button>
           <button
             style={tabButtonStyle(activeTab === 'projects')}
             onClick={() => setActiveTab('projects')}
           >
-            📁 Projektet
-          </button>
-          <button
-            style={tabButtonStyle(activeTab === 'deadline')}
-            onClick={() => setActiveTab('deadline')}
-          >
-            🗓️ Afati i Dorëzimit
+            📁 Lista e Projekteve
           </button>
           <button
             style={tabButtonStyle(activeTab === 'grades')}
@@ -600,19 +638,157 @@ const DoreziметStudentesh = () => {
                   marginBottom: '1.5rem',
                   width: '100%'
                 }}
-                onClick={() => setShowTemplateForm(!showTemplateForm)}
+                onClick={() => {
+                  if (editingTemplateId) {
+                    setEditingTemplateId(null);
+                    setTemplateTitle('');
+                    setTemplateContent('');
+                    setShowTemplateForm(false);
+                  } else {
+                    setShowTemplateForm(!showTemplateForm);
+                  }
+                }}
               >
-                {showTemplateForm ? '✕ Anulo' : '➕ Shto Template/Instruksion'}
+                {showTemplateForm ? (editingTemplateId ? '✕ Anulo Modifikimin' : '✕ Anulo') : (editingTemplateId ? '✏️ Redakto Template' : '➕ Shto Template/Instruksion')}
               </button>
 
               {showTemplateForm && (
-                <div style={{
+                <div 
+                  data-template-form
+                  style={{
                   background: 'rgba(23, 199, 122, 0.1)',
                   border: '1px solid rgba(23, 199, 122, 0.3)',
                   borderRadius: 10,
                   padding: '1.5rem',
                   marginBottom: '1.5rem'
                 }}>
+                  {editingTemplateId && (
+                    <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', background: 'rgba(23, 199, 122, 0.15)', borderRadius: 6, color: '#17c77a', fontWeight: 600, fontSize: 13 }}>
+                      ✏️ Po e modifikoni template-in
+                    </div>
+                  )}
+                  
+                  <div style={{
+                      background: 'rgba(23, 199, 122, 0.08)',
+                      border: '1px solid rgba(23, 199, 122, 0.25)',
+                      borderRadius: 10,
+                      padding: '1rem',
+                      marginBottom: '1.5rem'
+                    }}>
+                      <div style={{ fontWeight: 700, color: '#17c77a', marginBottom: '0.75rem' }}>
+                        📄 Template i Projektit
+                      </div>
+                      {templateInfo.hasTemplate ? (
+                        <div style={{ color: '#c4f0da', marginBottom: '0.75rem' }}>
+                          Aktual: <strong style={{ color: '#1fdc8c' }}>{templateInfo.fileName}</strong>
+                        </div>
+                      ) : (
+                        <div style={{ color: '#999', marginBottom: '0.75rem' }}>Nuk ka template të ruajtur.</div>
+                      )}
+                      <input
+                        type="file"
+                        onChange={(e) => setTemplateUploadFile(e.target.files?.[0] || null)}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem 1rem',
+                          borderRadius: 8,
+                          border: '1px solid rgba(23,199,122,0.4)',
+                          background: 'rgba(4,10,6,0.7)',
+                          color: '#1fdc8c',
+                          fontSize: 14,
+                          boxSizing: 'border-box',
+                          cursor: 'pointer',
+                          marginBottom: '0.75rem'
+                        }}
+                        accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.txt"
+                      />
+                      <div style={{ display: 'flex', gap: '0.75rem' }}>
+                        <button
+                          style={{
+                            flex: 1,
+                            padding: '0.75rem 1rem',
+                            background: '#17c77a',
+                            border: 'none',
+                            borderRadius: 8,
+                            color: '#041407',
+                            fontWeight: 700,
+                            cursor: uploadingTemplate ? 'not-allowed' : 'pointer',
+                            opacity: uploadingTemplate ? 0.6 : 1
+                          }}
+                          disabled={uploadingTemplate}
+                          onClick={async () => {
+                            if (!templateUploadFile) {
+                              alert('Zgjedh një fajll për template.');
+                              return;
+                            }
+                            try {
+                              setUploadingTemplate(true);
+                              await uploadLendaTemplate(PROFESOR_ID, lendaId, templateUploadFile);
+                              const data = await getLendaTemplateInfo(PROFESOR_ID, lendaId);
+                              setTemplateInfo(data?.hasTemplate ? { hasTemplate: true, fileName: data.fileName } : { hasTemplate: false, fileName: '' });
+                              setTemplateUploadFile(null);
+                              alert('Template u ngarkua me sukses!');
+                            } catch (error) {
+                              console.error('Error uploading template:', error);
+                              alert('Error: ' + (error.message || 'Nuk u ngarkua template'));
+                            } finally {
+                              setUploadingTemplate(false);
+                            }
+                          }}
+                        >
+                          {uploadingTemplate ? 'Duke ngarkuar...' : '⬆️ Ngarko Template'}
+                        </button>
+                        <button
+                          style={{
+                            flex: 1,
+                            padding: '0.75rem 1rem',
+                            background: 'rgba(255, 107, 107, 0.2)',
+                            border: '1px solid rgba(255, 107, 107, 0.4)',
+                            color: '#ff6b6b',
+                            borderRadius: 8,
+                            fontWeight: 700,
+                            cursor: templateInfo.hasTemplate ? 'pointer' : 'not-allowed',
+                            opacity: templateInfo.hasTemplate ? 1 : 0.6
+                          }}
+                          disabled={!templateInfo.hasTemplate}
+                          onClick={async () => {
+                            try {
+                              await deleteLendaTemplate(PROFESOR_ID, lendaId);
+                              setTemplateInfo({ hasTemplate: false, fileName: '' });
+                              alert('Template u fshi.');
+                            } catch (error) {
+                              console.error('Error deleting template:', error);
+                              alert('Error: ' + (error.message || 'Nuk u fshi template'));
+                            }
+                          }}
+                        >
+                          🗑️ Fshi Template
+                        </button>
+                      </div>
+                    </div>
+                  
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: 14, fontWeight: 600, color: '#17c77a' }}>
+                      Titulli (opsional):
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Shto një titull për template-in..."
+                      value={templateTitle}
+                      onChange={(e) => setTemplateTitle(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem 1rem',
+                        borderRadius: 8,
+                        border: '1px solid rgba(23,199,122,0.4)',
+                        background: 'rgba(4,10,6,0.7)',
+                        color: '#1fdc8c',
+                        fontSize: 14,
+                        fontFamily: 'inherit',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
                   <div style={{ marginBottom: '1rem' }}>
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: 14, fontWeight: 600, color: '#17c77a' }}>
                       Përmbajtja/Instruksionet:
@@ -636,79 +812,6 @@ const DoreziметStudentesh = () => {
                       }}
                     />
                   </div>
-                  <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: 14, fontWeight: 600, color: '#17c77a' }}>
-                      📎 Shto Fajllat (PDF, Excel, ZIP, etj.):
-                    </label>
-                    <input
-                      type="file"
-                      multiple
-                      onChange={(e) => {
-                        const newFiles = Array.from(e.target.files || []).map(file => ({
-                          name: file.name,
-                          size: file.size,
-                          type: file.type,
-                          data: file
-                        }));
-                        setTemplateFiles([...templateFiles, ...newFiles]);
-                      }}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem 1rem',
-                        borderRadius: 8,
-                        border: '1px solid rgba(23,199,122,0.4)',
-                        background: 'rgba(4,10,6,0.7)',
-                        color: '#1fdc8c',
-                        fontSize: 14,
-                        fontFamily: 'inherit',
-                        boxSizing: 'border-box',
-                        cursor: 'pointer'
-                      }}
-                      accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.txt,.jpg,.png,.jpeg"
-                    />
-                    {templateFiles.length > 0 && (
-                      <div style={{ marginTop: '0.75rem' }}>
-                        <label style={{ fontSize: 12, color: '#17c77a', fontWeight: 600 }}>Fajllat e shtuar:</label>
-                        <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                          {templateFiles.map((file, idx) => (
-                            <div
-                              key={idx}
-                              style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                background: 'rgba(9, 18, 12, 0.7)',
-                                padding: '0.75rem 1rem',
-                                borderRadius: 6,
-                                fontSize: 13,
-                                border: '1px solid rgba(23,199,122,0.2)'
-                              }}
-                            >
-                              <span style={{ color: '#e0e0e0' }}>📄 {file.name}</span>
-                              <button
-                                type="button"
-                                style={{
-                                  background: 'rgba(255, 107, 107, 0.2)',
-                                  border: '1px solid rgba(255, 107, 107, 0.4)',
-                                  color: '#ff6b6b',
-                                  padding: '0.3rem 0.6rem',
-                                  borderRadius: 4,
-                                  cursor: 'pointer',
-                                  fontSize: 11,
-                                  fontWeight: 600
-                                }}
-                                onClick={() => {
-                                  setTemplateFiles(templateFiles.filter((_, i) => i !== idx));
-                                }}
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
                   <button
                     style={{
                       padding: '0.75rem 1.5rem',
@@ -722,46 +825,42 @@ const DoreziметStudentesh = () => {
                       width: '100%'
                     }}
                     onClick={async () => {
-                      if (templateContent.trim() || templateFiles.length > 0) {
-                        const newTemplate = {
-                          id: Date.now(),
-                          title: templateTitle || 'Instruksione',
-                          content: templateContent,
-                          files: templateFiles.map(f => ({
-                            name: f.name,
-                            size: f.size,
-                            type: f.type
-                          })),
-                          createdAt: new Date().toLocaleString('sq-AL')
-                        };
-
-                        // Save to backend
+                      if (templateContent.trim()) {
                         try {
-                          await addInstructionTemplate(PROFESOR_ID, lendaId, {
-                            title: templateTitle || 'Instruksione',
-                            content: templateContent,
-                            files: templateFiles
-                          });
+                          if (editingTemplateId) {
+                            // Update existing template
+                            await updateInstructionTemplate(PROFESOR_ID, lendaId, editingTemplateId, {
+                              title: templateTitle || 'Instruksione',
+                              content: templateContent
+                            });
+                            alert('Template u përditësua me sukses!');
+                          } else {
+                            // Create new template
+                            await addInstructionTemplate(PROFESOR_ID, lendaId, {
+                              title: templateTitle || 'Instruksione',
+                              content: templateContent
+                            });
+                            alert('Template u ruajt me sukses!');
+                          }
 
                           // Reload templates from backend
                           const updatedTemplates = await getInstructionTemplates(PROFESOR_ID, lendaId);
                           setTemplates(updatedTemplates || []);
 
+                          setEditingTemplateId(null);
                           setTemplateTitle('');
                           setTemplateContent('');
-                          setTemplateFiles([]);
                           setShowTemplateForm(false);
-                          alert('Template u ruajt me sukses!');
                         } catch (error) {
                           console.error('Error saving template:', error);
                           alert('Error: ' + (error.message || 'Nuk u ruajt template'));
                         }
                       } else {
-                        alert('Shto instruksion ose fajll!');
+                        alert('Shto instruksion!');
                       }
                     }}
                   >
-                    💾 Ruaj Template
+                    {editingTemplateId ? '💾 Përditëso Template' : '💾 Ruaj Template'}
                   </button>
                 </div>
               )}
@@ -787,30 +886,56 @@ const DoreziметStudentesh = () => {
                         <h3 style={{ margin: 0, color: '#1fdc8c', fontSize: 18, fontWeight: 700 }}>
                           {template.title}
                         </h3>
-                        <button
-                          style={{
-                            background: 'rgba(255, 107, 107, 0.2)',
-                            border: '1px solid rgba(255, 107, 107, 0.4)',
-                            color: '#ff6b6b',
-                            padding: '0.4rem 0.8rem',
-                            borderRadius: 6,
-                            cursor: 'pointer',
-                            fontSize: 12,
-                            fontWeight: 600
-                          }}
-                          onClick={async () => {
-                            try {
-                              await deleteInstructionTemplate(PROFESOR_ID, lendaId, template.id);
-                              const updatedTemplates = await getInstructionTemplates(PROFESOR_ID, lendaId);
-                              setTemplates(updatedTemplates || []);
-                            } catch (error) {
-                              console.error('Error deleting template:', error);
-                              alert('Error: ' + (error.message || 'Nuk u fshi template'));
-                            }
-                          }}
-                        >
-                          ✕ Fshi
-                        </button>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button
+                            style={{
+                              background: 'rgba(23, 199, 122, 0.2)',
+                              border: '1px solid rgba(23, 199, 122, 0.4)',
+                              color: '#17c77a',
+                              padding: '0.4rem 0.8rem',
+                              borderRadius: 6,
+                              cursor: 'pointer',
+                              fontSize: 12,
+                              fontWeight: 600
+                            }}
+                            onClick={() => {
+                              setEditingTemplateId(template.id);
+                              setTemplateTitle(template.title);
+                              setTemplateContent(template.content);
+                              setShowTemplateForm(true);
+                              // Scroll to form
+                              setTimeout(() => {
+                                document.querySelector('[data-template-form]')?.scrollIntoView({ behavior: 'smooth' });
+                              }, 100);
+                            }}
+                          >
+                            ✏️ Modifiko
+                          </button>
+                          <button
+                            style={{
+                              background: 'rgba(255, 107, 107, 0.2)',
+                              border: '1px solid rgba(255, 107, 107, 0.4)',
+                              color: '#ff6b6b',
+                              padding: '0.4rem 0.8rem',
+                              borderRadius: 6,
+                              cursor: 'pointer',
+                              fontSize: 12,
+                              fontWeight: 600
+                            }}
+                            onClick={async () => {
+                              try {
+                                await deleteInstructionTemplate(PROFESOR_ID, lendaId, template.id);
+                                const updatedTemplates = await getInstructionTemplates(PROFESOR_ID, lendaId);
+                                setTemplates(updatedTemplates || []);
+                              } catch (error) {
+                                console.error('Error deleting template:', error);
+                                alert('Error: ' + (error.message || 'Nuk u fshi template'));
+                              }
+                            }}
+                          >
+                            ✕ Fshi
+                          </button>
+                        </div>
                       </div>
                       <div style={{ fontSize: 13, color: '#999', marginBottom: '1rem' }}>
                         Krijuar: {template.createdAt}
@@ -902,7 +1027,7 @@ const DoreziметStudentesh = () => {
           {/* PROJECTS TAB */}
           {activeTab === 'projects' && (
             <div>
-              <h2 style={{ margin: '0 0 1.5rem 0', color: '#1fdc8c' }}>📁 Projektet - {subject || 'Lënda'}</h2>
+              <h2 style={{ margin: '0 0 1.5rem 0', color: '#1fdc8c' }}>📁 Lista e Projekteve - {subject || 'Lënda'}</h2>
               {status.loading && (
                 <div style={{ textAlign: 'center', padding: '2rem', color: '#17c77a' }}>
                   Duke u ngarkuar projektet...

@@ -144,36 +144,6 @@ const Profilep = () => {
                         <p style={{ margin: 0, fontSize: 14, opacity: 0.7, marginBottom: '0.5rem' }}>Email</p>
                         <p style={{ margin: 0, fontSize: isMobile ? 16 : 18, fontWeight: 600, wordBreak: 'break-all' }}>{profesorData.email}</p>
                     </div>
-
-                    <div style={{
-                        background: 'rgba(23, 199, 122, 0.05)',
-                        padding: isMobile ? '1rem' : '1.25rem',
-                        borderRadius: 10,
-                        border: '1px solid rgba(23, 199, 122, 0.2)'
-                    }}>
-                        <p style={{ margin: 0, fontSize: 14, opacity: 0.7, marginBottom: '0.5rem' }}>Departamenti</p>
-                        <p style={{ margin: 0, fontSize: isMobile ? 18 : 20, fontWeight: 600 }}>{profesorData.departamenti || 'N/A'}</p>
-                    </div>
-
-                    <div style={{
-                        background: 'rgba(23, 199, 122, 0.05)',
-                        padding: isMobile ? '1rem' : '1.25rem',
-                        borderRadius: 10,
-                        border: '1px solid rgba(23, 199, 122, 0.2)'
-                    }}>
-                        <p style={{ margin: 0, fontSize: 14, opacity: 0.7, marginBottom: '0.5rem' }}>Grada</p>
-                        <p style={{ margin: 0, fontSize: isMobile ? 18 : 20, fontWeight: 600 }}>{profesorData.grada || 'N/A'}</p>
-                    </div>
-
-                    <div style={{
-                        background: 'rgba(23, 199, 122, 0.05)',
-                        padding: isMobile ? '1rem' : '1.25rem',
-                        borderRadius: 10,
-                        border: '1px solid rgba(23, 199, 122, 0.2)'
-                    }}>
-                        <p style={{ margin: 0, fontSize: 14, opacity: 0.7, marginBottom: '0.5rem' }}>Telefoni</p>
-                        <p style={{ margin: 0, fontSize: isMobile ? 18 : 20, fontWeight: 600 }}>{profesorData.telefoni || 'N/A'}</p>
-                    </div>
                 </div>
             </div>
         </div>

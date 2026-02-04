@@ -1,18 +1,5 @@
 const API_BASE_URL = (import.meta.env?.VITE_API_URL ?? 'http://localhost:5000/api').replace(/\/$/, '');
 
-// Helper function to convert academic year format
-// Converts 23/24 to 2023/2024, 24/25 to 2024/2025, etc.
-const convertAcademicYearFormat = (shortFormat) => {
-  if (!shortFormat || !shortFormat.includes('/')) return shortFormat;
-  const [start, end] = shortFormat.split('/');
-  const startYear = parseInt(start, 10);
-  const endYear = parseInt(end, 10);
-  // Assume years are in 20xx century
-  const fullStartYear = startYear < 100 ? 2000 + startYear : startYear;
-  const fullEndYear = endYear < 100 ? 2000 + endYear : endYear;
-  return `${fullStartYear}/${fullEndYear}`;
-};
-
 const handleResponse = async (response) => {
   const contentType = response.headers.get('content-type');
   const payload = contentType && contentType.includes('application/json')
@@ -41,16 +28,14 @@ const request = async (path, options = {}) => {
   return handleResponse(response);
 };
 
-export const getProfesorDashboard = (profesorId, academicYear) => {
-  const fullYearFormat = convertAcademicYearFormat(academicYear);
-  const url = `/profesoret/${profesorId}/dashboard${fullYearFormat ? `?academicYear=${encodeURIComponent(fullYearFormat)}` : ''}`;
+export const getProfesorDashboard = (profesorId) => {
+  const url = `/profesoret/${profesorId}/dashboard`;
   return request(url);
 };
 
-export const getProfesorYearData = (profesorId, yearId, academicYear) => {
-  const fullYearFormat = convertAcademicYearFormat(academicYear);
-  console.log(`[API] Fetching year data - profesorId: ${profesorId}, yearId: ${yearId}, academicYear: ${academicYear} -> ${fullYearFormat}`);
-  const url = `/profesoret/${profesorId}/lendet/${yearId}${fullYearFormat ? `?academicYear=${encodeURIComponent(fullYearFormat)}` : ''}`;
+export const getProfesorYearData = (profesorId, yearId) => {
+  console.log(`[API] Fetching year data - profesorId: ${profesorId}, yearId: ${yearId}`);
+  const url = `/profesoret/${profesorId}/lendet/${yearId}`;
   console.log(`[API] Request URL: ${url}`);
   return request(url);
 };
@@ -228,6 +213,28 @@ export const addInstructionTemplate = async (profesorId, lendaId, instructionDat
 export const getInstructionTemplates = (profesorId, lendaId) =>
   request(`/profesoret/${profesorId}/lendet/${lendaId}/instructions`);
 
+// Modifiko instruksionet për një lëndë
+export const updateInstructionTemplate = async (profesorId, lendaId, instructionId, instructionData) => {
+  const formData = new FormData();
+
+  formData.append('title', instructionData.title);
+  formData.append('content', instructionData.content);
+
+  // Add files if any
+  if (instructionData.files && instructionData.files.length > 0) {
+    instructionData.files.forEach((file, index) => {
+      formData.append(`files`, file.data || file, file.name);
+    });
+  }
+
+  const response = await fetch(`${API_BASE_URL}/profesoret/${profesorId}/lendet/${lendaId}/instructions/${instructionId}`, {
+    method: 'PUT',
+    body: formData,
+  });
+
+  return handleResponse(response);
+};
+
 // Fshij instruksionet për një lëndë
 export const deleteInstructionTemplate = (profesorId, lendaId, instructionId) =>
   request(`/profesoret/${profesorId}/lendet/${lendaId}/instructions/${instructionId}`, {
@@ -271,6 +278,7 @@ export default {
   deleteLendaTemplate,
   addInstructionTemplate,
   getInstructionTemplates,
+  updateInstructionTemplate,
   deleteInstructionTemplate,
   addFeedbackToSubmission,
 };

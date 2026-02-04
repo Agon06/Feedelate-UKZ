@@ -43,12 +43,20 @@ export class Lendet {
     @Column({ type: "varchar", length: 255, nullable: true })
     ideaTitle?: string;
 
+    // Lista e afateve të ideve (ruhet si JSON)
+    @Column({ type: "json", nullable: true })
+    ideaDeadlinesJson?: any;
+
     // Template/Shabllon files per projektet
     @Column({ nullable: true })
     templateFile?: string;
 
     @Column({ nullable: true })
     templateFileName?: string;
+
+    // Instruksionet për projektin (ruhen si tekst i vetëm)
+    @Column({ type: "text", nullable: true })
+    projectInstructions?: string;
 
     // Relacioni me Profesorin - nje profesor mund te ketë shumë lëndë
     @ManyToOne(() => Profesor, (profesor) => profesor.lendet, { onDelete: "SET NULL", nullable: true })

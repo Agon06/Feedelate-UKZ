@@ -16,6 +16,6 @@ INSERT INTO lendetp (emriLendes, semestri, viti, isZgjedhore, createdAt, updated
 ('Aplikacione Mobile', 6, 3, 1, NOW(), NOW());
 
 -- Insert a test professor if not exists
-INSERT INTO profesoret (emri, mbiemri, email, password, departamenti, grada, telefoni, createdAt, updatedAt) 
-VALUES ('Test', 'Profesor', 'test.profesor@uni-gjilan.net', '$2b$10$testHashedPassword', 'Informatikë', 'Profesor i Asociuar', '+383 44 123 456', NOW(), NOW())
+INSERT INTO profesoret (emri, mbiemri, email, password, createdAt, updatedAt) 
+VALUES ('Test', 'Profesor', 'test.profesor@uni-gjilan.net', '$2b$10$testHashedPassword', NOW(), NOW())
 ON DUPLICATE KEY UPDATE emri=emri;

@@ -67,11 +67,9 @@ const Lendetp = () => {
 
     const fetchYearData = async () => {
       try {
-        // Get academic year from localStorage
-        const academicYear = localStorage.getItem('profesorAcademicYear');
-        console.log('Fetching data for academic year:', academicYear);
+        console.log('Fetching data for year:', yearId);
         
-        const data = await getProfesorYearData(PROFESOR_ID, yearId, academicYear);
+        const data = await getProfesorYearData(PROFESOR_ID, yearId);
         if (!isMounted) return;
         
         // Debug: Log response
@@ -80,7 +78,6 @@ const Lendetp = () => {
           success: true,
           profesorId: PROFESOR_ID,
           yearId: yearId,
-          academicYear: academicYear,
           semesterCount: data?.semesters?.length || 0,
           subjectCount: data?.semesters?.reduce((sum, s) => sum + (s.subjects?.length || 0), 0) || 0,
           rawData: data

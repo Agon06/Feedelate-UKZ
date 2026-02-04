@@ -17,15 +17,6 @@ export class Profesor {
   @Column({ unique: true })
   email: string;
 
-  @Column({ nullable: true })
-  departamenti: string;
-
-  @Column({ nullable: true })
-  grada: string;
-
-  @Column({ nullable: true })
-  telefoni: string;
-
   @Column({ nullable: true, type: 'text' })
   profilePicture: string;
 

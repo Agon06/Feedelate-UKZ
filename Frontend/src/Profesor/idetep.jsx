@@ -32,6 +32,9 @@ const Idetep = () => {
   const [ideaFeedback, setIdeaFeedback] = useState('');
   const [toastMessage, setToastMessage] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState({ open: false, message: '', onConfirm: null });
+  const [showDeadlineForm, setShowDeadlineForm] = useState(false);
+  const [deadlinesList, setDeadlinesList] = useState([]);
+  const [selectedDeadlineIndex, setSelectedDeadlineIndex] = useState(null);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -94,47 +97,46 @@ const Idetep = () => {
     const months = ['Janar', 'Shkurt', 'Mars', 'Prill', 'Maj', 'Qershor', 'Korrik', 'Gusht', 'Shtator', 'Tetor', 'Nëntor', 'Dhjetor'];
     const periodsMap = new Map();
 
-    // ✅ Add period from database deadline if exists (with deadline dates)
-    if (ideaDeadline.start || ideaDeadline.end) {
-      const startDate = ideaDeadline.start ? new Date(ideaDeadline.start) : null;
-      const endDate = ideaDeadline.end ? new Date(ideaDeadline.end) : null;
-      
-      if (startDate && endDate) {
-        const customTitle = deadlineTitle || null;
-        // Use custom title as ID if available, otherwise use year-month
-        const id = customTitle ? `deadline-${customTitle.replace(/\s+/g, '-')}` : `${startDate.getFullYear()}-${startDate.getMonth()}`;
-        const year = startDate.getFullYear();
-        const month = startDate.getMonth();
-        const endMonth = (month + 2) % 12;
-        const endYear = month + 2 >= 12 ? year + 1 : year;
-        const periodLabel = `${months[month]} - ${months[endMonth]} ${year}`;
+    // ✅ Add ALL deadlines from deadlinesList
+    deadlinesList.forEach((deadline, idx) => {
+      if (deadline.start && deadline.end) {
+        const startDate = new Date(deadline.start);
+        const endDate = new Date(deadline.end);
+        const customTitle = deadline.title || null;
+        const id = `deadline-${idx}-${customTitle ? customTitle.replace(/\s+/g, '-') : startDate.getTime()}`;
         
         periodsMap.set(id, {
           id: id,
-          label: customTitle ? `📌 ${customTitle}` : `📅 ${periodLabel}`,
+          label: customTitle ? `📌 ${customTitle}` : `📅 ${startDate.toLocaleDateString('sq-AL')}`,
           startDate: startDate,
           endDate: endDate,
           isDeadline: true,
-          customTitle: customTitle
+          customTitle: customTitle,
+          deadlineData: deadline
         });
       }
-    }
+    });
 
-    // ✅ ALSO: Generate periods from actual idea submission dates (but skip if matches deadline)
+    // ✅ ALSO: Generate periods from actual idea submission dates (but skip if matches any deadline)
     ideas.forEach((idea) => {
       const submitDate = new Date(idea.createdAt || idea.created_at);
       const year = submitDate.getFullYear();
       const month = submitDate.getMonth();
       const key = `${year}-${month}`;
       
-      // Skip if this submission falls within deadline period
-      if (ideaDeadline.start && ideaDeadline.end) {
-        const deadlineStart = new Date(ideaDeadline.start);
-        const deadlineEnd = new Date(ideaDeadline.end);
-        if (submitDate >= deadlineStart && submitDate <= deadlineEnd) {
-          return; // Skip, it's already in deadline period
+      // Skip if this submission falls within any deadline period
+      let isInDeadline = false;
+      deadlinesList.forEach(deadline => {
+        if (deadline.start && deadline.end) {
+          const deadlineStart = new Date(deadline.start);
+          const deadlineEnd = new Date(deadline.end);
+          if (submitDate >= deadlineStart && submitDate <= deadlineEnd) {
+            isInDeadline = true;
+          }
         }
-      }
+      });
+      
+      if (isInDeadline) return; // Skip, it's already in a deadline period
 
       if (!periodsMap.has(key)) {
         const endMonth = (month + 2) % 12;
@@ -160,17 +162,39 @@ const Idetep = () => {
       setIdeaDeadline({ start: '', end: '' });
       setDeadlineTitle('');
       setDeadlineStatus({ loading: false, saving: false, error: null, message: null });
+      setDeadlinesList([]);
       return;
     }
 
     setDeadlineStatus({ loading: true, saving: false, error: null, message: null });
     try {
       const response = await getIdeaDeadline(PROFESOR_ID, lendaId);
+      console.log('📌 loadIdeaDeadline response:', response);
+      
       const startValue = response.lenda?.ideaStartDate ? response.lenda.ideaStartDate.slice(0, 16) : '';
       const endValue = response.lenda?.ideaDeadline ? response.lenda.ideaDeadline.slice(0, 16) : '';
       const titleValue = response.lenda?.ideaTitle || '';
       setIdeaDeadline({ start: startValue, end: endValue });
       setDeadlineTitle(titleValue);
+
+      // ✅ Populo listën nga JSON në DB (nëse ekziston)
+      if (Array.isArray(response.lenda?.ideaDeadlinesJson) && response.lenda.ideaDeadlinesJson.length > 0) {
+        console.log('✅ Loading from ideaDeadlinesJson:', response.lenda.ideaDeadlinesJson.length, 'afate');
+        setDeadlinesList(response.lenda.ideaDeadlinesJson);
+      } else if (startValue && endValue) {
+        console.log('⚠️ No JSON found, creating from single deadline');
+        setDeadlinesList([
+          {
+            title: titleValue || 'Afat pa titull',
+            start: startValue,
+            end: endValue
+          }
+        ]);
+      } else {
+        console.log('ℹ️ No deadlines found');
+        setDeadlinesList([]);
+      }
+
       setDeadlineStatus({ loading: false, saving: false, error: null, message: null });
     } catch (error) {
       setDeadlineStatus({ loading: false, saving: false, error: error?.message ?? 'Nuk u lexuan afatet.', message: null });
@@ -391,10 +415,29 @@ const Idetep = () => {
       return;
     }
 
+    const baseItem = {
+      title: deadlineTitle.trim() || 'Afat pa titull',
+      start: ideaDeadline.start || '',
+      end: ideaDeadline.end || '',
+    };
+
+    const updatedDeadlinesList = (() => {
+      if (!baseItem.start || !baseItem.end) return deadlinesList;
+      if (selectedDeadlineIndex === null || selectedDeadlineIndex === undefined) {
+        console.log('➕ Adding new deadline to list');
+        return [...deadlinesList, baseItem];
+      }
+      console.log(`✏️ Updating deadline at index ${selectedDeadlineIndex}`);
+      return deadlinesList.map((item, idx) => (idx === selectedDeadlineIndex ? baseItem : item));
+    })();
+
+    console.log(`📤 Sending to backend:`, { count: updatedDeadlinesList.length, list: updatedDeadlinesList });
+
     const payload = {
       ideaStartDate: normalizeDateInput(ideaDeadline.start),
       ideaDeadline: normalizeDateInput(ideaDeadline.end),
       ideaTitle: deadlineTitle.trim() || null,
+      ideaDeadlinesJson: updatedDeadlinesList,
     };
 
     if (payload.ideaStartDate && payload.ideaDeadline && payload.ideaStartDate > payload.ideaDeadline) {
@@ -414,10 +457,20 @@ const Idetep = () => {
       // Reload data to update periods
       calculatePeriods();
 
-      setDeadlineStatus({ loading: false, saving: false, error: null, message: 'Afati u ruajt me sukses.' });
+      // ✅ Përditëso listën nga backend, ose përdor listën lokale
+      if (Array.isArray(response.lenda?.ideaDeadlinesJson) && response.lenda.ideaDeadlinesJson.length > 0) {
+        console.log('✅ Backend returned:', response.lenda.ideaDeadlinesJson.length, 'afate');
+        setDeadlinesList(response.lenda.ideaDeadlinesJson);
+      } else if (startValue && endValue) {
+        console.log('⚠️ Backend did not return JSON, using local list');
+        setDeadlinesList(updatedDeadlinesList);
+      }
 
-      // ✅ NUK zbrazim formin - le të qëndrojnë vlerat e ruajtura
-      // Kjo siguron që calculatePeriods() të punojë saktë me vlerat e marra nga DB
+      // ✅ Fsheh formën pas ruajtes
+      setShowDeadlineForm(false);
+      setSelectedDeadlineIndex(null);
+
+      setDeadlineStatus({ loading: false, saving: false, error: null, message: 'Afati u ruajt me sukses.' });
     } catch (error) {
       setDeadlineStatus({ loading: false, saving: false, error: error?.message ?? 'Nuk u ruajt afati.', message: null });
     }
@@ -427,10 +480,31 @@ const Idetep = () => {
     if (!lendaId) return;
     setDeadlineStatus({ loading: false, saving: true, error: null, message: null });
     try {
-      const response = await updateIdeaDeadline(PROFESOR_ID, lendaId, { ideaStartDate: null, ideaDeadline: null });
+      const nextDeadlinesList = (selectedDeadlineIndex === null || selectedDeadlineIndex === undefined)
+        ? deadlinesList.filter((dl) => !(dl.start === ideaDeadline.start && dl.end === ideaDeadline.end))
+        : deadlinesList.filter((_, idx) => idx !== selectedDeadlineIndex);
+
+      const response = await updateIdeaDeadline(PROFESOR_ID, lendaId, {
+        ideaStartDate: null,
+        ideaDeadline: null,
+        ideaTitle: null,
+        ideaDeadlinesJson: nextDeadlinesList,
+      });
       const startValue = response.lenda?.ideaStartDate ? response.lenda.ideaStartDate.slice(0, 16) : '';
       const endValue = response.lenda?.ideaDeadline ? response.lenda.ideaDeadline.slice(0, 16) : '';
       setIdeaDeadline({ start: startValue, end: endValue });
+      
+      // ✅ Fshij afatin nga lista
+      if (Array.isArray(response.lenda?.ideaDeadlinesJson)) {
+        setDeadlinesList(response.lenda.ideaDeadlinesJson);
+      } else {
+        setDeadlinesList(nextDeadlinesList);
+      }
+      
+      // ✅ Fsheh formën
+      setShowDeadlineForm(false);
+      setSelectedDeadlineIndex(null);
+      
       setDeadlineStatus({ loading: false, saving: false, error: null, message: 'Afati u fshi.' });
     } catch (error) {
       setDeadlineStatus({ loading: false, saving: false, error: error?.message ?? 'Nuk u fshi afati.', message: null });
@@ -758,148 +832,205 @@ const Idetep = () => {
         <div style={rightPanelStyle}>
           {/* Afati i dorëzimit Tab */}
           {activeTab === 'deadline' && (
-            <div style={deadlineBar}>
-              <div style={deadlineCard}>
-                <div style={deadlineLabel}>
-                  <span role="img" aria-label="calendar">🗓️</span>
-                  Afati i dorëzimit të idesë
-                  {deadlineStatus.loading && <span style={{ fontSize: 12, color: '#cfeee0' }}>Duke u lexuar...</span>}
-                  {deadlineStatus.error && <span style={{ fontSize: 12, color: '#f8b4b4' }}>{deadlineStatus.error}</span>}
-                  {deadlineStatus.message && <span style={{ fontSize: 12, color: '#7be7b2' }}>{deadlineStatus.message}</span>}
-                </div>
-                <div style={{ marginBottom: '1rem' }}>
-                  <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 4 }}>Emërtimi i dorëzimit (opsional)</div>
-                  <input
-                    type="text"
-                    placeholder="Vendos titullin e Assignment."
-                    value={deadlineTitle}
-                    onChange={(e) => setDeadlineTitle(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem 0.75rem',
-                      borderRadius: 10,
-                      border: '1px solid rgba(23,199,122,0.4)',
-                      background: 'rgba(4,10,6,0.7)',
-                      color: '#1fdc8c',
-                      fontSize: 14,
-                      fontWeight: 500,
-                      outline: 'none'
-                    }}
-                    disabled={deadlineStatus.loading || deadlineStatus.saving}
-                  />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
-                  <div>
-                    <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 4 }}>Fillimi</div>
-                    <div style={compactRow}>
-                      <input
-                        type="date"
-                        style={deadlineInput}
-                        value={ideaDeadline.start ? ideaDeadline.start.split('T')[0] : ''}
-                        onChange={(e) => setDatePart('start', e.target.value)}
-                        disabled={deadlineStatus.loading || deadlineStatus.saving}
-                      />
-                      <div style={timeSegments}>
-                        <select
-                          style={timeSelect}
-                          value={get24hParts(ideaDeadline.start).hour}
-                          onChange={(e) => setTime24('start', e.target.value, get24hParts(ideaDeadline.start).minute)}
+            <div style={{ display: 'grid', gridTemplateColumns: showDeadlineForm ? '1fr 280px' : '1fr', gap: '1.5rem' }}>
+              {/* Forma në të majtë - fshehur by default */}
+              {showDeadlineForm && (
+                <div style={deadlineCard}>
+                  <div style={deadlineLabel}>
+                    <span role="img" aria-label="calendar">🗓️</span>
+                    Afati i dorëzimit të idesë
+                    {deadlineStatus.loading && <span style={{ fontSize: 12, color: '#cfeee0' }}>Duke u lexuar...</span>}
+                    {deadlineStatus.error && <span style={{ fontSize: 12, color: '#f8b4b4' }}>{deadlineStatus.error}</span>}
+                    {deadlineStatus.message && <span style={{ fontSize: 12, color: '#7be7b2' }}>{deadlineStatus.message}</span>}
+                  </div>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 4 }}>Emërtimi i dorëzimit (opsional)</div>
+                    <input
+                      type="text"
+                      placeholder="Vendos titullin e Assignment."
+                      value={deadlineTitle}
+                      onChange={(e) => setDeadlineTitle(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: 10,
+                        border: '1px solid rgba(23,199,122,0.4)',
+                        background: 'rgba(4,10,6,0.7)',
+                        color: '#1fdc8c',
+                        fontSize: 14,
+                        fontWeight: 500,
+                        outline: 'none'
+                      }}
+                      disabled={deadlineStatus.loading || deadlineStatus.saving}
+                    />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
+                    <div>
+                      <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 4 }}>Fillimi</div>
+                      <div style={compactRow}>
+                        <input
+                          type="date"
+                          style={deadlineInput}
+                          value={ideaDeadline.start ? ideaDeadline.start.split('T')[0] : ''}
+                          onChange={(e) => setDatePart('start', e.target.value)}
                           disabled={deadlineStatus.loading || deadlineStatus.saving}
-                        >
-                          {Array.from({ length: 24 }, (_, i) => pad2(i)).map((h) => (
-                            <option key={h} value={h}>{h}</option>
-                          ))}
-                        </select>
-                        <select
-                          style={timeSelect}
-                          value={get24hParts(ideaDeadline.start).minute}
-                          onChange={(e) => setTime24('start', get24hParts(ideaDeadline.start).hour, e.target.value)}
+                        />
+                        <div style={timeSegments}>
+                          <select
+                            style={timeSelect}
+                            value={get24hParts(ideaDeadline.start).hour}
+                            onChange={(e) => setTime24('start', e.target.value, get24hParts(ideaDeadline.start).minute)}
+                            disabled={deadlineStatus.loading || deadlineStatus.saving}
+                          >
+                            {Array.from({ length: 24 }, (_, i) => pad2(i)).map((h) => (
+                              <option key={h} value={h}>{h}</option>
+                            ))}
+                          </select>
+                          <select
+                            style={timeSelect}
+                            value={get24hParts(ideaDeadline.start).minute}
+                            onChange={(e) => setTime24('start', get24hParts(ideaDeadline.start).hour, e.target.value)}
+                            disabled={deadlineStatus.loading || deadlineStatus.saving}
+                          >
+                            {Array.from({ length: 60 }, (_, i) => pad2(i)).map((m) => (
+                              <option key={m} value={m}>{m}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 4 }}>Mbarimi</div>
+                      <div style={compactRow}>
+                        <input
+                          type="date"
+                          style={deadlineInput}
+                          value={ideaDeadline.end ? ideaDeadline.end.split('T')[0] : ''}
+                          onChange={(e) => setDatePart('end', e.target.value)}
                           disabled={deadlineStatus.loading || deadlineStatus.saving}
-                        >
-                          {Array.from({ length: 60 }, (_, i) => pad2(i)).map((m) => (
-                            <option key={m} value={m}>{m}</option>
-                          ))}
-                        </select>
+                        />
+                        <div style={timeSegments}>
+                          <select
+                            style={timeSelect}
+                            value={get24hParts(ideaDeadline.end).hour}
+                            onChange={(e) => setTime24('end', e.target.value, get24hParts(ideaDeadline.end).minute)}
+                            disabled={deadlineStatus.loading || deadlineStatus.saving}
+                          >
+                            {Array.from({ length: 24 }, (_, i) => pad2(i)).map((h) => (
+                              <option key={h} value={h}>{h}</option>
+                            ))}
+                          </select>
+                          <select
+                            style={timeSelect}
+                            value={get24hParts(ideaDeadline.end).minute}
+                            onChange={(e) => setTime24('end', get24hParts(ideaDeadline.end).hour, e.target.value)}
+                            disabled={deadlineStatus.loading || deadlineStatus.saving}
+                          >
+                            {Array.from({ length: 60 }, (_, i) => pad2(i)).map((m) => (
+                              <option key={m} value={m}>{m}</option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
                     </div>
                   </div>
-                  <div>
-                    <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 4 }}>Mbarimi</div>
-                    <div style={compactRow}>
-                      <input
-                        type="date"
-                        style={deadlineInput}
-                        value={ideaDeadline.end ? ideaDeadline.end.split('T')[0] : ''}
-                        onChange={(e) => setDatePart('end', e.target.value)}
-                        disabled={deadlineStatus.loading || deadlineStatus.saving}
-                      />
-                      <div style={timeSegments}>
-                        <select
-                          style={timeSelect}
-                          value={get24hParts(ideaDeadline.end).hour}
-                          onChange={(e) => setTime24('end', e.target.value, get24hParts(ideaDeadline.end).minute)}
-                          disabled={deadlineStatus.loading || deadlineStatus.saving}
-                        >
-                          {Array.from({ length: 24 }, (_, i) => pad2(i)).map((h) => (
-                            <option key={h} value={h}>{h}</option>
-                          ))}
-                        </select>
-                        <select
-                          style={timeSelect}
-                          value={get24hParts(ideaDeadline.end).minute}
-                          onChange={(e) => setTime24('end', get24hParts(ideaDeadline.end).hour, e.target.value)}
-                          disabled={deadlineStatus.loading || deadlineStatus.saving}
-                        >
-                          {Array.from({ length: 60 }, (_, i) => pad2(i)).map((m) => (
-                            <option key={m} value={m}>{m}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
+                  <div style={deadlineActions}>
+                    <button
+                      style={{ ...primaryButton, padding: '0.65rem 1.2rem' }}
+                      onClick={handleSaveDeadline}
+                      disabled={deadlineStatus.loading || deadlineStatus.saving}
+                    >
+                      {deadlineStatus.saving ? 'Duke ruajtur...' : 'Ruaj afatin'}
+                    </button>
+                    <button
+                      style={{ ...secondaryButton, padding: '0.65rem 1.2rem' }}
+                      onClick={handleClearDeadline}
+                      disabled={deadlineStatus.loading || deadlineStatus.saving || (!ideaDeadline.start && !ideaDeadline.end)}
+                    >
+                      Hiq afatin
+                    </button>
                   </div>
                 </div>
-                <div style={deadlineActions}>
-                  <button
-                    style={{ ...primaryButton, padding: '0.65rem 1.2rem' }}
-                    onClick={handleSaveDeadline}
-                    disabled={deadlineStatus.loading || deadlineStatus.saving}
-                  >
-                    {deadlineStatus.saving ? 'Duke ruajtur...' : 'Ruaj afatin'}
-                  </button>
-                  <button
-                    style={{ ...secondaryButton, padding: '0.65rem 1.2rem' }}
-                    onClick={handleClearDeadline}
-                    disabled={deadlineStatus.loading || deadlineStatus.saving || (!ideaDeadline.start && !ideaDeadline.end)}
-                  >
-                    Hiq afatin
-                  </button>
-                  <button
-                    style={{ ...secondaryButton, padding: '0.65rem 1.2rem' }}
-                    onClick={loadIdeaDeadline}
-                    disabled={deadlineStatus.loading}
-                  >
-                    Rifresko afatin
-                  </button>
-                </div>
-              </div>
+              )}
 
-              <div style={deadlineSummary}>
-                <div style={{ ...deadlineLabel, color: '#6495ed' }}>
-                  <span role="img" aria-label="pin">📌</span>
-                  Datat e caktuara
+              {/* Lista në të djathtë */}
+              <div style={deadlineCard}>
+                <button
+                  style={{ ...primaryButton, width: '100%', marginBottom: '1rem' }}
+                  onClick={() => {
+                    setShowDeadlineForm(true);
+                    setIdeaDeadline({ start: '', end: '' });
+                    setDeadlineTitle('');
+                    setSelectedDeadlineIndex(null);
+                  }}
+                >
+                  + Shto afat të ri
+                </button>
+
+                <div style={{ fontSize: 12, opacity: 0.75, marginBottom: '0.75rem' }}>Afatet ekzistues:</div>
+                <div style={{ ...ideaList, maxHeight: '400px', minHeight: '200px' }}>
+                  {deadlinesList.length === 0 ? (
+                    <div style={{ textAlign: 'center', opacity: 0.6, padding: '1rem' }}>
+                      Nuk ka afate të ruajur
+                    </div>
+                  ) : (
+                    deadlinesList.map((deadline, idx) => (
+                      <div
+                        key={idx}
+                        style={{ ...ideaItem, cursor: 'pointer', marginBottom: '0.5rem' }}
+                        onClick={() => {
+                          setShowDeadlineForm(true);
+                          setIdeaDeadline(deadline);
+                          setDeadlineTitle(deadline.title || '');
+                          setSelectedDeadlineIndex(idx);
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(15, 22, 18, 0.8)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(5,12,8,0.8)'}
+                      >
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, fontSize: 13 }}>
+                            {deadline.title || 'Afat pa titull'}
+                          </div>
+                          <div style={{ fontSize: 11, opacity: 0.7, marginTop: 3 }}>
+                            {formatDateDisplay(deadline.start)} → {formatDateDisplay(deadline.end)}
+                          </div>
+                        </div>
+                        <button
+                          style={{ ...tinyButton, marginLeft: '0.5rem' }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowDeadlineForm(true);
+                            setIdeaDeadline(deadline);
+                            setDeadlineTitle(deadline.title || '');
+                            setSelectedDeadlineIndex(idx);
+                          }}
+                        >
+                          Modifiko
+                        </button>
+                      </div>
+                    ))
+                  )}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.5rem' }}>
-                  <div style={{ fontSize: 14 }}>
-                    <div style={{ opacity: 0.75, fontSize: 12 }}>Fillimi</div>
-                    <strong>{formatDateDisplay(normalizeDateInput(ideaDeadline.start) ?? '')}</strong>
+
+                <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#6495ed', marginBottom: '0.5rem' }}>
+                    📌 Afati aktual:
                   </div>
-                  <div style={{ fontSize: 14 }}>
-                    <div style={{ opacity: 0.75, fontSize: 12 }}>Mbarimi</div>
-                    <strong>{formatDateDisplay(normalizeDateInput(ideaDeadline.end) ?? '')}</strong>
+                  <div style={{ fontSize: 12, opacity: 0.85 }}>
+                    {ideaDeadline.start && ideaDeadline.end ? (
+                      <>
+                        {deadlineTitle && (
+                          <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>
+                            {deadlineTitle}
+                          </div>
+                        )}
+                        <div>{formatDateDisplay(ideaDeadline.start)}</div>
+                        <div style={{ marginTop: '0.25rem' }}>{formatDateDisplay(ideaDeadline.end)}</div>
+                      </>
+                    ) : (
+                      <span style={{ opacity: 0.6 }}>Nuk ka afat të zgjedhur</span>
+                    )}
                   </div>
-                </div>
-                <div style={{ fontSize: 12, opacity: 0.75 }}>
-                  Këto data shfaqen si udhëzim për dorëzimin e ideve.
                 </div>
               </div>
             </div>

@@ -2,9 +2,9 @@
 -- Këto lëndë do të jenë të lidhura me profesorId = 1
 
 -- Para së gjithash, sigurohuni që profesori ekziston
-INSERT INTO profesoret (id, emri, mbiemri, email, password, departamenti, grada, telefoni, createdAt, updatedAt) 
+INSERT INTO profesoret (id, emri, mbiemri, email, password, createdAt, updatedAt) 
 VALUES 
-  (1, 'Fatmir', 'Morina', 'fatmir.morina@uni-gjilan.net', '$2b$10$testHashedPassword123456789', 'Informatikë', 'Profesor i Asociuar', '+383 44 111 222', NOW(), NOW())
+  (1, 'Fatmir', 'Morina', 'fatmir.morina@uni-gjilan.net', '$2b$10$testHashedPassword123456789', NOW(), NOW())
 ON DUPLICATE KEY UPDATE emri=emri;
 
 -- VITI I (Semestri 1 dhe 2)

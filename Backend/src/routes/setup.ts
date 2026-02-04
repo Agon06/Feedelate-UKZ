@@ -30,9 +30,6 @@ router.post("/setup", async (req, res) => {
         emri: "Test",
         mbiemri: "Profesor",
         email: "test.profesor@uni-gjilan.net",
-        departamenti: "Informatikë",
-        grada: "Profesor i Asociuar",
-        telefoni: "+383 44 123 456",
         roles: JSON.stringify(["profesor"]),
       });
       profesor = await profesorRepository.save(profesor);

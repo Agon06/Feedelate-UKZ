@@ -505,6 +505,129 @@ router.get("/:id/dorezime/template-download", async (req: Request, res: Response
   }
 });
 
+// Get template info për nje lende (projekti) - përdor lendaId nga param
+router.get("/:id/projekti/:lendaId/template", async (req: Request, res: Response) => {
+  const studentId = Number(req.params.id);
+  const lendaId = Number(req.params.lendaId);
+
+  if (Number.isNaN(studentId)) {
+    return res.status(400).json({ message: "Student id is invalid" });
+  }
+
+  if (Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "lendaId eshte i pavlefshem" });
+  }
+
+  try {
+    const student = await studentRepository.findOneBy({ id: studentId });
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const lenda = await lendeRepository.findOneBy({ id: lendaId });
+    if (!lenda) {
+      return res.status(404).json({ message: "Lenda nuk u gjet" });
+    }
+
+    if (!lenda.templateFile || !lenda.templateFileName) {
+      return res.json({ hasTemplate: false, fileName: null });
+    }
+
+    res.json({ hasTemplate: true, fileName: lenda.templateFileName });
+  } catch (error) {
+    console.error("Template info fetch error:", error);
+    res.status(500).json({ message: "Error fetching template info", error: String(error) });
+  }
+});
+
+// DOWNLOAD: Shkarko template-in për nje lende (projekti)
+router.get("/:id/projekti/:lendaId/template/download", async (req: Request, res: Response) => {
+  const studentId = Number(req.params.id);
+  const lendaId = Number(req.params.lendaId);
+
+  if (Number.isNaN(studentId)) {
+    return res.status(400).json({ message: "Student id is invalid" });
+  }
+
+  if (Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "lendaId eshte i pavlefshem" });
+  }
+
+  try {
+    const student = await studentRepository.findOneBy({ id: studentId });
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const lenda = await lendeRepository.findOneBy({ id: lendaId });
+    if (!lenda) {
+      return res.status(404).json({ message: "Lenda nuk u gjet" });
+    }
+
+    if (!lenda.templateFile || !lenda.templateFileName) {
+      return res.status(404).json({ message: "Template nuk u gjet" });
+    }
+
+    const absolutePath = path.resolve(process.cwd(), lenda.templateFile);
+    if (!fs.existsSync(absolutePath)) {
+      return res.status(404).json({ message: "Template file nuk ekziston ne disk" });
+    }
+
+    return res.download(absolutePath, lenda.templateFileName);
+  } catch (error) {
+    console.error("Template download error:", error);
+    res.status(500).json({ message: "Error downloading template", error: String(error) });
+  }
+});
+
+// GET: Merr instruksionet/template-et për një lëndë (projekti) për studentin
+router.get("/:id/projekti/:lendaId/instructions", async (req: Request, res: Response) => {
+  const studentId = Number(req.params.id);
+  const lendaId = Number(req.params.lendaId);
+
+  if (Number.isNaN(studentId)) {
+    return res.status(400).json({ message: "Student id is invalid" });
+  }
+
+  if (Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "lendaId eshte i pavlefshem" });
+  }
+
+  try {
+    const student = await studentRepository.findOneBy({ id: studentId });
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const lenda = await lendeRepository.findOneBy({ id: lendaId });
+    if (!lenda) {
+      return res.status(404).json({ message: "Lenda nuk u gjet" });
+    }
+
+    if (!lenda.projectInstructions) {
+      return res.json([]);
+    }
+
+    res.json([
+      {
+        id: lenda.id,
+        title: "Instruksione",
+        content: lenda.projectInstructions,
+        createdAt: lenda.updatedAt,
+        files: [],
+      },
+    ]);
+  } catch (error) {
+    console.error("Error fetching instructions:", error);
+    res.status(500).json({ message: "Error fetching instructions", error: String(error) });
+  }
+});
+
+// DOWNLOAD: Shkarko një fajll të instruksioneve
+router.get("/:id/projekti/:lendaId/instructions/:fileName/download", async (req: Request, res: Response) => {
+  return res.status(404).json({ message: "Instruksionet ruhen vetëm si tekst" });
+});
+
 // Get template (shabllon) per nje lende
 router.get("/:id/dorezime/shabllon", async (req: Request, res: Response) => {
   const studentId = Number(req.params.id);
