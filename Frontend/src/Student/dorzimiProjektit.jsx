@@ -125,13 +125,13 @@ const DorzimiProjektit = () => {
 
     const pageStyle = {
         minHeight: "100vh",
-        background: "linear-gradient(180deg, var(--st-2) 0%, var(--st-3) 70%)",
+        background: "linear-gradient(180deg, #4F7C82 0%, #0B2E33 60%, #0B2E33 100%)",
         color: "var(--st-text)",
         fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     };
 
     const topBarStyle = {
-        background: "rgba(79, 99, 103, 0.9)",
+        background: "rgba(79, 124, 130, 0.25)",
         borderBottom: "1px solid var(--st-border)",
         padding: "1rem 2rem",
         display: "flex",
@@ -158,7 +158,7 @@ const DorzimiProjektit = () => {
 
     const leftPanelStyle = {
         flex: "0 0 280px",
-        background: "rgba(79, 99, 103, 0.85)",
+        background: "rgba(11, 46, 51, 0.65)",
         border: "1px solid var(--st-border)",
         borderRadius: 18,
         padding: "2rem 1.5rem",
@@ -169,7 +169,7 @@ const DorzimiProjektit = () => {
 
     const rightPanelStyle = {
         flex: 1,
-        background: "rgba(79, 99, 103, 0.85)",
+        background: "rgba(11, 46, 51, 0.65)",
         border: "1px solid var(--st-border)",
         borderRadius: 18,
         padding: "1rem",
@@ -187,10 +187,10 @@ const DorzimiProjektit = () => {
     const tabButtonStyle = (isActive) => ({
         width: "100%",
         padding: "1rem",
-        background: isActive ? "rgba(23,199,122,0.25)" : "rgba(9,18,12,0.5)",
-        border: `1px solid ${isActive ? "#17c77a" : "rgba(255,255,255,0.1)"}`,
+        background: isActive ? "rgba(184, 227, 233, 0.18)" : "rgba(11, 46, 51, 0.6)",
+        border: `1px solid ${isActive ? "rgba(184, 227, 233, 0.55)" : "rgba(255,255,255,0.1)"}`,
         borderRadius: 12,
-        color: isActive ? "#1fdc8c" : "#c4f0da",
+        color: isActive ? "var(--st-1)" : "var(--st-text)",
         fontSize: 13,
         fontWeight: 600,
         cursor: "pointer",
@@ -202,24 +202,24 @@ const DorzimiProjektit = () => {
     const sectionHeaderStyle = {
         fontSize: 20,
         fontWeight: 700,
-        color: "#1fdc8c",
+        color: "var(--st-1)",
         marginBottom: "1rem",
     };
 
     const cardStyle = {
-        background: "rgba(5,12,8,0.9)",
-        border: "1px solid rgba(255,255,255,0.08)",
+        background: "rgba(11, 46, 51, 0.7)",
+        border: "1px solid rgba(184, 227, 233, 0.2)",
         borderRadius: 14,
         padding: "1rem",
         marginBottom: "1rem",
     };
 
     const buttonStyle = {
-        background: "linear-gradient(135deg, #17c77a 0%, #14b56d 100%)",
+        background: '#4F7C82',
         border: "none",
         borderRadius: 10,
         padding: "0.85rem 1.5rem",
-        color: "#0a1612",
+        color: "#0B2E33",
         fontSize: 14,
         fontWeight: 700,
         cursor: "pointer",
@@ -232,7 +232,7 @@ const DorzimiProjektit = () => {
         border: "1px solid rgba(255,255,255,0.15)",
         borderRadius: 10,
         padding: "0.6rem 1.2rem",
-        color: "#c4f0da",
+        color: "var(--st-text)",
         fontSize: 13,
         fontWeight: 600,
         cursor: "pointer",
@@ -325,9 +325,9 @@ const DorzimiProjektit = () => {
         fontSize: 15,
         fontWeight: 700,
         background: isDorzuar
-            ? "linear-gradient(135deg, #17c77a 0%, #14b56d 100%)"
-            : "linear-gradient(135deg, #ff5252 0%, #e04545 100%)",
-        color: isDorzuar ? "#0a1612" : "#ffffff",
+            ? "linear-gradient(135deg, #B8E3E9 0%, #4F7C82 100%)"
+            : "linear-gradient(135deg, #f37c7c 0%, #e26464 100%)",
+        color: isDorzuar ? "#0B2E33" : "#ffffff",
         border: "none",
     });
 
@@ -388,9 +388,9 @@ const DorzimiProjektit = () => {
                                     marginBottom: "1rem",
                                     padding: "0.85rem 1rem",
                                     borderRadius: 10,
-                                    border: submitMessage.type === "success" ? "1px solid rgba(23,199,122,0.4)" : "1px solid rgba(255,99,71,0.4)",
-                                    background: submitMessage.type === "success" ? "rgba(23,199,122,0.12)" : "rgba(255,99,71,0.12)",
-                                    color: submitMessage.type === "success" ? "#1fdc8c" : "#ff9f8d",
+                                    border: submitMessage.type === "success" ? "1px solid rgba(184, 227, 233, 0.35)" : "1px solid rgba(255,99,71,0.4)",
+                                    background: submitMessage.type === "success" ? "rgba(184, 227, 233, 0.12)" : "rgba(255,99,71,0.12)",
+                                    color: submitMessage.type === "success" ? "var(--st-1)" : "#ff9f8d",
                                     textAlign: "center",
                                     fontWeight: 600
                                 }}>
@@ -427,10 +427,10 @@ const DorzimiProjektit = () => {
                                         display: "block",
                                         marginBottom: "1rem",
                                         padding: "0.75rem",
-                                        background: "rgba(255,255,255,0.05)",
-                                        border: "1px solid rgba(255,255,255,0.15)",
+                                        background: "rgba(11, 46, 51, 0.7)",
+                                        border: "1px solid rgba(184, 227, 233, 0.2)",
                                         borderRadius: 8,
-                                        color: "#c4f0da",
+                                        color: "var(--st-text)",
                                         width: "100%",
                                         opacity: (isLoading || isDeadlinePassed) ? 0.5 : 1,
                                         cursor: (isLoading || isDeadlinePassed) ? "not-allowed" : "pointer",
@@ -446,31 +446,33 @@ const DorzimiProjektit = () => {
                                         {isLoading ? "Duke procesuar..." : "Dorëzo Projektin"}
                                     </button>
                                     <div style={statusBadgeStyle(isDorzuar)}>
-                                        {isDorzuar ? "✓ Dorzuar" : "⏳ Pa dorzuar"}
+                                        {isDorzuar ? "✓ Dorzuar" : " Pa dorzuar"}
                                     </div>
                                 </div>
 
                                 {isDorzuar && dorezimData && (
                                     <div style={{
-                                        marginTop: "1rem",
+                                        marginTop: "5rem",
                                         padding: "1rem",
-                                        background: "rgba(23,199,122,0.08)",
-                                        border: "1px solid rgba(23,199,122,0.25)",
+                                        background: "rgba(184, 227, 233, 0.12)",
+                                        border: "1px solid rgba(184, 227, 233, 0.3)",
                                         borderRadius: 12
                                     }}>
                                         <h3 style={{
-                                            color: "#1fdc8c",
+                                            color: "var(--st-1)",
                                             fontSize: 16,
                                             fontWeight: 700,
-                                            marginBottom: "0.7rem"
+                                            marginBottom: "0.7rem",
+                                            textAlign: "center"
                                         }}>
                                             Projekti i Dorëzuar
                                         </h3>
                                         <div style={{
                                             padding: "0.7rem",
-                                            background: "rgba(5,12,8,0.5)",
+                                            background: "rgba(11, 46, 51, 0.6)",
                                             borderRadius: 8,
-                                            marginBottom: "0.7rem"
+                                            marginBottom: "0.7rem",
+                                         
                                         }}>
                                             {/* Rreshti 1: Emri i file-it (majtas) + Dorëzuar më (djathtas) */}
                                             <div
@@ -485,7 +487,7 @@ const DorzimiProjektit = () => {
                                             >
                                                 <div style={{ display: "inline-flex", alignItems: "center", gap: "0.45rem" }}>
                                                     <span style={{ opacity: 0.7 }}>Emri i File-it:</span>
-                                                    <strong style={{ color: "#c4f0da" }}>{dorezimData.fileName}</strong>
+                                                    <strong style={{ color: "var(--st-text)" }}>{dorezimData.fileName}</strong>
                                                 </div>
 
                                                 {dorezimData.createdAt && (
@@ -498,7 +500,7 @@ const DorzimiProjektit = () => {
                                                         whiteSpace: "nowrap"
                                                     }}>
                                                         <span style={{ opacity: 0.7 }}>Dorëzuar më:</span>
-                                                        <strong style={{ color: "#c4f0da" }}>
+                                                        <strong style={{ color: "var(--st-text)" }}>
                                                             {new Date(dorezimData.createdAt).toLocaleString('sq-AL')}
                                                         </strong>
                                                     </div>
@@ -506,10 +508,7 @@ const DorzimiProjektit = () => {
                                             </div>
 
                                             {/* Rreshti 2: Statusi */}
-                                            <div style={{ marginTop: "0.5rem", fontSize: 14 }}>
-                                                <span style={{ opacity: 0.7, marginRight: 6 }}>Statusi:</span>
-                                                <strong style={{ color: "#17c77a" }}>{dorezimData.statusi}</strong>
-                                            </div>
+                                           
                                         </div>
                                         <div style={{
                                             display: "flex",
@@ -520,7 +519,7 @@ const DorzimiProjektit = () => {
                                                 style={{
                                                     ...buttonStyle,
                                                     flex: window.innerWidth < 768 ? "none" : 1,
-                                                    background: "linear-gradient(135deg, #2bb0a9 0%, #1f9187 100%)",
+                                                    background: "linear-gradient(135deg, #B8E3E9 0%, #4F7C82 100%)",
                                                 }}
                                                 onClick={handleShkarko}
                                                 disabled={isLoading}
@@ -555,17 +554,18 @@ const DorzimiProjektit = () => {
                                 Pikët
                             </h2>
                             <div style={cardStyle}>
-                                <p style={{ opacity: 0.7 }}>
+                                <p style={{ opacity: 0.7, textAlign: "center" }}>
                                     Informacion mbi pikët e projektit dhe vlerësimin.
+
                                 </p>
                                 <div style={{ marginTop: "1.5rem" }}>
                                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.75rem" }}>
                                         <span>Pikët Totale:</span>
-                                        <strong style={{ color: "#1fdc8c" }}>{projectMaxPoints}</strong>
+                                        <strong style={{ color: "var(--st-1)" }}>{projectMaxPoints}</strong>
                                     </div>
                                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                                         <span>Pikët e Fituara:</span>
-                                        <strong style={{ color: "#17c77a" }}>
+                                        <strong style={{ color: "var(--st-1)" }}>
                                             {dorezimData && dorezimData.piket !== undefined ? dorezimData.piket : "--"}
                                         </strong>
                                     </div>
@@ -583,18 +583,18 @@ const DorzimiProjektit = () => {
                                 Afati i Dorëzimit
                             </h2>
                             <div style={cardStyle}>
-                                <p style={{ opacity: 0.7, marginBottom: "1rem" }}>
+                                <p style={{ opacity: 0.7, marginBottom: "1rem", textAlign: "center" }}>
                                     Afatet e dorëzimit për projektin e lëndës <strong>{subject}</strong>.
                                 </p>
                                 <div style={{ marginTop: "1.5rem" }}>
-                                    <div style={{ padding: "1rem", background: "rgba(255,255,255,0.03)", borderRadius: 8, marginBottom: "0.75rem" }}>
-                                        <strong style={{ color: "#1fdc8c" }}>Data e Fillimit:</strong>
+                                    <div style={{ padding: "1rem", background: "rgba(11, 46, 51, 0.6)", borderRadius: 8, marginBottom: "0.75rem" }}>
+                                        <strong style={{ color: "var(--st-1)" }}>Data e Fillimit:</strong>
                                         <p style={{ margin: "0.5rem 0 0", opacity: 0.8 }}>
                                             {projectStartDisplay || "--/--/----"}
                                         </p>
                                     </div>
-                                    <div style={{ padding: "1rem", background: "rgba(255,255,255,0.03)", borderRadius: 8 }}>
-                                        <strong style={{ color: "#ff5252" }}>Afati i Dorëzimit:</strong>
+                                    <div style={{ padding: "1rem", background: "rgba(11, 46, 51, 0.6)", borderRadius: 8 }}>
+                                        <strong style={{ color: "#ff9a9a" }}>Afati i Dorëzimit:</strong>
                                         <p style={{ margin: "0.5rem 0 0", opacity: 0.8 }}>
                                             {projectDeadlineDisplay || "--/--/----"}
                                         </p>
@@ -623,7 +623,7 @@ const DorzimiProjektit = () => {
                                         padding: "4rem 2rem",
                                         minHeight: "300px"
                                     }}>
-                                        <p style={{ color: "#17c77a", fontSize: 16 }}>Duke u ngarkuar instruksionet...</p>
+                                        <p style={{ color: "var(--st-1)", fontSize: 16 }}>Duke u ngarkuar instruksionet...</p>
                                     </div>
                                 </div>
                             ) : (
@@ -641,7 +641,7 @@ const DorzimiProjektit = () => {
                                                 <p style={{
                                                     fontSize: 16,
                                                     fontWeight: 600,
-                                                    color: "#999"
+                                                    color: "var(--st-text)"
                                                 }}>
                                                     Nuk ka template për këtë lëndë
                                                 </p>
@@ -653,21 +653,21 @@ const DorzimiProjektit = () => {
                                                 <div key={instruction.id} style={cardStyle}>
                                                     <h3 style={{
                                                         margin: "0 0 1rem 0",
-                                                        color: "#1fdc8c",
+                                                        color: "var(--st-1)",
                                                         fontSize: 18,
                                                         fontWeight: 700
                                                     }}>
                                                         {instruction.title}
                                                     </h3>
                                                     <div style={{
-                                                        background: "rgba(9, 18, 12, 0.5)",
+                                                        background: "rgba(11, 46, 51, 0.6)",
                                                         borderRadius: 8,
                                                         padding: "1rem",
                                                         whiteSpace: "pre-wrap",
                                                         wordBreak: "break-word",
                                                         fontSize: 14,
                                                         lineHeight: 1.6,
-                                                        color: "#e0e0e0",
+                                                        color: "var(--st-text)",
                                                         maxHeight: "300px",
                                                         overflow: "auto",
                                                         marginBottom: "1rem"
@@ -676,15 +676,15 @@ const DorzimiProjektit = () => {
                                                     </div>
                                                     {instruction.files && instruction.files.length > 0 && (
                                                         <div style={{
-                                                            background: "rgba(23, 199, 122, 0.08)",
-                                                            border: "1px solid rgba(23, 199, 122, 0.2)",
+                                                            background: "rgba(184, 227, 233, 0.12)",
+                                                            border: "1px solid rgba(184, 227, 233, 0.25)",
                                                             borderRadius: 8,
                                                             padding: "1rem"
                                                         }}>
                                                             <div style={{
                                                                 fontSize: 13,
                                                                 fontWeight: 600,
-                                                                color: "#17c77a",
+                                                                color: "var(--st-1)",
                                                                 marginBottom: "0.75rem"
                                                             }}>
                                                                 📎 Fajllat e Lidhur:
@@ -705,20 +705,20 @@ const DorzimiProjektit = () => {
                                                                                 display: "flex",
                                                                                 justifyContent: "space-between",
                                                                                 alignItems: "center",
-                                                                                background: "rgba(16, 24, 20, 0.6)",
+                                                                                background: "rgba(11, 46, 51, 0.6)",
                                                                                 padding: "0.75rem 1rem",
                                                                                 borderRadius: 6,
                                                                                 fontSize: 13
                                                                             }}
                                                                         >
-                                                                            <div style={{ color: "#e0e0e0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+                                                                            <div style={{ color: "var(--st-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
                                                                                 📄 {file.name} <span style={{ color: "#999", fontSize: 12 }}>({formatFileSize(file.size)})</span>
                                                                             </div>
                                                                             <button
                                                                                 style={{
-                                                                                    background: "#17c77a",
+                                                                                    background: "var(--st-1)",
                                                                                     border: "none",
-                                                                                    color: "#041407",
+                                                                                    color: "#0B2E33",
                                                                                     padding: "0.4rem 0.8rem",
                                                                                     borderRadius: 4,
                                                                                     cursor: "pointer",
@@ -756,7 +756,7 @@ const DorzimiProjektit = () => {
                                                 <p style={{
                                                     fontSize: 18,
                                                     fontWeight: 600,
-                                                    color: "#1fdc8c",
+                                                    color: "var(--st-1)",
                                                     marginBottom: "1rem",
                                                     textAlign: "center"
                                                 }}>
@@ -764,7 +764,7 @@ const DorzimiProjektit = () => {
                                                 </p>
                                                 <p style={{
                                                     fontSize: 14,
-                                                    color: "#c4f0da",
+                                                    color: "var(--st-text)",
                                                     marginBottom: "2rem",
                                                     textAlign: "center",
                                                     opacity: 0.8
@@ -774,15 +774,15 @@ const DorzimiProjektit = () => {
                                                 <button
                                                     style={{
                                                         padding: "1rem 2rem",
-                                                        background: "linear-gradient(135deg, #17c77a 0%, #14b56d 100%)",
+                                                        background: "linear-gradient(135deg, #4F7C82 0%, #0B2E33 100%)",
                                                         border: "none",
                                                         borderRadius: 12,
-                                                        color: "#0a1612",
+                                                        color: "#0B2E33",
                                                         fontSize: 15,
                                                         fontWeight: 700,
                                                         cursor: isLoading ? "not-allowed" : "pointer",
                                                         transition: "all 0.2s",
-                                                        boxShadow: "0 4px 12px rgba(23,199,122,0.3)",
+                                                        boxShadow: "0 4px 12px rgba(11, 46, 51, 0.35)",
                                                         opacity: isLoading ? 0.6 : 1
                                                     }}
                                                     onClick={handleShkarkoTemplate}
@@ -790,12 +790,12 @@ const DorzimiProjektit = () => {
                                                     onMouseEnter={(e) => {
                                                         if (!isLoading) {
                                                             e.target.style.transform = "translateY(-2px)";
-                                                            e.target.style.boxShadow = "0 6px 16px rgba(23,199,122,0.4)";
+                                                            e.target.style.boxShadow = "0 6px 16px rgba(11, 46, 51, 0.45)";
                                                         }
                                                     }}
                                                     onMouseLeave={(e) => {
                                                         e.target.style.transform = "translateY(0)";
-                                                        e.target.style.boxShadow = "0 4px 12px rgba(23,199,122,0.3)";
+                                                        e.target.style.boxShadow = "0 4px 12px rgba(11, 46, 51, 0.35)";
                                                     }}
                                                 >
                                                     {isLoading ? "Duke shkarkuar..." : "⬇ Shkarko Shabilonin"}
@@ -826,8 +826,8 @@ const DorzimiProjektit = () => {
                 padding: '1rem'
             }}>
                 <div style={{
-                    background: 'rgba(6,13,9,0.95)',
-                    border: '1px solid rgba(23,199,122,0.4)',
+                    background: 'rgba(11, 46, 51, 0.95)',
+                    border: '1px solid rgba(184, 227, 233, 0.4)',
                     borderRadius: 20,
                     padding: '2rem',
                     maxWidth: '400px',
@@ -837,7 +837,7 @@ const DorzimiProjektit = () => {
                     <div style={{
                         fontSize: 18,
                         fontWeight: 600,
-                        color: '#fff',
+                        color: 'var(--st-text)',
                         marginBottom: '2rem',
                         lineHeight: 1.5
                     }}>
@@ -853,21 +853,21 @@ const DorzimiProjektit = () => {
                                 padding: '0.9rem 1.8rem',
                                 borderRadius: 12,
                                 border: 'none',
-                                background: '#17c77a',
-                                color: '#041407',
+                                background: 'linear-gradient(135deg, #B8E3E9 0%, #4F7C82 100%)',
+                                color: '#0B2E33',
                                 fontWeight: 700,
                                 fontSize: 14,
                                 cursor: 'pointer',
                                 transition: 'all 200ms ease',
-                                boxShadow: '0 4px 12px rgba(23, 199, 122, 0.3)'
+                                boxShadow: '0 4px 12px rgba(11, 46, 51, 0.35)'
                             }}
                             onMouseEnter={(e) => {
-                                e.currentTarget.style.background = '#14b56d';
-                                e.currentTarget.style.boxShadow = '0 6px 16px rgba(23, 199, 122, 0.4)';
+                                e.currentTarget.style.background = 'linear-gradient(135deg, #CFEFF3 0%, #5B8E96 100%)';
+                                e.currentTarget.style.boxShadow = '0 6px 16px rgba(11, 46, 51, 0.45)';
                             }}
                             onMouseLeave={(e) => {
-                                e.currentTarget.style.background = '#17c77a';
-                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(23, 199, 122, 0.3)';
+                                e.currentTarget.style.background = 'linear-gradient(135deg, #B8E3E9 0%, #4F7C82 100%)';
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(11, 46, 51, 0.35)';
                             }}
                         >
                             ✓ Po
@@ -880,21 +880,21 @@ const DorzimiProjektit = () => {
                                 flex: 1,
                                 padding: '0.9rem 1.8rem',
                                 borderRadius: 12,
-                                border: '1px solid rgba(255,255,255,0.2)',
-                                background: 'transparent',
-                                color: '#c4f0da',
+                                border: '1px solid rgba(184, 227, 233, 0.35)',
+                                background: 'rgba(11, 46, 51, 0.6)',
+                                color: 'var(--st-text)',
                                 fontWeight: 600,
                                 fontSize: 14,
                                 cursor: 'pointer',
                                 transition: 'all 200ms ease'
                             }}
                             onMouseEnter={(e) => {
-                                e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-                                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)';
+                                e.currentTarget.style.background = 'rgba(184, 227, 233, 0.12)';
+                                e.currentTarget.style.borderColor = 'rgba(184, 227, 233, 0.6)';
                             }}
                             onMouseLeave={(e) => {
-                                e.currentTarget.style.background = 'transparent';
-                                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                                e.currentTarget.style.background = 'rgba(11, 46, 51, 0.6)';
+                                e.currentTarget.style.borderColor = 'rgba(184, 227, 233, 0.35)';
                             }}
                         >
                             ✕ Jo

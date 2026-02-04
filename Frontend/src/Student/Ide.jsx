@@ -416,7 +416,7 @@ const IdeaPage = () => {
           <div style={columnCard}>
             <div style={formField}>
               <label></label>
-             
+              
             </div>
 
             {/* Info mesazh për limitin */}

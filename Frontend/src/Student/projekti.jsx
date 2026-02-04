@@ -83,7 +83,7 @@ const Projekti = () => {
     }
   };
 
-  if (loading) return <div style={{ padding: "2rem" }}>Po ngarkohen projektet...</div>;
+  if (loading) return <div style={{ padding: "2rem", color: "var(--st-text)" }}>Po ngarkohen projektet...</div>;
 
   return (
     <div className="student-theme" style={{ padding: "2rem", color: "var(--st-text)" }}>
@@ -114,7 +114,7 @@ const Projekti = () => {
         <form
           onSubmit={handleSubmit}
           style={{
-            background: "rgba(79, 99, 103, 0.85)",
+            background: "rgba(79, 124, 130, 0.25)",
             padding: "1.5rem",
             borderRadius: "12px",
             marginBottom: "2rem",
@@ -134,7 +134,7 @@ const Projekti = () => {
               style={{
                 width: "100%",
                 padding: "0.75rem",
-                background: "rgba(79,99,103,0.8)",
+                background: "rgba(11, 46, 51, 0.7)",
                 color: "var(--st-text)",
                 border: "1px solid var(--st-border)",
                 borderRadius: "6px",
@@ -154,7 +154,7 @@ const Projekti = () => {
               style={{
                 width: "100%",
                 padding: "0.75rem",
-                background: "rgba(79,99,103,0.8)",
+                background: "rgba(11, 46, 51, 0.7)",
                 color: "var(--st-text)",
                 border: "1px solid var(--st-border)",
                 borderRadius: "6px",
@@ -175,7 +175,7 @@ const Projekti = () => {
               style={{
                 width: "100%",
                 padding: "0.75rem",
-                background: "rgba(79,99,103,0.8)",
+                background: "rgba(11, 46, 51, 0.7)",
                 color: "var(--st-text)",
                 border: "1px solid var(--st-border)",
                 borderRadius: "6px",
@@ -187,7 +187,7 @@ const Projekti = () => {
             type="submit"
             style={{
               padding: "0.75rem 1.5rem",
-              background: "var(--st-2)",
+              background: "var(--st-1)",
               color: "var(--st-text-dark)",
               border: "none",
               borderRadius: "6px",
@@ -208,22 +208,22 @@ const Projekti = () => {
         }}
       >
         {projects.length === 0 ? (
-          <p>Nuk keni projekte të krijuara akoma.</p>
+          <p style={{ color: "var(--st-text)", opacity: 0.8 }}>Nuk keni projekte të krijuara akoma.</p>
         ) : (
           projects.map((project) => (
             <div
               key={project.id}
               style={{
-                background: "rgba(13, 30, 19, 0.85)",
-                border: "1px solid rgba(23, 199, 122, 0.35)",
+                background: "rgba(11, 46, 51, 0.7)",
+                border: "1px solid rgba(184, 227, 233, 0.25)",
                 borderRadius: "12px",
                 padding: "1.5rem",
               }}
             >
-              <h3 style={{ color: "#1fdc8c", marginTop: 0 }}>{project.emriProjekti}</h3>
+              <h3 style={{ color: "var(--st-1)", marginTop: 0 }}>{project.emriProjekti}</h3>
               <p>{project.pershkrimiProjekti}</p>
               {project.deaAdline && (
-                <p style={{ fontSize: "0.9rem", color: "#9bf3c8" }}>
+                <p style={{ fontSize: "0.9rem", color: "var(--st-1)" }}>
                   Afati: {new Date(project.deaAdline).toLocaleDateString()}
                 </p>
               )}
@@ -231,9 +231,9 @@ const Projekti = () => {
                 onClick={() => handleDelete(project.id)}
                 style={{
                   padding: "0.5rem 1rem",
-                  background: "rgba(255,82,82,0.3)",
-                  color: "#ff5252",
-                  border: "1px solid rgba(255,82,82,0.5)",
+                  background: "rgba(255,82,82,0.18)",
+                  color: "#ff9a9a",
+                  border: "1px solid rgba(255,82,82,0.4)",
                   borderRadius: "6px",
                   cursor: "pointer",
                   marginTop: "1rem",
