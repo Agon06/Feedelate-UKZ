@@ -586,14 +586,14 @@ const DorzimiProjektit = () => {
                                 <p style={{ opacity: 0.7, marginBottom: "1rem", textAlign: "center" }}>
                                     Afatet e dorëzimit për projektin e lëndës <strong>{subject}</strong>.
                                 </p>
-                                <div style={{ marginTop: "1.5rem" }}>
-                                    <div style={{ padding: "1rem", background: "rgba(11, 46, 51, 0.6)", borderRadius: 8, marginBottom: "0.75rem" }}>
+                                <div style={{ marginTop: "1.5rem", display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                                    <div style={{ padding: "1rem", background: "rgba(11, 46, 51, 0.6)", borderRadius: 8, flex: 1, minWidth: 240 }}>
                                         <strong style={{ color: "var(--st-1)" }}>Data e Fillimit:</strong>
                                         <p style={{ margin: "0.5rem 0 0", opacity: 0.8 }}>
                                             {projectStartDisplay || "--/--/----"}
                                         </p>
                                     </div>
-                                    <div style={{ padding: "1rem", background: "rgba(11, 46, 51, 0.6)", borderRadius: 8 }}>
+                                    <div style={{ padding: "1rem", background: "rgba(11, 46, 51, 0.6)", borderRadius: 8, flex: 1, minWidth: 240 }}>
                                         <strong style={{ color: "#ff9a9a" }}>Afati i Dorëzimit:</strong>
                                         <p style={{ margin: "0.5rem 0 0", opacity: 0.8 }}>
                                             {projectDeadlineDisplay || "--/--/----"}
