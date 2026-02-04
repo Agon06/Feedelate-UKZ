@@ -38,7 +38,7 @@ const UserMenu = ({ userName, userType = 'student' }) => {
   };
 
   const userNameStyle = {
-    color: '#fff',
+    color: '#B8E3E9',
     fontSize: '14px',
     fontWeight: 500,
     maxWidth: '150px',
@@ -51,23 +51,23 @@ const UserMenu = ({ userName, userType = 'student' }) => {
     width: 40,
     height: 40,
     borderRadius: '50%',
-    background: 'linear-gradient(135deg, #17c77a 0%, #1fc789 100%)',
-    border: '2px solid rgba(255,255,255,0.1)',
+    background: 'linear-gradient(135deg, #B8E3E9 0%, #4F7C82 100%)',
+    border: '2px solid rgba(184,227,233,0.35)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     fontSize: 16,
     fontWeight: 700,
-    color: '#fff',
+    color: '#0B2E33',
     cursor: 'pointer',
     transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-    boxShadow: '0 4px 15px rgba(23, 199, 122, 0.2)'
+    boxShadow: '0 4px 15px rgba(11, 46, 51, 0.35)'
   };
 
   const avatarHoverStyle = {
     ...avatarStyle,
     transform: 'scale(1.05)',
-    boxShadow: '0 6px 20px rgba(23, 199, 122, 0.3)'
+    boxShadow: '0 6px 20px rgba(11, 46, 51, 0.45)'
   };
 
   const dropdownStyle = {
@@ -75,9 +75,9 @@ const UserMenu = ({ userName, userType = 'student' }) => {
     top: '100%',
     right: 0,
     marginTop: '8px',
-    background: 'rgba(16, 24, 20, 0.95)',
+    background: 'rgba(11, 46, 51, 0.95)',
     backdropFilter: 'blur(10px)',
-    border: '1px solid rgba(255,255,255,0.1)',
+    border: '1px solid rgba(184,227,233,0.25)',
     borderRadius: '8px',
     boxShadow: '0 10px 40px rgba(0,0,0,0.4)',
     minWidth: '200px',
@@ -88,18 +88,18 @@ const UserMenu = ({ userName, userType = 'student' }) => {
 
   const dropdownItemStyle = {
     padding: '12px 16px',
-    color: '#fff',
+    color: '#B8E3E9',
     display: 'flex',
     alignItems: 'center',
     gap: '10px',
     fontSize: '14px',
-    borderBottom: '1px solid rgba(255,255,255,0.05)',
+    borderBottom: '1px solid rgba(184,227,233,0.15)',
     cursor: 'default'
   };
 
   const logoutButtonStyle = {
     padding: '12px 16px',
-    color: '#ff6b6b',
+    color: '#ff9a9a',
     display: 'flex',
     alignItems: 'center',
     gap: '10px',
@@ -128,7 +128,7 @@ const UserMenu = ({ userName, userType = 'student' }) => {
         }
         
         .user-menu-logout:hover {
-          background-color: rgba(255, 107, 107, 0.1);
+          background-color: rgba(184, 227, 233, 0.12);
         }
       `}</style>
       

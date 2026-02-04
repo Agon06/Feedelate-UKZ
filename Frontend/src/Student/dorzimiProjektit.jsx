@@ -194,7 +194,7 @@ const DorzimiProjektit = () => {
         fontSize: 13,
         fontWeight: 600,
         cursor: "pointer",
-        marginBottom: "3rem",
+        marginBottom: "1.25rem",
         transition: "all 0.2s",
         textAlign: "left",
     });
