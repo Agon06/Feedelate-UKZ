@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserMenu from '../components/UserMenu';
 import RoleSwitcher from '../components/RoleSwitcher';
+import '../Student/StudentTheme.css';
 
 const ProfesorDashboard = () => {
   const navigate = useNavigate();
@@ -41,9 +42,9 @@ const ProfesorDashboard = () => {
   }, []);
 
   const pageStyle = {
-    color: '#fff',
+    color: '#B8E3E9',
     minHeight: '100vh',
-    background: 'linear-gradient(180deg, rgba(10,18,12,1) 0%, rgba(14,28,20,1) 50%, rgba(12,30,18,1) 100%)',
+    background: 'linear-gradient(180deg, #FFFFFF 0%, #0B2E33 100%, #0B2E33 0%)',
     padding: 0,
     margin: 0,
     fontFamily: 'Inter, system-ui, Arial, sans-serif',
@@ -57,11 +58,12 @@ const ProfesorDashboard = () => {
     padding: isMobile ? '0.85rem 1.5rem' : '1rem 2.5rem',
     minHeight: 64,
     width: '100%',
-    boxSizing: 'border-box'
+    boxSizing: 'border-box',
+    background: 'linear-gradient(180deg,  #4F7C82 10%, #0B2E33 90%, #0B2E33 100%)'
   };
 
   const brandStyle = {
-    color: '#17c77a',
+    color: '#B8E3E9',
     fontWeight: 800,
     fontSize: isMobile ? 18 : 22,
     letterSpacing: 0.6
@@ -76,7 +78,8 @@ const ProfesorDashboard = () => {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '1rem'
+    gap: '1rem',
+    color: '#B8E3E9'
   };
 
   const backButtonStyle = {
@@ -98,19 +101,6 @@ const ProfesorDashboard = () => {
     gap: isMobile ? 12 : 18
   };
 
-  const bellStyle = {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    background: 'rgba(23, 199, 122, 0.12)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: 18,
-    color: '#fbd38d'
-  };
-
   const profesorBadge = {
     display: 'flex',
     alignItems: 'center',
@@ -122,11 +112,11 @@ const ProfesorDashboard = () => {
     width: 42,
     height: 42,
     borderRadius: 21,
-    background: '#0e6b3d',
+    background: '#525252',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#fff',
+    color: '#f2f2f2',
     fontWeight: 700,
     letterSpacing: 0.8
   };
@@ -143,25 +133,25 @@ const ProfesorDashboard = () => {
     position: 'absolute',
     width: isMobile ? 160 : 260,
     height: isMobile ? 160 : 260,
-    background: 'rgba(16, 24, 20, 0.85)',
-    color: '#fff',
+    background: '#0B2E33',
+    color: '#B8E3E9',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 14,
-    boxShadow: '0 14px 30px rgba(0,0,0,0.6)',
+    boxShadow: '0 18px 36px rgba(0,0,0,0.45)',
     fontSize: isMobile ? 16 : 22,
     fontWeight: 800,
     cursor: 'pointer',
-    transition: 'all 200ms ease',
-    border: '1px solid rgba(23, 199, 122, 0.2)'
+    transition: 'transform 180ms ease, box-shadow 180ms ease',
+    border: '1px solid rgba(184,227,233,0.2)'
   };
 
   const cardHoverStyle = {
     ...cardBase,
-    background: 'rgba(23, 199, 122, 0.08)',
-    borderColor: '#17c77a',
-    boxShadow: '0 20px 40px rgba(23, 199, 122, 0.2)',
+    background: 'rgba(184, 227, 233, 0.12)',
+    borderColor: '#B8E3E9',
+    boxShadow: '0 20px 40px rgba(184, 227, 233, 0.2)',
     transform: 'scale(1.05)'
   };
 
@@ -173,7 +163,7 @@ const ProfesorDashboard = () => {
       e.currentTarget.style.transform = cardHoverStyle.transform;
     } else {
       e.currentTarget.style.background = cardBase.background;
-      e.currentTarget.style.borderColor = 'rgba(23, 199, 122, 0.2)';
+      e.currentTarget.style.borderColor = 'rgba(184,227,233,0.2)';
       e.currentTarget.style.boxShadow = cardBase.boxShadow;
       e.currentTarget.style.transform = 'scale(1)';
     }
@@ -209,23 +199,20 @@ const ProfesorDashboard = () => {
   }, [navigate]);
 
   return (
-    <div className="profesor-dashboard" style={pageStyle}>
+    <div className="profesor-dashboard student-theme" style={pageStyle}>
       {/* Top bar - uses full available width (no negative margins) */}
       <div style={topBarStyle}>
         <div style={brandStyle}>Feedelate</div>
         <div style={{flex: 1}} />
         <div style={actionsStyle}>
           <RoleSwitcher currentRole="profesor" />
-          <div style={bellStyle} aria-label="notifications" role="img">
-            🔔
-          </div>
           <UserMenu userName={profesorName} userType="profesor" />
         </div>
       </div>
 
       <div style={{width: '100%', boxSizing: 'border-box'}}>
         <div style={titleStyle}>
-          <h2 style={{margin: 0}}>Universiteti Publik Kadri Zeka</h2>
+          <h2 style={{color: '#B8E3E9', margin: 0}}>Universiteti Publik Kadri Zeka</h2>
         </div>
       </div>
 

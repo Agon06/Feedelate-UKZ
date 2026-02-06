@@ -36,6 +36,10 @@ const Idetep = () => {
   const [deadlinesList, setDeadlinesList] = useState([]);
   const [selectedDeadlineIndex, setSelectedDeadlineIndex] = useState(null);
 
+  const spacing = isMobile ? '1rem' : '1.5rem';
+  const panelPadding = isMobile ? '1.25rem' : '2rem';
+  const cardPadding = isMobile ? '1rem' : '1.25rem';
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
@@ -513,8 +517,8 @@ const Idetep = () => {
 
   const pageStyle = {
     minHeight: '100vh',
-    background: 'linear-gradient(180deg, rgba(10,18,12,1) 0%, rgba(14,28,20,1) 60%, rgba(10,18,12,1) 100%)',
-    color: '#fff',
+    background: 'linear-gradient(180deg, #FFFFFF 0%, #0B2E33 100%, #0B2E33 0%)',
+    color: '#B8E3E9',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -527,9 +531,9 @@ const Idetep = () => {
   const modalStyle = {
     width: '100%',
     maxWidth: isMobile ? '95vw' : '1100px',
-    background: 'rgba(6,13,9,0.95)',
+    background: '#0B2E33',
     borderRadius: isMobile ? 16 : 28,
-    border: '1px solid rgba(23,199,122,0.4)',
+    border: '1px solid rgba(184,227,233,0.35)',
     boxShadow: '0 30px 80px rgba(0,0,0,0.6)',
     padding: isMobile ? '1rem' : '2rem',
     position: 'relative',
@@ -543,11 +547,11 @@ const Idetep = () => {
     right: 24,
     top: 20,
     background: 'transparent',
-    border: '1px solid rgba(255,255,255,0.2)',
+    border: '1px solid rgba(184,227,233,0.3)',
     borderRadius: 20,
     width: 38,
     height: 38,
-    color: '#fff',
+    color: '#B8E3E9',
     cursor: 'pointer',
     transition: 'all 200ms ease'
   };
@@ -555,15 +559,15 @@ const Idetep = () => {
   const columnsStyle = {
     display: 'grid',
     gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(320px, 1fr))',
-    gap: isMobile ? '1rem' : '1.5rem',
+    gap: spacing,
     marginTop: '1rem'
   };
 
   const columnCard = {
-    background: 'rgba(9,18,12,0.9)',
+    background: 'rgba(11,46,51,0.75)',
     borderRadius: isMobile ? 12 : 20,
-    border: '1px solid rgba(23,199,122,0.25)',
-    padding: isMobile ? '1rem' : '1.25rem',
+    border: '1px solid rgba(184,227,233,0.25)',
+    padding: cardPadding,
     minHeight: isMobile ? 280 : 360
   };
 
@@ -571,16 +575,16 @@ const Idetep = () => {
     width: '100%',
     padding: '0.75rem 0.9rem',
     borderRadius: 14,
-    border: '1px solid rgba(255,255,255,0.1)',
-    background: 'rgba(4,10,6,0.6)',
-    color: '#fff',
+    border: '1px solid rgba(184,227,233,0.25)',
+    background: 'rgba(11,46,51,0.6)',
+    color: '#B8E3E9',
     marginBottom: '1rem'
   };
 
   const ideaList = {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.8rem',
+    gap: '0.75rem',
     maxHeight: '220px',
     overflowY: 'auto',
     overflowX: 'visible',
@@ -593,8 +597,8 @@ const Idetep = () => {
     alignItems: 'center',
     padding: '0.75rem 0.9rem',
     borderRadius: 14,
-    background: 'rgba(5,12,8,0.8)',
-    border: '1px solid rgba(255,255,255,0.05)',
+    background: '#0B2E33',
+    border: '1px solid rgba(184,227,233,0.2)',
     width: '100%',
     overflow: 'visible',
     minWidth: 0,
@@ -603,9 +607,9 @@ const Idetep = () => {
 
   const tinyButton = {
     borderRadius: 10,
-    border: '1px solid rgba(23,199,122,0.35)',
+    border: '1px solid rgba(184,227,233,0.35)',
     background: 'transparent',
-    color: '#c8f5e8',
+    color: '#B8E3E9',
     fontSize: 12,
     padding: '0.35rem 0.6rem',
     cursor: 'pointer',
@@ -615,9 +619,9 @@ const Idetep = () => {
 
   const downloadButton = {
     borderRadius: 10,
-    border: '1px solid rgba(100,149,237,0.35)',
+    border: '1px solid rgba(184,227,233,0.35)',
     background: 'transparent',
-    color: '#6495ed',
+    color: '#B8E3E9',
     fontSize: 12,
     padding: '0.35rem 0.6rem',
     cursor: 'pointer',
@@ -629,15 +633,15 @@ const Idetep = () => {
     fontSize: 12,
     borderRadius: 999,
     padding: '0.25rem 0.7rem',
-    border: '1px solid rgba(255,255,255,0.2)',
-    color: '#d0f5e5'
+    border: '1px solid rgba(184,227,233,0.3)',
+    color: '#B8E3E9'
   };
 
   const primaryButton = {
     borderRadius: 12,
-    border: 'none',
-    background: '#19c776',
-    color: '#041407',
+    border: '1px solid rgba(184,227,233,0.4)',
+    background: '#0B2E33',
+    color: '#B8E3E9',
     fontWeight: 700,
     padding: '0.8rem 1.6rem',
     cursor: 'pointer',
@@ -646,9 +650,9 @@ const Idetep = () => {
 
   const secondaryButton = {
     borderRadius: 12,
-    border: '1px solid rgba(23,199,122,0.35)',
-    background: 'transparent',
-    color: '#c8f5e8',
+    border: '1px solid rgba(184,227,233,0.4)',
+    background: 'rgba(11,46,51,0.6)',
+    color: '#B8E3E9',
     fontWeight: 600,
     padding: '0.8rem 1.6rem',
     cursor: 'pointer',
@@ -671,9 +675,9 @@ const Idetep = () => {
   };
 
   const deadlineCard = {
-    background: 'rgba(8,16,12,0.9)',
+    background: 'rgba(11,46,51,0.75)',
     borderRadius: 18,
-    border: '1px solid rgba(23,199,122,0.3)',
+    border: '1px solid rgba(184,227,233,0.25)',
     padding: '1rem 1.1rem',
     display: 'flex',
     flexDirection: 'column',
@@ -683,7 +687,7 @@ const Idetep = () => {
   const deadlineLabel = {
     fontSize: 14,
     fontWeight: 700,
-    color: '#1fdc8c',
+    color: '#B8E3E9',
     display: 'flex',
     alignItems: 'center',
     gap: 10,
@@ -693,9 +697,9 @@ const Idetep = () => {
   const deadlineInput = {
     width: '100%',
     borderRadius: 12,
-    border: '1px solid rgba(255,255,255,0.12)',
-    background: 'rgba(6,12,9,0.7)',
-    color: '#fff',
+    border: '1px solid rgba(184,227,233,0.25)',
+    background: 'rgba(11,46,51,0.6)',
+    color: '#B8E3E9',
     padding: '0.65rem 0.75rem'
   };
 
@@ -716,9 +720,9 @@ const Idetep = () => {
   const timeSelect = {
     width: '100%',
     borderRadius: 10,
-    border: '1px solid rgba(255,255,255,0.14)',
-    background: 'rgba(6,12,9,0.75)',
-    color: '#fff',
+    border: '1px solid rgba(184,227,233,0.25)',
+    background: 'rgba(11,46,51,0.6)',
+    color: '#B8E3E9',
     padding: '0.55rem 0.6rem'
   };
 
@@ -730,46 +734,50 @@ const Idetep = () => {
 
   const deadlineSummary = {
     ...deadlineCard,
-    borderColor: 'rgba(100,149,237,0.35)',
-    background: 'rgba(6,12,9,0.8)'
+    borderColor: 'rgba(184,227,233,0.35)',
+    background: 'rgba(11,46,51,0.75)'
   };
 
   const containerStyle = {
     display: isMobile ? 'block' : 'flex',
     maxWidth: 1400,
     margin: '0 auto',
-    padding: '2rem',
-    gap: '2rem',
-    minHeight: 'calc(100vh - 80px)'
+    padding: panelPadding,
+    gap: spacing,
+    minHeight: 'calc(100vh - 80px)',
+    alignItems: 'stretch'
   };
 
   const leftPanelStyle = {
     flex: isMobile ? '1' : '0 0 280px',
-    background: 'rgba(9,18,12,0.85)',
-    border: '1px solid rgba(23,199,122,0.35)',
+    background: 'rgba(11,46,51,0.75)',
+    border: '1px solid rgba(184,227,233,0.35)',
     borderRadius: 18,
-    padding: '2rem 1.5rem',
-    height: 'fit-content',
+    padding: panelPadding,
+    minHeight: isMobile ? 'auto' : 'calc(100vh - 180px)',
     position: isMobile ? 'relative' : 'sticky',
     top: isMobile ? '0' : '2rem',
-    marginBottom: isMobile ? '2rem' : '0'
+    marginBottom: isMobile ? '2rem' : '0',
+    alignSelf: 'stretch'
   };
 
   const rightPanelStyle = {
     flex: 1,
-    background: 'rgba(9,18,12,0.85)',
-    border: '1px solid rgba(23,199,122,0.35)',
+    background: 'rgba(11,46,51,0.75)',
+    border: '1px solid rgba(184,227,233,0.35)',
     borderRadius: 18,
-    padding: '2rem'
+    padding: panelPadding,
+    minHeight: isMobile ? 'auto' : 'calc(100vh - 180px)',
+    alignSelf: 'stretch'
   };
 
   const tabButtonStyle = (isActive) => ({
     width: '100%',
     padding: '1rem',
-    background: isActive ? 'rgba(23,199,122,0.25)' : 'rgba(9,18,12,0.5)',
-    border: `1px solid ${isActive ? '#17c77a' : 'rgba(255,255,255,0.1)'}`,
+    background: isActive ? 'rgba(184,227,233,0.12)' : 'rgba(11,46,51,0.6)',
+    border: `1px solid ${isActive ? '#B8E3E9' : 'rgba(184,227,233,0.25)'}`,
     borderRadius: 12,
-    color: isActive ? '#1fdc8c' : '#c4f0da',
+    color: isActive ? '#B8E3E9' : 'rgba(184,227,233,0.85)',
     fontSize: 14,
     fontWeight: 600,
     cursor: 'pointer',
@@ -779,11 +787,11 @@ const Idetep = () => {
   });
 
   const backButtonStyle = {
-    background: 'rgba(255,255,255,0.05)',
-    border: '1px solid rgba(255,255,255,0.15)',
+    background: '#0B2E33',
+    border: '1px solid rgba(184,227,233,0.4)',
     borderRadius: 10,
     padding: '0.6rem 1.2rem',
-    color: '#c4f0da',
+    color: '#B8E3E9',
     fontSize: 13,
     fontWeight: 600,
     cursor: 'pointer',
@@ -796,35 +804,35 @@ const Idetep = () => {
       <div style={containerStyle}>
         {/* Left Sidebar */}
         <div style={leftPanelStyle}>
-          <h2 style={{ fontSize: 24, fontWeight: 700, color: '#1fdc8c', marginBottom: '1.5rem', textAlign: 'center', letterSpacing: 1 }}>
+          <h2 style={{ fontSize: 24, fontWeight: 700, color: '#B8E3E9', marginBottom: '1.5rem', textAlign: 'center', letterSpacing: 1 }}>
             {subjectName}
           </h2>
           <button
             style={tabButtonStyle(activeTab === 'deadline')}
             onClick={() => setActiveTab('deadline')}
           >
-            📅 Afati i dorëzimit
+            Afati i dorëzimit
           </button>
           <button
             style={tabButtonStyle(activeTab === 'template')}
             onClick={() => setActiveTab('template')}
           >
-            📄 Template
+            Template
           </button>
           <button
             style={tabButtonStyle(activeTab === 'ideas')}
             onClick={() => setActiveTab('ideas')}
           >
-            📋 Lista e Ideve
+            Lista e Ideve
           </button>
           <button
             style={tabButtonStyle(activeTab === 'files')}
             onClick={() => setActiveTab('files')}
           >
-            📁 File-t e Dërguara
+            File-t e Dërguara
           </button>
           <button style={backButtonStyle} onClick={() => navigate(-1)}>
-            ← Kthehu Mbrapa
+            Kthehu Mbrapa
           </button>
         </div>
 
@@ -837,7 +845,6 @@ const Idetep = () => {
               {showDeadlineForm && (
                 <div style={deadlineCard}>
                   <div style={deadlineLabel}>
-                    <span role="img" aria-label="calendar">🗓️</span>
                     Afati i dorëzimit të idesë
                     {deadlineStatus.loading && <span style={{ fontSize: 12, color: '#cfeee0' }}>Duke u lexuar...</span>}
                     {deadlineStatus.error && <span style={{ fontSize: 12, color: '#f8b4b4' }}>{deadlineStatus.error}</span>}
@@ -854,9 +861,9 @@ const Idetep = () => {
                         width: '100%',
                         padding: '0.5rem 0.75rem',
                         borderRadius: 10,
-                        border: '1px solid rgba(23,199,122,0.4)',
-                        background: 'rgba(4,10,6,0.7)',
-                        color: '#1fdc8c',
+                        border: '1px solid rgba(184,227,233,0.35)',
+                        background: 'rgba(11,46,51,0.6)',
+                        color: '#B8E3E9',
                         fontSize: 14,
                         fontWeight: 500,
                         outline: 'none'
@@ -984,8 +991,8 @@ const Idetep = () => {
                           setDeadlineTitle(deadline.title || '');
                           setSelectedDeadlineIndex(idx);
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(15, 22, 18, 0.8)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(5,12,8,0.8)'}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(184, 227, 233, 0.12)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = '#0B2E33'}
                       >
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontWeight: 600, fontSize: 13 }}>
@@ -1012,9 +1019,9 @@ const Idetep = () => {
                   )}
                 </div>
 
-                <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: '#6495ed', marginBottom: '0.5rem' }}>
-                    📌 Afati aktual:
+                <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(184,227,233,0.2)' }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#B8E3E9', marginBottom: '0.5rem' }}>
+                    Afati aktual:
                   </div>
                   <div style={{ fontSize: 12, opacity: 0.85 }}>
                     {ideaDeadline.start && ideaDeadline.end ? (
@@ -1039,16 +1046,16 @@ const Idetep = () => {
           {/* Template/Instruksionet Tab */}
           {activeTab === 'template' && (
             <div style={{
-              background: 'rgba(23,199,122,0.08)',
-              border: '1px solid rgba(23,199,122,0.25)',
+              background: 'rgba(11,46,51,0.75)',
+              border: '1px solid rgba(184,227,233,0.25)',
               borderRadius: 12,
               padding: '1rem',
               marginBottom: '1.5rem'
             }}>
-              <h3 style={{ margin: '0 0 0.75rem', fontSize: 16, color: '#1fdc8c' }}>📄 Template/Instruksionet</h3>
+              <h3 style={{ margin: '0 0 0.75rem', fontSize: 16, color: '#B8E3E9' }}>Template/Instruksionet</h3>
               {templateInfo.hasTemplate ? (
                 <div>
-                  <p style={{ margin: '0 0 0.75rem', fontSize: 14, color: '#c4f0da' }}>
+                  <p style={{ margin: '0 0 0.75rem', fontSize: 14, color: '#B8E3E9' }}>
                     <strong>File:</strong> {templateInfo.fileName}
                   </p>
                   <div style={{ display: 'flex', gap: 8 }}>
@@ -1057,10 +1064,10 @@ const Idetep = () => {
                       style={{
                         flex: 1,
                         padding: '0.5rem',
-                        background: 'rgba(23,199,122,0.2)',
-                        border: '1px solid rgba(23,199,122,0.5)',
+                        background: 'rgba(184,227,233,0.12)',
+                        border: '1px solid rgba(184,227,233,0.5)',
                         borderRadius: 8,
-                        color: '#1fdc8c',
+                        color: '#B8E3E9',
                         fontWeight: 600,
                         cursor: uploadingTemplate ? 'not-allowed' : 'pointer',
                         textAlign: 'center',
@@ -1070,20 +1077,20 @@ const Idetep = () => {
                       }}
                       onMouseEnter={(e) => {
                         if (!uploadingTemplate) {
-                          e.currentTarget.style.background = 'rgba(23, 199, 122, 0.3)';
-                          e.currentTarget.style.borderColor = '#1fdc8c';
-                          e.currentTarget.style.boxShadow = '0 6px 16px rgba(23, 199, 122, 0.15)';
+                          e.currentTarget.style.background = 'rgba(184, 227, 233, 0.2)';
+                          e.currentTarget.style.borderColor = '#B8E3E9';
+                          e.currentTarget.style.boxShadow = '0 6px 16px rgba(184, 227, 233, 0.2)';
                         }
                       }}
                       onMouseLeave={(e) => {
                         if (!uploadingTemplate) {
-                          e.currentTarget.style.background = 'rgba(23, 199, 122, 0.2)';
-                          e.currentTarget.style.borderColor = 'rgba(23, 199, 122, 0.5)';
+                          e.currentTarget.style.background = 'rgba(184, 227, 233, 0.12)';
+                          e.currentTarget.style.borderColor = 'rgba(184, 227, 233, 0.5)';
                           e.currentTarget.style.boxShadow = 'none';
                         }
                       }}
                     >
-                      {uploadingTemplate ? 'Duke ngarkuar...' : '🔄 Ndrysho'}
+                      {uploadingTemplate ? 'Duke ngarkuar...' : 'Ndrysho'}
                     </label>
                     <button
                       onClick={handleDeleteTemplate}
@@ -1116,13 +1123,13 @@ const Idetep = () => {
                         }
                       }}
                     >
-                      🗑️ Fshi
+                      Fshi
                     </button>
                   </div>
                 </div>
               ) : (
                 <div>
-                  <p style={{ margin: '0 0 0.75rem', fontSize: 14, opacity: 0.7 }}>
+                  <p style={{ margin: '0 0 0.75rem', fontSize: 14, opacity: 0.85, color: '#B8E3E9' }}>
                     Nuk ka template të ngarkuar
                   </p>
                   <label
@@ -1130,10 +1137,10 @@ const Idetep = () => {
                     style={{
                       display: 'block',
                       padding: '0.6rem',
-                      background: 'linear-gradient(135deg, #17c77a 0%, #14b56d 100%)',
-                      border: 'none',
+                      background: 'rgba(184,227,233,0.12)',
+                      border: '1px solid rgba(184,227,233,0.5)',
                       borderRadius: 8,
-                      color: '#0a1612',
+                      color: '#B8E3E9',
                       fontWeight: 700,
                       cursor: uploadingTemplate ? 'not-allowed' : 'pointer',
                       textAlign: 'center',
@@ -1141,7 +1148,7 @@ const Idetep = () => {
                       opacity: uploadingTemplate ? 0.5 : 1
                     }}
                   >
-                    {uploadingTemplate ? 'Duke ngarkuar...' : '📤 Ngarko Template'}
+                    {uploadingTemplate ? 'Duke ngarkuar...' : 'Ngarko Template'}
                   </label>
                 </div>
               )}
@@ -1159,7 +1166,7 @@ const Idetep = () => {
           {/* Lista e Ideve Tab */}
           {activeTab === 'ideas' && (
             <div style={columnCard}>
-              <h3 style={{ margin: '0 0 1rem', fontSize: 18, color: '#1fdc8c' }}>📋 Lista e Ideve</h3>
+              <h3 style={{ margin: '0 0 1rem', fontSize: 18, color: '#B8E3E9' }}>Lista e Ideve</h3>
               {periods.length > 0 && (
                 <div style={{ marginBottom: '0.75rem', display: 'flex', gap: '0.5rem' }}>
                   <select
@@ -1169,15 +1176,15 @@ const Idetep = () => {
                       flex: 1,
                       padding: '0.5rem 0.75rem',
                       borderRadius: 10,
-                      border: '1px solid rgba(23,199,122,0.4)',
-                      background: 'rgba(4,10,6,0.7)',
-                      color: '#1fdc8c',
+                      border: '1px solid rgba(184,227,233,0.35)',
+                      background: 'rgba(11,46,51,0.6)',
+                      color: '#B8E3E9',
                       fontSize: 12,
                       fontWeight: 500,
                       cursor: 'pointer'
                     }}
                   >
-                    <option value="all">📅 Të gjitha periudhat</option>
+                    <option value="all">Të gjitha periudhat</option>
                     {periods.map(p => (
                       <option key={p.id} value={p.id}>{p.label}</option>
                     ))}
@@ -1254,8 +1261,8 @@ const Idetep = () => {
                       key={`${idea.type}-${idea.id}`} 
                       style={{ ...ideaItem, cursor: 'pointer' }}
                       onClick={() => setSelectedIdea(idea)}
-                      onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(15, 22, 18, 0.8)'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(5,12,8,0.8)'}
+                      onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(184, 227, 233, 0.12)'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = '#0B2E33'}
                     >
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontWeight: 600, fontSize: 15 }}>
@@ -1292,12 +1299,12 @@ const Idetep = () => {
                             handleDownloadIdea(idea);
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(100, 149, 237, 0.15)';
-                            e.currentTarget.style.borderColor = '#6495ed';
+                            e.currentTarget.style.background = 'rgba(184, 227, 233, 0.2)';
+                            e.currentTarget.style.borderColor = '#B8E3E9';
                           }}
                           onMouseLeave={(e) => {
                             e.currentTarget.style.background = 'transparent';
-                            e.currentTarget.style.borderColor = 'rgba(100,149,237,0.35)';
+                            e.currentTarget.style.borderColor = 'rgba(184,227,233,0.35)';
                           }}
                         >
                           Shkarko
@@ -1310,12 +1317,12 @@ const Idetep = () => {
                           }}
                           title="Shfaq feedback për këtë ide"
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(23, 199, 122, 0.15)';
-                            e.currentTarget.style.borderColor = '#17c77a';
+                            e.currentTarget.style.background = 'rgba(184, 227, 233, 0.12)';
+                            e.currentTarget.style.borderColor = '#B8E3E9';
                           }}
                           onMouseLeave={(e) => {
                             e.currentTarget.style.background = 'transparent';
-                            e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
+                            e.currentTarget.style.borderColor = 'rgba(184,227,233,0.35)';
                           }}
                         >
                           Feedback
@@ -1330,12 +1337,12 @@ const Idetep = () => {
                   onClick={loadIdeas}
                   disabled={listStatus.loading}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(23, 199, 122, 0.1)';
-                    e.currentTarget.style.borderColor = '#17c77a';
+                    e.currentTarget.style.background = 'rgba(184, 227, 233, 0.12)';
+                    e.currentTarget.style.borderColor = '#B8E3E9';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
+                    e.currentTarget.style.borderColor = 'rgba(184,227,233,0.35)';
                   }}
                 >
                   Rifresko listën
@@ -1370,7 +1377,7 @@ const Idetep = () => {
                     URL.revokeObjectURL(url);
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(25, 199, 118, 0.3)';
+                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(184, 227, 233, 0.25)';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.boxShadow = 'none';
@@ -1385,7 +1392,7 @@ const Idetep = () => {
           {/* File-t e Dërguara Tab */}
           {activeTab === 'files' && (
             <div style={columnCard}>
-              <h3 style={{ margin: '0 0 1rem', fontSize: 18, color: '#6495ed' }}>📄 File-t e Dërguara</h3>
+              <h3 style={{ margin: '0 0 1rem', fontSize: 18, color: '#B8E3E9' }}>File-t e Dërguara</h3>
               {periods.length > 0 && (
                 <div style={{ marginBottom: '0.75rem', display: 'flex', gap: '0.5rem' }}>
                   <select
@@ -1395,15 +1402,15 @@ const Idetep = () => {
                       flex: 1,
                       padding: '0.5rem 0.75rem',
                       borderRadius: 10,
-                      border: '1px solid rgba(100,149,237,0.4)',
-                      background: 'rgba(4,10,6,0.7)',
-                      color: '#6495ed',
+                      border: '1px solid rgba(184,227,233,0.35)',
+                      background: 'rgba(11,46,51,0.6)',
+                      color: '#B8E3E9',
                       fontSize: 12,
                       fontWeight: 500,
                       cursor: 'pointer'
                     }}
                   >
-                    <option value="all">📅 Të gjitha periudhat</option>
+                    <option value="all">Të gjitha periudhat</option>
                     {periods.map(p => (
                       <option key={p.id} value={p.id}>{p.label}</option>
                     ))}
@@ -1456,7 +1463,7 @@ const Idetep = () => {
                   .map((file) => (
                     <div key={file.id} style={ideaItem}>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 600, fontSize: 15 }}>📝 {file.fileName}</div>
+                        <div style={{ fontWeight: 600, fontSize: 15 }}>{file.fileName}</div>
                         <div style={{ fontSize: 12, opacity: 0.8, marginTop: 4 }}>
                           <span>{file.studentName}</span>
                           <span style={{ margin: '0 0.5rem' }}>•</span>
@@ -1475,12 +1482,12 @@ const Idetep = () => {
                           style={downloadButton}
                           onClick={() => handleDownloadFile(file)}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(100, 149, 237, 0.15)';
-                            e.currentTarget.style.borderColor = '#6495ed';
+                            e.currentTarget.style.background = 'rgba(184, 227, 233, 0.2)';
+                            e.currentTarget.style.borderColor = '#B8E3E9';
                           }}
                           onMouseLeave={(e) => {
                             e.currentTarget.style.background = 'transparent';
-                            e.currentTarget.style.borderColor = 'rgba(100,149,237,0.35)';
+                            e.currentTarget.style.borderColor = 'rgba(184,227,233,0.35)';
                           }}
                         >
                           Shkarko
@@ -1500,12 +1507,12 @@ const Idetep = () => {
                             }
                           })}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(23, 199, 122, 0.15)';
-                            e.currentTarget.style.borderColor = '#17c77a';
+                            e.currentTarget.style.background = 'rgba(184, 227, 233, 0.12)';
+                            e.currentTarget.style.borderColor = '#B8E3E9';
                           }}
                           onMouseLeave={(e) => {
                             e.currentTarget.style.background = 'transparent';
-                            e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
+                            e.currentTarget.style.borderColor = 'rgba(184,227,233,0.35)';
                           }}
                         >
                           Feedback
@@ -1520,12 +1527,12 @@ const Idetep = () => {
                   onClick={loadFiles}
                   disabled={filesStatus.loading}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(23, 199, 122, 0.1)';
-                    e.currentTarget.style.borderColor = '#17c77a';
+                    e.currentTarget.style.background = 'rgba(184, 227, 233, 0.12)';
+                    e.currentTarget.style.borderColor = '#B8E3E9';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.borderColor = 'rgba(23,199,122,0.35)';
+                    e.currentTarget.style.borderColor = 'rgba(184,227,233,0.35)';
                   }}
                 >
                   Rifresko listën
@@ -1534,7 +1541,7 @@ const Idetep = () => {
                   style={{ ...primaryButton, flex: 1 }}
                   onClick={handleDownloadAllFiles}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(25, 199, 118, 0.3)';
+                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(184, 227, 233, 0.25)';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.boxShadow = 'none';
@@ -1575,12 +1582,12 @@ const Idetep = () => {
                 setIdeaFeedback('');
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(23, 199, 122, 0.15)';
-                e.currentTarget.style.borderColor = '#17c77a';
+                e.currentTarget.style.background = 'rgba(184, 227, 233, 0.12)';
+                e.currentTarget.style.borderColor = '#B8E3E9';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                e.currentTarget.style.borderColor = 'rgba(184,227,233,0.3)';
               }}
             >
               ✕
@@ -1589,7 +1596,7 @@ const Idetep = () => {
             <div style={columnsStyle}>
               {/* KOLONA E MAJTË - Detajet e idesë */}
               <div style={columnCard}>
-                <div style={{ fontSize: 16, fontWeight: 700, color: '#1fdc8c', marginBottom: '1rem' }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: '#B8E3E9', marginBottom: '1rem' }}>
                   Idetë për {subjectName}
                 </div>
                 
@@ -1600,7 +1607,7 @@ const Idetep = () => {
 
                 <div style={{ marginBottom: '1rem' }}>
                   <div style={{ fontSize: 12, opacity: 0.75, marginBottom: '0.5rem' }}>Shkurtesa</div>
-                  <div style={{ fontSize: 14, fontWeight: 500, background: 'rgba(23,199,122,0.15)', padding: '0.5rem', borderRadius: 8, color: '#1fdc8c' }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, background: 'rgba(184,227,233,0.12)', padding: '0.5rem', borderRadius: 8, color: '#B8E3E9' }}>
                     {selectedIdea.shorthand}
                   </div>
                 </div>
@@ -1613,9 +1620,9 @@ const Idetep = () => {
                 )}
 
                 {/* Seksioni i feedback-ut */}
-                <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: '#17c77a', marginBottom: '0.75rem' }}>
-                    💬 Feedback
+                <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(184,227,233,0.2)' }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#B8E3E9', marginBottom: '0.75rem' }}>
+                    Feedback
                   </div>
                   <textarea
                     value={ideaFeedback}
@@ -1626,9 +1633,9 @@ const Idetep = () => {
                       minHeight: '100px',
                       padding: '0.75rem',
                       borderRadius: 8,
-                      border: '1px solid rgba(23,199,122,0.3)',
-                      background: 'rgba(4,10,6,0.8)',
-                      color: '#fff',
+                      border: '1px solid rgba(184,227,233,0.3)',
+                      background: 'rgba(11,46,51,0.6)',
+                      color: '#B8E3E9',
                       fontFamily: 'inherit',
                       resize: 'vertical',
                       fontSize: 13
@@ -1664,7 +1671,7 @@ const Idetep = () => {
                       }
                     }}
                   >
-                    ✓ Ruaj Feedback
+                    Ruaj Feedback
                   </button>
                   <button
                     style={{
@@ -1706,14 +1713,14 @@ const Idetep = () => {
                       });
                     }}
                   >
-                    🗑️ Fshi
+                    Fshi
                   </button>
                   <button
                     style={{
                       borderRadius: 12,
-                      border: '1px solid rgba(100, 200, 255, 0.4)',
+                      border: '1px solid rgba(184,227,233,0.4)',
                       background: 'transparent',
-                      color: '#64c8ff',
+                      color: '#B8E3E9',
                       fontWeight: 600,
                       padding: '0.8rem 1.6rem',
                       cursor: 'pointer',
@@ -1731,14 +1738,14 @@ const Idetep = () => {
                       });
                     }}
                   >
-                    💬 Feedback
+                    Feedback
                   </button>
                 </div>
               </div>
 
               {/* KOLONA E DJATHTË - Informacion lënde */}
               <div style={columnCard}>
-                <div style={{ fontSize: 16, fontWeight: 700, color: '#1fdc8c', marginBottom: '1rem' }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: '#B8E3E9', marginBottom: '1rem' }}>
                   Lënda
                 </div>
                 
@@ -1747,15 +1754,15 @@ const Idetep = () => {
                 </div>
 
                 <div style={{
-                  background: 'rgba(23, 199, 122, 0.1)',
-                  border: '1px solid rgba(23, 199, 122, 0.3)',
+                  background: 'rgba(184, 227, 233, 0.12)',
+                  border: '1px solid rgba(184, 227, 233, 0.35)',
                   borderRadius: 10,
                   padding: '1rem',
                   fontSize: 13,
                   lineHeight: 1.6,
-                  color: '#c8f5e8'
+                  color: '#B8E3E9'
                 }}>
-                  💡 Mund të shtohen më shumë detaje të lëndës këtu sipas nevojës.
+                  Mund të shtohen më shumë detaje të lëndës këtu sipas nevojës.
                 </div>
               </div>
             </div>
@@ -1779,8 +1786,8 @@ const Idetep = () => {
           padding: '1rem'
         }}>
           <div style={{
-            background: 'rgba(6,13,9,0.95)',
-            border: '1px solid rgba(23,199,122,0.4)',
+            background: '#0B2E33',
+            border: '1px solid rgba(184,227,233,0.35)',
             borderRadius: 20,
             padding: '2rem',
             maxWidth: '400px',
@@ -1790,7 +1797,7 @@ const Idetep = () => {
             <div style={{
               fontSize: 18,
               fontWeight: 600,
-              color: '#fff',
+              color: '#B8E3E9',
               marginBottom: '2rem',
               lineHeight: 1.5
             }}>
@@ -1805,22 +1812,22 @@ const Idetep = () => {
                   flex: 1,
                   padding: '0.9rem 1.8rem',
                   borderRadius: 12,
-                  border: 'none',
-                  background: '#17c77a',
-                  color: '#041407',
+                  border: '1px solid rgba(184,227,233,0.4)',
+                  background: '#0B2E33',
+                  color: '#B8E3E9',
                   fontWeight: 700,
                   fontSize: 14,
                   cursor: 'pointer',
                   transition: 'all 200ms ease',
-                  boxShadow: '0 4px 12px rgba(23, 199, 122, 0.3)'
+                  boxShadow: '0 4px 12px rgba(184, 227, 233, 0.2)'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#14b56d';
-                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(23, 199, 122, 0.4)';
+                  e.currentTarget.style.background = 'rgba(184, 227, 233, 0.12)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(184, 227, 233, 0.3)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#17c77a';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(23, 199, 122, 0.3)';
+                  e.currentTarget.style.background = '#0B2E33';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(184, 227, 233, 0.2)';
                 }}
               >
                 ✓ Po
@@ -1833,24 +1840,24 @@ const Idetep = () => {
                   flex: 1,
                   padding: '0.9rem 1.8rem',
                   borderRadius: 12,
-                  border: '1px solid rgba(255,255,255,0.2)',
+                  border: '1px solid rgba(184,227,233,0.3)',
                   background: 'transparent',
-                  color: '#c4f0da',
+                  color: '#B8E3E9',
                   fontWeight: 600,
                   fontSize: 14,
                   cursor: 'pointer',
                   transition: 'all 200ms ease'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)';
+                  e.currentTarget.style.background = 'rgba(184,227,233,0.12)';
+                  e.currentTarget.style.borderColor = 'rgba(184,227,233,0.5)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                  e.currentTarget.style.borderColor = 'rgba(184,227,233,0.3)';
                 }}
               >
-                ✕ Jo
+                Jo
               </button>
             </div>
           </div>
@@ -1863,8 +1870,8 @@ const Idetep = () => {
           position: 'fixed',
           top: 20,
           right: 20,
-          background: toastMessage.type === 'success' ? '#17c77a' : toastMessage.type === 'error' ? '#ff5252' : '#6495ed',
-          color: '#000',
+          background: toastMessage.type === 'success' ? '#0B2E33' : toastMessage.type === 'error' ? '#ff5252' : '#4F7C82',
+          color: '#B8E3E9',
           padding: '1rem 1.5rem',
           borderRadius: 12,
           fontSize: 14,

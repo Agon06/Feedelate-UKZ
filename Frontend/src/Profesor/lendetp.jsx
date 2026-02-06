@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getProfesorYearData, uploadLendaTemplate, getLendaTemplateInfo, deleteLendaTemplate } from '../services/profesorApi';
+import '../Student/StudentTheme.css';
 
-const Lendetp = () => {
+const Lendetp = () => { 
   const { yearId } = useParams();
   const navigate = useNavigate();
   const student = JSON.parse(localStorage.getItem('student') || '{}');
@@ -131,9 +132,9 @@ const Lendetp = () => {
   const avatarLetter = yearData?.profesor?.emri?.[0]?.toUpperCase() ?? 'P';
 
   const pageStyle = {
-    color: '#fff',
+    color: '#B8E3E9',
     minHeight: '100vh',
-    background: 'linear-gradient(180deg, rgba(10,18,12,1) 0%, rgba(14,28,20,1) 50%, rgba(12,30,18,1) 100%)',
+    background: 'linear-gradient(180deg, #FFFFFF 0%, #0B2E33 100%, #0B2E33 0%)',
     fontFamily: 'Inter, system-ui, Arial, sans-serif'
   };
 
@@ -141,11 +142,12 @@ const Lendetp = () => {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: isMobile ? '0.85rem 1.5rem' : '1rem 2.5rem'
+    padding: isMobile ? '0.85rem 1.5rem' : '1rem 2.5rem',
+    background: 'linear-gradient(180deg,  #4F7C82 10%, #0B2E33 90%, #0B2E33 100%)'
   };
 
   const brandStyle = {
-    color: '#17c77a',
+    color: '#B8E3E9',
     fontWeight: 800,
     fontSize: isMobile ? 18 : 22,
     letterSpacing: 0.6
@@ -158,7 +160,7 @@ const Lendetp = () => {
   };
 
   const bannerStyle = {
-    border: '1px solid rgba(255,255,255,0.15)',
+    border: '1px solid rgba(184,227,233,0.25)',
     borderRadius: 14,
     padding: '0.85rem 1rem',
     marginTop: 16,
@@ -166,28 +168,15 @@ const Lendetp = () => {
     fontWeight: 600,
   };
 
-  const bellStyle = {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    background: 'rgba(23, 199, 122, 0.12)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: 18,
-    color: '#fbd38d'
-  };
-
   const avatarStyle = {
     width: 42,
     height: 42,
     borderRadius: 21,
-    background: '#0e6b3d',
+    background: '#525252',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#fff',
+    color: '#f2f2f2',
     fontWeight: 700
   };
 
@@ -203,9 +192,9 @@ const Lendetp = () => {
   };
 
   const backButton = {
-    border: '1px solid rgba(23, 199, 122, 0.5)',
-    color: '#17c77a',
-    background: 'transparent',
+    border: '1px solid #0B2E33',
+    color: '#0B2E33',
+    background: '#FFFFFF ',
     padding: '0.4rem 0.9rem',
     borderRadius: 999,
     cursor: 'pointer',
@@ -219,9 +208,9 @@ const Lendetp = () => {
 
   const backButtonHover = {
     ...backButton,
-    background: 'rgba(23, 199, 122, 0.1)',
-    borderColor: '#17c77a',
-    boxShadow: '0 6px 16px rgba(23, 199, 122, 0.15)'
+    background: '#0F3A40',
+    borderColor: '#0F3A40',
+    boxShadow: '0 6px 16px rgba(11,46,51,0.35)'
   };
 
   const semesterGrid = {
@@ -232,8 +221,8 @@ const Lendetp = () => {
   };
 
   const semesterCard = {
-    background: 'rgba(13, 30, 19, 0.85)',
-    border: '1px solid rgba(23, 199, 122, 0.35)',
+    background: 'rgba(11, 46, 51, 0.75)',
+    border: '1px solid rgba(184,227,233,0.25)',
     borderRadius: 18,
     padding: isMobile ? '1rem' : '1.25rem',
     position: 'relative',
@@ -241,7 +230,7 @@ const Lendetp = () => {
   };
 
   const semesterTitle = {
-    color: '#1fdc8c',
+    color: '#B8E3E9',
     fontSize: 18,
     fontWeight: 700,
     marginBottom: 16
@@ -256,31 +245,31 @@ const Lendetp = () => {
   const emptySubjectsStyle = {
     gridColumn: '1 / -1',
     textAlign: 'center',
-    border: '1px dashed rgba(255,255,255,0.25)',
+    border: '1px dashed rgba(184,227,233,0.35)',
     borderRadius: 12,
     padding: '1rem',
-    color: '#c4f0da',
+    color: '#B8E3E9',
     fontStyle: 'italic'
   };
 
   const subjectItem = {
-    background: 'rgba(9,18,12,0.85)',
+    background: '#0B2E33',
     borderRadius: 12,
     padding: '0.9rem 1rem',
-    border: '1px solid rgba(255,255,255,0.05)',
+    border: '1px solid rgba(184,227,233,0.2)',
     textAlign: 'center',
     fontWeight: 600,
     fontSize: 15,
-    color: '#e1f8ed',
+    color: '#B8E3E9',
     transition: 'all 200ms ease',
     cursor: 'pointer'
   };
 
   const subjectItemHover = {
     ...subjectItem,
-    background: 'rgba(23, 199, 122, 0.08)',
-    border: '1px solid rgba(23, 199, 122, 0.6)',
-    boxShadow: '0 10px 25px rgba(23, 199, 122, 0.15)',
+    background: 'rgba(184, 227, 233, 0.12)',
+    border: '1px solid rgba(184, 227, 233, 0.6)',
+    boxShadow: '0 10px 25px rgba(184, 227, 233, 0.2)',
     transform: 'translateY(-2px)'
   };
 
@@ -300,10 +289,10 @@ const Lendetp = () => {
 
   const primaryButtonStyle = {
     padding: '0.75rem',
-    background: '#19c776',
-    border: 'none',
+    background: '#0B2E33',
+    border: '1px solid rgba(184,227,233,0.4)',
     borderRadius: 12,
-    color: '#041407',
+    color: '#B8E3E9',
     fontWeight: 700,
     cursor: 'pointer',
     transition: 'all 200ms ease'
@@ -311,10 +300,10 @@ const Lendetp = () => {
 
   const secondaryButtonStyle = {
     padding: '0.75rem',
-    background: 'transparent',
-    border: '1px solid rgba(23,199,122,0.5)',
+    background: 'rgba(11,46,51,0.6)',
+    border: '1px solid rgba(184,227,233,0.4)',
     borderRadius: 12,
-    color: '#c8f5e8',
+    color: '#B8E3E9',
     fontWeight: 600,
     cursor: 'pointer',
     transition: 'all 200ms ease'
@@ -322,10 +311,10 @@ const Lendetp = () => {
 
   const closeButtonStyle = {
     padding: '0.75rem',
-    background: 'transparent',
-    border: '1px solid rgba(255,255,255,0.2)',
+    background: 'rgba(11,46,51,0.6)',
+    border: '1px solid rgba(184,227,233,0.4)',
     borderRadius: 12,
-    color: '#fff',
+    color: '#B8E3E9',
     cursor: 'pointer',
     transition: 'all 200ms ease'
   };
@@ -417,12 +406,11 @@ const Lendetp = () => {
   };
 
   return (
-    <div style={pageStyle}>
+    <div className="student-theme" style={pageStyle}>
       <div style={topBarStyle}>
         <div style={brandStyle}>Feedelate</div>
         <div style={{ flex: 1 }} />
         <div style={actionsStyle}>
-          <div style={bellStyle}>🔔</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 600 }}>
             <div style={avatarStyle}>{avatarLetter}</div>
             <span>{profesorName}</span>
@@ -434,21 +422,21 @@ const Lendetp = () => {
         <div style={headerRow}>
           <button 
             style={backButton} 
-            onClick={() => navigate('/profesor/dashboard')}
+            onClick={() => navigate('/profesor')}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = backButtonHover.background;
               e.currentTarget.style.borderColor = backButtonHover.borderColor;
-              e.currentTarget.style.boxShadow = backButtonHover.boxShadow;
+              e.currentTarget.style.boxShadow = backButtonHover.boxShadow; 
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = backButton.background;
-              e.currentTarget.style.borderColor = 'rgba(23, 199, 122, 0.5)';
+              e.currentTarget.style.borderColor = 'rgba(184,227,233,0.2)';
               e.currentTarget.style.boxShadow = 'none';
             }}
           >
             ← Kthehu
           </button>
-          <h2 style={{ margin: isMobile ? '12px 0 0' : 0 }}>
+          <h2 style={{ margin: isMobile ? '12px 0 0' : 0, color: '#0B2E33' }}>
             {yearData?.year?.title ?? `Viti ${yearId}`}
           </h2>
         </div>
@@ -464,10 +452,10 @@ const Lendetp = () => {
               style={{
                 marginTop: 12,
                 padding: '0.5rem 1rem',
-                background: 'rgba(251,211,141,0.2)',
-                border: '1px solid rgba(251,211,141,0.5)',
+                background: 'rgba(184,227,233,0.2)',
+                border: '1px solid rgba(184,227,233,0.5)',
                 borderRadius: 8,
-                color: '#fbd38d',
+                color: '#B8E3E9',
                 fontWeight: 600,
                 cursor: 'pointer',
                 fontSize: 13
@@ -478,8 +466,8 @@ const Lendetp = () => {
             {showDebug && debugInfo && (
               <div style={{
                 ...bannerStyle,
-                background: 'rgba(251,211,141,0.1)',
-                border: '1px solid rgba(251,211,141,0.3)',
+                background: 'rgba(184,227,233,0.12)',
+                border: '1px solid rgba(184,227,233,0.35)',
                 textAlign: 'left',
                 fontSize: 12,
                 fontFamily: 'monospace',
@@ -559,26 +547,31 @@ const Lendetp = () => {
         >
           <div
             style={{
-              background: 'rgba(6,13,9,0.98)',
+              background: '#0B2E33',
               borderRadius: 20,
-              border: '1px solid rgba(23,199,122,0.5)',
+              border: '1px solid rgba(184,227,233,0.4)',
               padding: '2rem',
               maxWidth: 500,
               width: '90%',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 style={{ marginTop: 0 }}>{activeModal.subject?.name}</h2>
-            <p style={{ opacity: 0.85 }}>Zgjidh veprimin për këtë lëndë:</p>
+            <h2 style={{ marginTop: 0, color: '#B8E3E9', textAlign: 'center' }}>{activeModal.subject?.name}</h2>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 24 }}>
               <button
                 style={{
                   ...primaryButtonStyle,
-                  boxShadow: '0 4px 12px rgba(25, 199, 118, 0.2)'
+                  boxShadow: '0 4px 12px rgba(184, 227, 233, 0.15)'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 8px 24px rgba(25, 199, 118, 0.4)'}
-                onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 4px 12px rgba(25, 199, 118, 0.2)'}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(184, 227, 233, 0.12)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(184, 227, 233, 0.25)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = primaryButtonStyle.background;
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(184, 227, 233, 0.15)';
+                }}
                 onClick={handleNavigateToIdea}
               >
                 Shko te Idetë
@@ -586,17 +579,17 @@ const Lendetp = () => {
               <button
                 style={{
                   ...secondaryButtonStyle,
-                  boxShadow: '0 4px 12px rgba(23, 199, 122, 0.1)'
+                  boxShadow: '0 4px 12px rgba(184, 227, 233, 0.1)'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(23, 199, 122, 0.1)';
-                  e.currentTarget.style.borderColor = '#17c77a';
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(23, 199, 122, 0.2)';
+                  e.currentTarget.style.background = 'rgba(184, 227, 233, 0.12)';
+                  e.currentTarget.style.borderColor = '#B8E3E9';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(184, 227, 233, 0.2)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.borderColor = 'rgba(23,199,122,0.5)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(23, 199, 122, 0.1)';
+                  e.currentTarget.style.background = secondaryButtonStyle.background;
+                  e.currentTarget.style.borderColor = 'rgba(184,227,233,0.4)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(184, 227, 233, 0.1)';
                 }}
                 onClick={handleNavigateToDorezim}
               >
@@ -605,17 +598,17 @@ const Lendetp = () => {
               <button
                 style={{
                   ...closeButtonStyle,
-                  boxShadow: '0 4px 12px rgba(255, 255, 255, 0.05)'
+                  boxShadow: '0 4px 12px rgba(184, 227, 233, 0.05)'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)';
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.background = 'rgba(184, 227, 233, 0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(184, 227, 233, 0.5)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(184, 227, 233, 0.12)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 255, 255, 0.05)';
+                  e.currentTarget.style.background = closeButtonStyle.background;
+                  e.currentTarget.style.borderColor = 'rgba(184, 227, 233, 0.4)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(184, 227, 233, 0.05)';
                 }}
                 onClick={handleCloseModal}
               >
@@ -642,8 +635,8 @@ const Lendetp = () => {
           padding: '1rem'
         }}>
           <div style={{
-            background: 'rgba(6,13,9,0.95)',
-            border: '1px solid rgba(23,199,122,0.4)',
+            background: 'rgba(11,46,51,0.95)',
+            border: '1px solid rgba(184,227,233,0.35)',
             borderRadius: 20,
             padding: '2rem',
             maxWidth: '400px',
@@ -653,7 +646,7 @@ const Lendetp = () => {
             <div style={{
               fontSize: 18,
               fontWeight: 600,
-              color: '#fff',
+              color: '#B8E3E9',
               marginBottom: '2rem',
               lineHeight: 1.5
             }}>
@@ -669,21 +662,21 @@ const Lendetp = () => {
                   padding: '0.9rem 1.8rem',
                   borderRadius: 12,
                   border: 'none',
-                  background: '#17c77a',
-                  color: '#041407',
+                  background: '#4F7C82',
+                  color: '#0B2E33',
                   fontWeight: 700,
                   fontSize: 14,
                   cursor: 'pointer',
                   transition: 'all 200ms ease',
-                  boxShadow: '0 4px 12px rgba(23, 199, 122, 0.3)'
+                  boxShadow: '0 4px 12px rgba(79, 124, 130, 0.3)'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#14b56d';
-                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(23, 199, 122, 0.4)';
+                  e.currentTarget.style.background = '#3f666b';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(79, 124, 130, 0.4)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#17c77a';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(23, 199, 122, 0.3)';
+                  e.currentTarget.style.background = '#4F7C82';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(79, 124, 130, 0.3)';
                 }}
               >
                 ✓ Po
@@ -696,21 +689,21 @@ const Lendetp = () => {
                   flex: 1,
                   padding: '0.9rem 1.8rem',
                   borderRadius: 12,
-                  border: '1px solid rgba(255,255,255,0.2)',
+                  border: '1px solid rgba(184,227,233,0.3)',
                   background: 'transparent',
-                  color: '#c4f0da',
+                  color: '#B8E3E9',
                   fontWeight: 600,
                   fontSize: 14,
                   cursor: 'pointer',
                   transition: 'all 200ms ease'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)';
+                  e.currentTarget.style.background = 'rgba(184,227,233,0.12)';
+                  e.currentTarget.style.borderColor = 'rgba(184,227,233,0.5)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                  e.currentTarget.style.borderColor = 'rgba(184,227,233,0.3)';
                 }}
               >
                 ✕ Jo
