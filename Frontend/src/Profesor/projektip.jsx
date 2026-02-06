@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getProfesorProjects, createProfesorProject, deleteProfesorProject } from "../services/profesorApi";
+import '../Student/StudentTheme.css';
 
 const Projektip = () => {
   const student = JSON.parse(localStorage.getItem('student') || '{}');
@@ -15,6 +16,66 @@ const Projektip = () => {
     deaAdline: "",
     lendaId: 1,
   });
+
+  const pageStyle = {
+    minHeight: '100vh',
+    background: 'linear-gradient(180deg, #FFFFFF 0%, #0B2E33 100%, #0B2E33 0%)',
+    color: '#B8E3E9',
+    padding: isMobile ? '1.5rem' : '2.5rem',
+    fontFamily: 'Inter, system-ui, Arial, sans-serif'
+  };
+
+  const titleStyle = {
+    marginTop: 0,
+    marginBottom: '1.5rem',
+    color: '#0B2E33'
+  };
+
+  const primaryButtonStyle = {
+    padding: '0.65rem 1.2rem',
+    background: '#0B2E33',
+    color: '#B8E3E9',
+    border: '1px solid rgba(184,227,233,0.4)',
+    borderRadius: 10,
+    cursor: 'pointer',
+    fontWeight: 700
+  };
+
+  const formCardStyle = {
+    background: 'rgba(11,46,51,0.75)',
+    padding: '1.5rem',
+    borderRadius: 16,
+    marginBottom: '2rem',
+    border: '1px solid rgba(184,227,233,0.35)',
+    boxShadow: '0 20px 40px rgba(0,0,0,0.45)'
+  };
+
+  const inputStyle = {
+    width: '100%',
+    padding: '0.75rem',
+    background: 'rgba(11,46,51,0.6)',
+    color: '#B8E3E9',
+    border: '1px solid rgba(184,227,233,0.25)',
+    borderRadius: 10
+  };
+
+  const cardStyle = {
+    background: 'rgba(11,46,51,0.75)',
+    border: '1px solid rgba(184,227,233,0.35)',
+    borderRadius: 16,
+    padding: '1.5rem',
+    boxShadow: '0 20px 40px rgba(0,0,0,0.45)'
+  };
+
+  const deleteButtonStyle = {
+    padding: '0.5rem 1rem',
+    background: 'rgba(184,227,233,0.08)',
+    color: '#B8E3E9',
+    border: '1px solid rgba(184,227,233,0.35)',
+    borderRadius: 10,
+    cursor: 'pointer',
+    marginTop: '1rem'
+  };
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -80,8 +141,8 @@ const Projektip = () => {
   if (loading) return <div style={{ padding: "2rem" }}>Po ngarkohen projektet...</div>;
 
   return (
-    <div style={{ padding: "2rem", color: "#fff" }}>
-      <h1>Projektet e Mia</h1>
+    <div className="student-theme" style={pageStyle}>
+      <h1 style={titleStyle}>Projektet e Mia</h1>
 
       {error && (
         <div style={{ padding: "1rem", background: "rgba(255,82,82,0.2)", borderRadius: "8px", marginBottom: "1rem" }}>
@@ -92,13 +153,8 @@ const Projektip = () => {
       <button
         onClick={() => setShowForm(!showForm)}
         style={{
-          padding: "0.5rem 1rem",
-          background: "#17c77a",
-          color: "#fff",
-          border: "none",
-          borderRadius: "6px",
-          cursor: "pointer",
-          marginBottom: "1rem",
+          ...primaryButtonStyle,
+          marginBottom: '1rem'
         }}
       >
         {showForm ? "Mbyll formularin" : "Shto projekt të ri"}
@@ -107,13 +163,7 @@ const Projektip = () => {
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          style={{
-            background: "rgba(13, 30, 19, 0.85)",
-            padding: "1.5rem",
-            borderRadius: "12px",
-            marginBottom: "2rem",
-            border: "1px solid rgba(23, 199, 122, 0.35)",
-          }}
+          style={formCardStyle}
         >
           <div style={{ marginBottom: "1rem" }}>
             <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "600" }}>
@@ -125,14 +175,7 @@ const Projektip = () => {
               value={formData.emriProjekti}
               onChange={handleInputChange}
               required
-              style={{
-                width: "100%",
-                padding: "0.75rem",
-                background: "rgba(5,12,8,0.8)",
-                color: "#fff",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "6px",
-              }}
+              style={inputStyle}
             />
           </div>
 
@@ -146,13 +189,8 @@ const Projektip = () => {
               onChange={handleInputChange}
               required
               style={{
-                width: "100%",
-                padding: "0.75rem",
-                background: "rgba(5,12,8,0.8)",
-                color: "#fff",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "6px",
-                minHeight: "100px",
+                ...inputStyle,
+                minHeight: '100px'
               }}
             />
           </div>
@@ -166,28 +204,13 @@ const Projektip = () => {
               name="deaAdline"
               value={formData.deaAdline}
               onChange={handleInputChange}
-              style={{
-                width: "100%",
-                padding: "0.75rem",
-                background: "rgba(5,12,8,0.8)",
-                color: "#fff",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "6px",
-              }}
+              style={inputStyle}
             />
           </div>
 
           <button
             type="submit"
-            style={{
-              padding: "0.75rem 1.5rem",
-              background: "#17c77a",
-              color: "#fff",
-              border: "none",
-              borderRadius: "6px",
-              cursor: "pointer",
-              fontWeight: "600",
-            }}
+            style={primaryButtonStyle}
           >
             Shto projektin
           </button>
@@ -215,31 +238,18 @@ const Projektip = () => {
             projects.map((project) => (
               <div
                 key={project.id}
-                style={{
-                  background: "rgba(13, 30, 19, 0.85)",
-                  border: "1px solid rgba(23, 199, 122, 0.35)",
-                  borderRadius: "12px",
-                  padding: "1.5rem",
-                }}
+                style={cardStyle}
               >
-                <h3 style={{ color: "#1fdc8c", marginTop: 0 }}>{project.emriProjekti}</h3>
-                <p>{project.pershkrimiProjekti}</p>
+                <h3 style={{ color: "#B8E3E9", marginTop: 0 }}>{project.emriProjekti}</h3>
+                <p style={{ color: "rgba(184,227,233,0.9)" }}>{project.pershkrimiProjekti}</p>
                 {project.deaAdline && (
-                  <p style={{ fontSize: "0.9rem", color: "#9bf3c8" }}>
+                  <p style={{ fontSize: "0.9rem", color: "rgba(184,227,233,0.8)" }}>
                     Afati: {new Date(project.deaAdline).toLocaleDateString()}
                   </p>
                 )}
                 <button
                   onClick={() => handleDelete(project.id)}
-                  style={{
-                    padding: "0.5rem 1rem",
-                    background: "rgba(255,82,82,0.3)",
-                    color: "#ff5252",
-                    border: "1px solid rgba(255,82,82,0.5)",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    marginTop: "1rem",
-                  }}
+                  style={deleteButtonStyle}
                 >
                   Fshi
                 </button>

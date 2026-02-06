@@ -73,9 +73,9 @@ const AdminStudentManagement = () => {
 
 
     const pageStyle = {
-        color: '#fff',
+        color: '#B8E3E9',
         minHeight: '100vh',
-        background: 'radial-gradient(circle at 20% 20%, rgba(27,148,92,0.15), transparent 35%), radial-gradient(circle at 80% 0%, rgba(23,199,122,0.12), transparent 30%), linear-gradient(180deg, rgba(9,16,12,1) 0%, rgba(12,26,18,1) 50%, rgba(8,18,12,1) 100%)',
+        background: 'linear-gradient(180deg, #6B7280 0%, #0B2E33 60%, #0B2E33 100%)',
         padding: '2rem',
         margin: 0,
         fontFamily: 'Inter, system-ui, Arial, sans-serif',
@@ -100,7 +100,7 @@ const AdminStudentManagement = () => {
     };
 
     const brandStyle = {
-        color: '#17c77a',
+        color: '#B8E3E9',
         fontWeight: 800,
         fontSize: isMobile ? 18 : 22,
         letterSpacing: 0.6
@@ -116,13 +116,13 @@ const AdminStudentManagement = () => {
         width: 40,
         height: 40,
         borderRadius: 20,
-        background: 'rgba(23, 199, 122, 0.12)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        background: 'rgba(184,227,233,0.12)',
+        border: '1px solid rgba(184,227,233,0.3)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         fontSize: 18,
-        color: '#fbd38d'
+        color: '#B8E3E9'
     };
 
     const containerStyle = {
@@ -137,13 +137,14 @@ const AdminStudentManagement = () => {
         display: 'flex',
         alignItems: 'center',
         gap: '1rem',
-        marginBottom: '1rem'
+        marginBottom: '1rem',
+        width: '100%'
     };
 
     const backButtonStyle = {
-        background: 'rgba(23, 199, 122, 0.1)',
-        border: '1px solid rgba(23, 199, 122, 0.3)',
-        color: '#17c77a',
+        background: 'rgba(11,46,51,0.6)',
+        border: '1px solid rgba(184,227,233,0.35)',
+        color: '#B8E3E9',
         padding: '0.75rem 1.5rem',
         borderRadius: 8,
         cursor: 'pointer',
@@ -159,16 +160,18 @@ const AdminStudentManagement = () => {
         fontSize: isMobile ? '24px' : '28px',
         fontWeight: 800,
         margin: 0,
-        letterSpacing: '-0.5px'
+        letterSpacing: '-0.5px',
+        textAlign: 'center',
+        flex: 1
     };
 
     const tableContainerStyle = {
-        background: 'rgba(16, 24, 20, 0.9)',
+        background: 'rgba(11,46,51,0.75)',
         backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255,255,255,0.06)',
+        border: '1px solid rgba(184,227,233,0.25)',
         borderRadius: 12,
         overflow: 'hidden',
-        boxShadow: '0 24px 60px rgba(0,0,0,0.55)'
+        boxShadow: '0 24px 60px rgba(0,0,0,0.45)'
     };
 
     const tableStyle = {
@@ -178,22 +181,22 @@ const AdminStudentManagement = () => {
     };
 
     const theadStyle = {
-        background: 'rgba(23, 199, 122, 0.1)',
-        borderBottom: '2px solid rgba(23, 199, 122, 0.3)'
+        background: 'rgba(184,227,233,0.12)',
+        borderBottom: '2px solid rgba(184,227,233,0.35)'
     };
 
     const thStyle = {
         padding: isMobile ? '1rem 0.75rem' : '1.25rem 1.5rem',
         textAlign: 'left',
         fontWeight: 700,
-        color: '#17c77a',
+        color: '#B8E3E9',
         letterSpacing: '0.5px'
     };
 
     const tdStyle = {
         padding: isMobile ? '1rem 0.75rem' : '1.25rem 1.5rem',
-        borderBottom: '1px solid rgba(255,255,255,0.05)',
-        color: '#e0e0e0'
+        borderBottom: '1px solid rgba(184,227,233,0.15)',
+        color: 'rgba(184,227,233,0.9)'
     };
 
     const tbodyRowStyle = {
@@ -201,9 +204,9 @@ const AdminStudentManagement = () => {
     };
 
     const modifyButtonStyle = {
-        background: 'linear-gradient(135deg, rgba(23, 199, 122, 0.2) 0%, rgba(23, 199, 122, 0.1) 100%)',
-        border: '1px solid rgba(23, 199, 122, 0.3)',
-        color: '#17c77a',
+        background: 'rgba(11,46,51,0.6)',
+        border: '1px solid rgba(184,227,233,0.35)',
+        color: '#B8E3E9',
         padding: '0.5rem 1.25rem',
         borderRadius: 6,
         cursor: 'pointer',
@@ -219,8 +222,8 @@ const AdminStudentManagement = () => {
         fontSize: '12px',
         fontWeight: 600,
         display: 'inline-block',
-        background: status === 'Aktiv' ? 'rgba(23, 199, 122, 0.15)' : 'rgba(255, 107, 107, 0.15)',
-        color: status === 'Aktiv' ? '#17c77a' : '#ff6b6b'
+        background: status === 'Aktiv' ? 'rgba(184,227,233,0.15)' : 'rgba(255, 107, 107, 0.15)',
+        color: status === 'Aktiv' ? '#B8E3E9' : '#ff6b6b'
     });
 
     const handleModify = (student) => {
@@ -327,12 +330,12 @@ const AdminStudentManagement = () => {
                         style={backButtonStyle}
                         onClick={handleBack}
                         onMouseEnter={(e) => {
-                            e.target.style.background = 'rgba(23, 199, 122, 0.15)';
-                            e.target.style.borderColor = 'rgba(23, 199, 122, 0.5)';
+                            e.target.style.background = 'rgba(184,227,233,0.12)';
+                            e.target.style.borderColor = 'rgba(184,227,233,0.5)';
                         }}
                         onMouseLeave={(e) => {
-                            e.target.style.background = 'rgba(23, 199, 122, 0.1)';
-                            e.target.style.borderColor = 'rgba(23, 199, 122, 0.3)';
+                            e.target.style.background = 'rgba(11,46,51,0.6)';
+                            e.target.style.borderColor = 'rgba(184,227,233,0.35)';
                         }}
                     >
                         ← Kthehu
@@ -352,22 +355,22 @@ const AdminStudentManagement = () => {
                                 width: '100%',
                                 padding: '0.85rem 1.25rem',
                                 borderRadius: 10,
-                                border: '1px solid rgba(23, 199, 122, 0.3)',
-                                background: 'rgba(16, 24, 20, 0.9)',
-                                color: '#fff',
+                                border: '1px solid rgba(184,227,233,0.35)',
+                                background: 'rgba(11,46,51,0.6)',
+                                color: '#B8E3E9',
                                 fontSize: '14px',
                                 boxSizing: 'border-box',
                                 transition: 'all 200ms ease',
                                 fontFamily: 'Inter, system-ui, Arial, sans-serif'
                             }}
                             onFocus={(e) => {
-                                e.target.style.borderColor = 'rgba(23, 199, 122, 0.6)';
-                                e.target.style.background = 'rgba(16, 24, 20, 0.95)';
-                                e.target.style.boxShadow = '0 0 20px rgba(23, 199, 122, 0.1)';
+                                e.target.style.borderColor = 'rgba(184,227,233,0.6)';
+                                e.target.style.background = 'rgba(11,46,51,0.7)';
+                                e.target.style.boxShadow = '0 0 20px rgba(184,227,233,0.1)';
                             }}
                             onBlur={(e) => {
-                                e.target.style.borderColor = 'rgba(23, 199, 122, 0.3)';
-                                e.target.style.background = 'rgba(16, 24, 20, 0.9)';
+                                e.target.style.borderColor = 'rgba(184,227,233,0.35)';
+                                e.target.style.background = 'rgba(11,46,51,0.6)';
                                 e.target.style.boxShadow = 'none';
                             }}
                         />
@@ -376,7 +379,7 @@ const AdminStudentManagement = () => {
 
                 <div style={tableContainerStyle}>
                     {loading ? (
-                        <div style={{ padding: '3rem', textAlign: 'center', color: '#17c77a' }}>
+                        <div style={{ padding: '3rem', textAlign: 'center', color: '#B8E3E9' }}>
                             <p>Ngarkim i studentëve...</p>
                         </div>
                     ) : error ? (
@@ -384,7 +387,7 @@ const AdminStudentManagement = () => {
                             <p>{error}</p>
                         </div>
                     ) : students.length === 0 ? (
-                        <div style={{ padding: '3rem', textAlign: 'center', color: '#e0e0e0' }}>
+                        <div style={{ padding: '3rem', textAlign: 'center', color: 'rgba(184,227,233,0.9)' }}>
                             <p>Nuk ka studentë në sistem</p>
                         </div>
                     ) : (() => {
@@ -398,7 +401,7 @@ const AdminStudentManagement = () => {
                         });
 
                         return filteredStudents.length === 0 ? (
-                            <div style={{ padding: '3rem', textAlign: 'center', color: '#e0e0e0' }}>
+                            <div style={{ padding: '3rem', textAlign: 'center', color: 'rgba(184,227,233,0.9)' }}>
                                 <p>Asnjë student nuk përputhet me kërkimin</p>
                             </div>
                         ) : (
@@ -426,7 +429,7 @@ const AdminStudentManagement = () => {
                                         key={student.id}
                                         style={tbodyRowStyle}
                                         onMouseEnter={(e) => {
-                                            e.currentTarget.style.backgroundColor = 'rgba(23, 199, 122, 0.05)';
+                                            e.currentTarget.style.backgroundColor = 'rgba(184,227,233,0.08)';
                                         }}
                                         onMouseLeave={(e) => {
                                             e.currentTarget.style.backgroundColor = 'transparent';
@@ -442,12 +445,12 @@ const AdminStudentManagement = () => {
                                                 style={modifyButtonStyle}
                                                 onClick={() => handleModify(student)}
                                                 onMouseEnter={(e) => {
-                                                    e.target.style.background = 'linear-gradient(135deg, rgba(23, 199, 122, 0.3) 0%, rgba(23, 199, 122, 0.2) 100%)';
-                                                    e.target.style.borderColor = 'rgba(23, 199, 122, 0.5)';
+                                                    e.target.style.background = 'rgba(184,227,233,0.12)';
+                                                    e.target.style.borderColor = 'rgba(184,227,233,0.6)';
                                                 }}
                                                 onMouseLeave={(e) => {
-                                                    e.target.style.background = 'linear-gradient(135deg, rgba(23, 199, 122, 0.2) 0%, rgba(23, 199, 122, 0.1) 100%)';
-                                                    e.target.style.borderColor = 'rgba(23, 199, 122, 0.3)';
+                                                    e.target.style.background = 'rgba(11,46,51,0.6)';
+                                                    e.target.style.borderColor = 'rgba(184,227,233,0.35)';
                                                 }}
                                             >
                                                 Modifiko
@@ -477,22 +480,22 @@ const AdminStudentManagement = () => {
                     zIndex: 1000
                 }}>
                     <div style={{
-                        background: 'rgba(16, 24, 20, 0.95)',
+                        background: 'rgba(11,46,51,0.95)',
                         backdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(255,255,255,0.06)',
+                        border: '1px solid rgba(184,227,233,0.35)',
                         borderRadius: 12,
                         padding: '2rem',
                         maxWidth: 500,
                         width: '90%',
                         boxShadow: '0 24px 60px rgba(0,0,0,0.55)',
-                        color: '#fff'
+                        color: '#B8E3E9'
                     }}>
                         <h2 style={{ margin: '0 0 1.5rem 0', fontSize: '24px', fontWeight: 800 }}>
                             Ndrysho Të Dhënat e Studentit
                         </h2>
 
                         <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '14px', color: '#17c77a' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '14px', color: '#B8E3E9' }}>
                                 Emri
                             </label>
                             <input
@@ -503,9 +506,9 @@ const AdminStudentManagement = () => {
                                     width: '100%',
                                     padding: '0.75rem',
                                     borderRadius: 8,
-                                    border: '1px solid rgba(255,255,255,0.2)',
-                                    background: 'rgba(255,255,255,0.05)',
-                                    color: '#fff',
+                                    border: '1px solid rgba(184,227,233,0.35)',
+                                    background: 'rgba(11,46,51,0.6)',
+                                    color: '#B8E3E9',
                                     fontSize: '14px',
                                     boxSizing: 'border-box'
                                 }}
@@ -513,7 +516,7 @@ const AdminStudentManagement = () => {
                         </div>
 
                         <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '14px', color: '#17c77a' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '14px', color: '#B8E3E9' }}>
                                 Mbiemri
                             </label>
                             <input
@@ -524,9 +527,9 @@ const AdminStudentManagement = () => {
                                     width: '100%',
                                     padding: '0.75rem',
                                     borderRadius: 8,
-                                    border: '1px solid rgba(255,255,255,0.2)',
-                                    background: 'rgba(255,255,255,0.05)',
-                                    color: '#fff',
+                                    border: '1px solid rgba(184,227,233,0.35)',
+                                    background: 'rgba(11,46,51,0.6)',
+                                    color: '#B8E3E9',
                                     fontSize: '14px',
                                     boxSizing: 'border-box'
                                 }}
@@ -534,7 +537,7 @@ const AdminStudentManagement = () => {
                         </div>
 
                         <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '14px', color: '#17c77a' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '14px', color: '#B8E3E9' }}>
                                 Email
                             </label>
                             <input
@@ -545,9 +548,9 @@ const AdminStudentManagement = () => {
                                     width: '100%',
                                     padding: '0.75rem',
                                     borderRadius: 8,
-                                    border: '1px solid rgba(255,255,255,0.2)',
-                                    background: 'rgba(255,255,255,0.05)',
-                                    color: '#fff',
+                                    border: '1px solid rgba(184,227,233,0.35)',
+                                    background: 'rgba(11,46,51,0.6)',
+                                    color: '#B8E3E9',
                                     fontSize: '14px',
                                     boxSizing: 'border-box'
                                 }}
@@ -555,7 +558,7 @@ const AdminStudentManagement = () => {
                         </div>
 
                         <div style={{ marginBottom: '1.5rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '14px', color: '#17c77a' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '14px', color: '#B8E3E9' }}>
                                 Nr ID Card
                             </label>
                             <input
@@ -566,9 +569,9 @@ const AdminStudentManagement = () => {
                                     width: '100%',
                                     padding: '0.75rem',
                                     borderRadius: 8,
-                                    border: '1px solid rgba(255,255,255,0.2)',
-                                    background: 'rgba(255,255,255,0.05)',
-                                    color: '#fff',
+                                    border: '1px solid rgba(184,227,233,0.35)',
+                                    background: 'rgba(11,46,51,0.6)',
+                                    color: '#B8E3E9',
                                     fontSize: '14px',
                                     boxSizing: 'border-box'
                                 }}
@@ -576,7 +579,7 @@ const AdminStudentManagement = () => {
                         </div>
 
                         <div style={{ marginBottom: '1.5rem' }}>
-                            <label style={{ display: 'block', marginBottom: '1rem', fontWeight: 600, fontSize: '14px', color: '#17c77a' }}>
+                            <label style={{ display: 'block', marginBottom: '1rem', fontWeight: 600, fontSize: '14px', color: '#B8E3E9' }}>
                                 Rolet
                             </label>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -610,7 +613,7 @@ const AdminStudentManagement = () => {
                                             accentColor: '#17c77a'
                                         }}
                                     />
-                                    <span style={{ fontSize: '14px', color: '#e0e0e0' }}>Student</span>
+                                    <span style={{ fontSize: '14px', color: 'rgba(184,227,233,0.9)' }}>Student</span>
                                 </label>
 
                                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
@@ -643,7 +646,7 @@ const AdminStudentManagement = () => {
                                             accentColor: '#17c77a'
                                         }}
                                     />
-                                    <span style={{ fontSize: '14px', color: '#e0e0e0' }}>Profesor</span>
+                                    <span style={{ fontSize: '14px', color: 'rgba(184,227,233,0.9)' }}>Profesor</span>
                                 </label>
 
                                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
@@ -676,7 +679,7 @@ const AdminStudentManagement = () => {
                                             accentColor: '#17c77a'
                                         }}
                                     />
-                                    <span style={{ fontSize: '14px', color: '#e0e0e0' }}>Admin</span>
+                                    <span style={{ fontSize: '14px', color: 'rgba(184,227,233,0.9)' }}>Admin</span>
                                 </label>
                             </div>
                         </div>
@@ -687,20 +690,20 @@ const AdminStudentManagement = () => {
                                 style={{
                                     padding: '0.75rem 1.5rem',
                                     borderRadius: 8,
-                                    border: '1px solid rgba(255,255,255,0.2)',
-                                    background: 'transparent',
-                                    color: '#fff',
+                                    border: '1px solid rgba(184,227,233,0.35)',
+                                    background: 'rgba(11,46,51,0.6)',
+                                    color: '#B8E3E9',
                                     fontWeight: 600,
                                     cursor: 'pointer',
                                     transition: 'all 200ms ease'
                                 }}
                                 onMouseEnter={(e) => {
-                                    e.target.style.background = 'rgba(255,255,255,0.05)';
-                                    e.target.style.borderColor = 'rgba(255,255,255,0.3)';
+                                    e.target.style.background = 'rgba(184,227,233,0.12)';
+                                    e.target.style.borderColor = 'rgba(184,227,233,0.6)';
                                 }}
                                 onMouseLeave={(e) => {
-                                    e.target.style.background = 'transparent';
-                                    e.target.style.borderColor = 'rgba(255,255,255,0.2)';
+                                    e.target.style.background = 'rgba(11,46,51,0.6)';
+                                    e.target.style.borderColor = 'rgba(184,227,233,0.35)';
                                 }}
                             >
                                 Anulo
@@ -710,20 +713,20 @@ const AdminStudentManagement = () => {
                                 style={{
                                     padding: '0.75rem 1.5rem',
                                     borderRadius: 8,
-                                    border: '1px solid rgba(23, 199, 122, 0.3)',
-                                    background: 'rgba(23, 199, 122, 0.2)',
-                                    color: '#17c77a',
+                                    border: '1px solid rgba(184,227,233,0.35)',
+                                    background: '#0B2E33',
+                                    color: '#B8E3E9',
                                     fontWeight: 600,
                                     cursor: 'pointer',
                                     transition: 'all 200ms ease'
                                 }}
                                 onMouseEnter={(e) => {
-                                    e.target.style.background = 'rgba(23, 199, 122, 0.3)';
-                                    e.target.style.borderColor = 'rgba(23, 199, 122, 0.5)';
+                                    e.target.style.background = 'rgba(184,227,233,0.12)';
+                                    e.target.style.borderColor = 'rgba(184,227,233,0.6)';
                                 }}
                                 onMouseLeave={(e) => {
-                                    e.target.style.background = 'rgba(23, 199, 122, 0.2)';
-                                    e.target.style.borderColor = 'rgba(23, 199, 122, 0.3)';
+                                    e.target.style.background = '#0B2E33';
+                                    e.target.style.borderColor = 'rgba(184,227,233,0.35)';
                                 }}
                             >
                                 Ruaj Ndryshimet
@@ -739,11 +742,11 @@ const AdminStudentManagement = () => {
                     position: 'fixed',
                     top: '2rem',
                     right: '2rem',
-                    background: notification.type === 'success' ? 'rgba(23, 199, 122, 0.2)' : 'rgba(255, 107, 107, 0.2)',
-                    border: `1px solid ${notification.type === 'success' ? 'rgba(23, 199, 122, 0.4)' : 'rgba(255, 107, 107, 0.4)'}`,
+                    background: notification.type === 'success' ? 'rgba(184,227,233,0.2)' : 'rgba(255, 107, 107, 0.2)',
+                    border: `1px solid ${notification.type === 'success' ? 'rgba(184,227,233,0.4)' : 'rgba(255, 107, 107, 0.4)'}`,
                     borderRadius: 12,
                     padding: '1.25rem 1.75rem',
-                    color: notification.type === 'success' ? '#17c77a' : '#ff6b6b',
+                    color: notification.type === 'success' ? '#B8E3E9' : '#ff6b6b',
                     fontSize: '14px',
                     fontWeight: 600,
                     boxShadow: '0 10px 40px rgba(0,0,0,0.5)',

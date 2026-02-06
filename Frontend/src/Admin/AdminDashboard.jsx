@@ -36,7 +36,7 @@ const AdminDashboard = () => {
     const pageStyle = {
         color: '#fff',
         minHeight: '100vh',
-        background: 'radial-gradient(circle at 20% 20%, rgba(27,148,92,0.15), transparent 35%), radial-gradient(circle at 80% 0%, rgba(23,199,122,0.12), transparent 30%), linear-gradient(180deg, rgba(9,16,12,1) 0%, rgba(12,26,18,1) 50%, rgba(8,18,12,1) 100%)',
+        background: 'linear-gradient(180deg, #6B7280 0%, #0B2E33 60%, #0B2E33 100%)',
         padding: '2rem',
         margin: 0,
         fontFamily: 'Inter, system-ui, Arial, sans-serif',
@@ -62,7 +62,7 @@ const AdminDashboard = () => {
     };
 
     const brandStyle = {
-        color: '#17c77a',
+        color: '#B8E3E9',
         fontWeight: 800,
         fontSize: isMobile ? 18 : 22,
         letterSpacing: 0.6
@@ -86,13 +86,13 @@ const AdminDashboard = () => {
         width: 40,
         height: 40,
         borderRadius: 20,
-        background: 'rgba(23, 199, 122, 0.12)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        background: 'rgba(184,227,233,0.12)',
+        border: '1px solid rgba(184,227,233,0.3)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         fontSize: 18,
-        color: '#fbd38d'
+        color: '#B8E3E9'
     };
 
     const adminBadge = {
@@ -106,11 +106,11 @@ const AdminDashboard = () => {
         width: 42,
         height: 42,
         borderRadius: 21,
-        background: '#0e6b3d',
+        background: '#4F7C82',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: '#fff',
+        color: '#0B2E33',
         fontWeight: 700,
         letterSpacing: 0.8
     };
@@ -128,12 +128,12 @@ const AdminDashboard = () => {
         width: '100%',
         maxWidth: isMobile ? '300px' : '360px',
         padding: isMobile ? '2rem 1.5rem' : '2.5rem 2rem',
-        background: 'rgba(16, 24, 20, 0.9)',
+        background: 'rgba(11,46,51,0.75)',
         backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255,255,255,0.06)',
+        border: '1px solid rgba(184,227,233,0.25)',
         borderRadius: 16,
-        boxShadow: '0 24px 60px rgba(0,0,0,0.55)',
-        color: '#fff',
+        boxShadow: '0 24px 60px rgba(0,0,0,0.45)',
+        color: '#B8E3E9',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -218,15 +218,15 @@ const AdminDashboard = () => {
                                 style={cardBase}
                                 className="admin-card"
                                 onMouseEnter={(e) => {
-                                    e.currentTarget.style.background = 'rgba(16, 24, 20, 0.95)';
-                                    e.currentTarget.style.borderColor = 'rgba(23, 199, 122, 0.2)';
-                                    e.currentTarget.style.boxShadow = '0 30px 80px rgba(23, 199, 122, 0.15)';
+                                    e.currentTarget.style.background = 'rgba(11,46,51,0.9)';
+                                    e.currentTarget.style.borderColor = 'rgba(184,227,233,0.5)';
+                                    e.currentTarget.style.boxShadow = '0 30px 80px rgba(11,46,51,0.45)';
                                     e.currentTarget.style.transform = 'translateY(-6px)';
                                 }}
                                 onMouseLeave={(e) => {
-                                    e.currentTarget.style.background = 'rgba(16, 24, 20, 0.9)';
-                                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
-                                    e.currentTarget.style.boxShadow = '0 24px 60px rgba(0,0,0,0.55)';
+                                    e.currentTarget.style.background = 'rgba(11,46,51,0.75)';
+                                    e.currentTarget.style.borderColor = 'rgba(184,227,233,0.25)';
+                                    e.currentTarget.style.boxShadow = '0 24px 60px rgba(0,0,0,0.45)';
                                     e.currentTarget.style.transform = 'translateY(0)';
                                 }}
                             >

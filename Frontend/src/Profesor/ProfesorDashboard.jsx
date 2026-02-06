@@ -42,7 +42,7 @@ const ProfesorDashboard = () => {
   }, []);
 
   const pageStyle = {
-    color: '#B8E3E9',
+    color: '#0B2E33',
     minHeight: '100vh',
     background: 'linear-gradient(180deg, #FFFFFF 0%, #0B2E33 100%, #0B2E33 0%)',
     padding: 0,
@@ -63,7 +63,7 @@ const ProfesorDashboard = () => {
   };
 
   const brandStyle = {
-    color: '#B8E3E9',
+    color: '#0B2E33',
     fontWeight: 800,
     fontSize: isMobile ? 18 : 22,
     letterSpacing: 0.6
@@ -212,7 +212,7 @@ const ProfesorDashboard = () => {
 
       <div style={{width: '100%', boxSizing: 'border-box'}}>
         <div style={titleStyle}>
-          <h2 style={{color: '#B8E3E9', margin: 0}}>Universiteti Publik Kadri Zeka</h2>
+          <h2 style={{color: '#0B2E33', margin: 0}}>Universiteti Publik Kadri Zeka</h2>
         </div>
       </div>
 

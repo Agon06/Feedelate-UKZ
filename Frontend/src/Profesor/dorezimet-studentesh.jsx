@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import JSZip from 'jszip';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getStudentProjectSubmissions, updateProjectGrade, updateProjectMaxPoints, updateProjectDeadline, addInstructionTemplate, getInstructionTemplates, updateInstructionTemplate, deleteInstructionTemplate, uploadLendaTemplate, getLendaTemplateInfo, deleteLendaTemplate } from '../services/profesorApi';
+import '../Student/StudentTheme.css';
 
 const DoreziметStudentesh = () => {
   const navigate = useNavigate();
@@ -170,9 +171,9 @@ const DoreziметStudentesh = () => {
   const avatarLetter = 'P';
 
   const pageStyle = {
-    color: '#fff',
+    color: '#B8E3E9',
     minHeight: '100vh',
-    background: 'linear-gradient(180deg, rgba(10,18,12,1) 0%, rgba(14,28,20,1) 50%, rgba(12,30,18,1) 100%)',
+    background: 'linear-gradient(180deg, #FFFFFF 0%, #0B2E33 100%, #0B2E33 0%)',
     fontFamily: 'Inter, system-ui, Arial, sans-serif'
   };
 
@@ -180,11 +181,12 @@ const DoreziметStudentesh = () => {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: isMobile ? '0.85rem 1.5rem' : '1rem 2.5rem'
+    padding: isMobile ? '0.85rem 1.5rem' : '1rem 2.5rem',
+    background: 'linear-gradient(180deg,  #4F7C82 10%, #0B2E33 90%, #0B2E33 100%)'
   };
 
   const brandStyle = {
-    color: '#17c77a',
+    color: '#B8E3E9',
     fontWeight: 800,
     fontSize: isMobile ? 18 : 22,
     letterSpacing: 0.6
@@ -196,33 +198,20 @@ const DoreziметStudentesh = () => {
     gap: isMobile ? 10 : 18
   };
 
-  const bellStyle = {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    background: 'rgba(23, 199, 122, 0.12)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: 18,
-    color: '#fbd38d'
-  };
-
   const avatarStyle = {
     width: 42,
     height: 42,
     borderRadius: 21,
-    background: '#0e6b3d',
+    background: '#4F7C82',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#fff',
+    color: '#0B2E33',
     fontWeight: 700
   };
 
   const bannerStyle = {
-    border: '1px solid rgba(255,255,255,0.15)',
+    border: '1px solid rgba(184,227,233,0.25)',
     borderRadius: 14,
     padding: '0.85rem 1rem',
     marginTop: 16,
@@ -231,8 +220,8 @@ const DoreziметStudentesh = () => {
   };
 
   const submissionCard = {
-    background: 'rgba(13, 30, 19, 0.85)',
-    border: '1px solid rgba(23, 199, 122, 0.35)',
+    background: 'rgba(11,46,51,0.75)',
+    border: '1px solid rgba(184,227,233,0.35)',
     borderRadius: 14,
     padding: isMobile ? '1rem' : '1.25rem',
     marginTop: 16,
@@ -249,10 +238,10 @@ const DoreziметStudentesh = () => {
 
   const downloadButton = {
     padding: '0.5rem 1rem',
-    background: '#19c776',
-    border: 'none',
+    background: '#0B2E33',
+    border: '1px solid rgba(184,227,233,0.35)',
     borderRadius: 8,
-    color: '#041407',
+    color: '#B8E3E9',
     fontWeight: 700,
     cursor: 'pointer',
     fontSize: 14,
@@ -493,69 +482,73 @@ const DoreziметStudentesh = () => {
 
   const containerStyle = {
     display: 'flex',
-    gap: '2rem',
+    gap: '2.4rem',
     marginTop: '2rem',
     paddingBottom: '2rem',
     marginLeft: '2.5rem',
-    marginRight: '2.5rem'
+    marginRight: '2.5rem',
+    alignItems: 'stretch'
   };
 
   const leftPanelStyle = {
     flex: '0 0 280px',
-    background: 'rgba(9,18,12,0.85)',
+    background: 'rgba(11,46,51,0.75)',
     borderRadius: 18,
     padding: '1.5rem',
-    border: '1px solid rgba(23,199,122,0.2)',
-    height: 'fit-content',
+    border: '1px solid rgba(184,227,233,0.35)',
+    minHeight: 'calc(100vh - 140px)',
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.5rem',
+    gap: '2rem',
     position: 'sticky',
-    top: '100px'
+    top: '100px',
+    alignSelf: 'stretch'
   };
 
   const rightPanelStyle = {
     flex: 1,
-    background: 'rgba(9,18,12,0.5)',
+    background: 'rgba(11,46,51,0.6)',
     borderRadius: 18,
     padding: '2rem',
-    border: '1px solid rgba(23,199,122,0.15)',
+    border: '1px solid rgba(184,227,233,0.25)',
     minHeight: '500px',
     maxHeight: 'calc(100vh - 140px)',
     overflowY: 'auto',
-    overflowX: 'hidden'
+    overflowX: 'hidden',
+    alignSelf: 'stretch'
   };
 
   const tabButtonStyle = (isActive) => ({
     width: '100%',
     padding: '0.75rem 1rem',
-    background: isActive ? 'rgba(23,199,122,0.25)' : 'rgba(23,199,122,0.08)',
-    border: isActive ? '1px solid rgba(23,199,122,0.6)' : '1px solid rgba(23,199,122,0.2)',
+    background: isActive ? 'rgba(184,227,233,0.12)' : 'rgba(11,46,51,0.6)',
+    border: isActive ? '1px solid rgba(184,227,233,0.6)' : '1px solid rgba(184,227,233,0.25)',
     borderRadius: 10,
-    color: isActive ? '#1fdc8c' : '#17c77a',
+    color: '#B8E3E9',
     fontWeight: isActive ? 700 : 600,
     fontSize: 14,
     cursor: 'pointer',
     transition: 'all 0.2s',
-    textAlign: 'left'
+    textAlign: 'center'
   });
 
   const sidebarBackButtonStyle = {
     width: '100%',
     padding: '0.75rem 1rem',
-    background: 'rgba(139,0,0,0.2)',
-    border: '1px solid rgba(139,0,0,0.4)',
+    background: 'rgba(11,46,51,0.6)',
+    border: '1px solid rgba(184,227,233,0.35)',
     borderRadius: 10,
-    color: '#ff6b6b',
+    color: '#B8E3E9',
     fontWeight: 600,
     fontSize: 14,
     cursor: 'pointer',
     marginTop: 'auto',
-    transition: 'all 0.2s'
+    transition: 'all 0.2s',
+    textAlign: 'center'
   };
 
   return (
-    <div style={pageStyle}>
+    <div className="student-theme" style={pageStyle}>
       <style>{`
         /* Hide the calendar icon so users type manually */
         input[type="datetime-local"]::-webkit-calendar-picker-indicator {
@@ -576,7 +569,6 @@ const DoreziметStudentesh = () => {
         <div style={brandStyle}>Feedelate</div>
         <div style={{ flex: 1 }} />
         <div style={actionsStyle}>
-          <div style={bellStyle}>🔔</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 600 }}>
             <div style={avatarStyle}>{avatarLetter}</div>
             <span>{profesorName}</span>
@@ -591,25 +583,25 @@ const DoreziметStudentesh = () => {
             style={tabButtonStyle(activeTab === 'deadline')}
             onClick={() => setActiveTab('deadline')}
           >
-            🗓️ Afati i Dorëzimit
+            Afati i Dorëzimit
           </button>
           <button
             style={tabButtonStyle(activeTab === 'templates')}
             onClick={() => setActiveTab('templates')}
           >
-            📋 Template
+            Template
           </button>
           <button
             style={tabButtonStyle(activeTab === 'projects')}
             onClick={() => setActiveTab('projects')}
           >
-            📁 Lista e Projekteve
+            Lista e Projekteve
           </button>
           <button
             style={tabButtonStyle(activeTab === 'grades')}
             onClick={() => setActiveTab('grades')}
           >
-            📊 Pikët
+            Pikët
           </button>
           <button
             style={sidebarBackButtonStyle}
@@ -624,14 +616,14 @@ const DoreziметStudentesh = () => {
           {/* TEMPLATES TAB */}
           {activeTab === 'templates' && (
             <div>
-              <h2 style={{ margin: '0 0 1.5rem 0', color: '#1fdc8c' }}>📋 Template/Instruksione</h2>
+              <h2 style={{ margin: '0 0 1.5rem 0', color: '#B8E3E9', textAlign: 'center' }}>Template/Instruksione</h2>
               <button
                 style={{
                   padding: '0.75rem 1.5rem',
-                  background: '#19c776',
-                  border: 'none',
+                  background: '#0B2E33',
+                  border: '1px solid rgba(184,227,233,0.35)',
                   borderRadius: 10,
-                  color: '#041407',
+                  color: '#B8E3E9',
                   fontWeight: 700,
                   cursor: 'pointer',
                   fontSize: 14,
@@ -649,41 +641,41 @@ const DoreziметStudentesh = () => {
                   }
                 }}
               >
-                {showTemplateForm ? (editingTemplateId ? '✕ Anulo Modifikimin' : '✕ Anulo') : (editingTemplateId ? '✏️ Redakto Template' : '➕ Shto Template/Instruksion')}
+                {showTemplateForm ? (editingTemplateId ? 'Anulo Modifikimin' : 'Anulo') : (editingTemplateId ? 'Redakto Template' : 'Shto Template/Instruksion')}
               </button>
 
               {showTemplateForm && (
                 <div 
                   data-template-form
                   style={{
-                  background: 'rgba(23, 199, 122, 0.1)',
-                  border: '1px solid rgba(23, 199, 122, 0.3)',
+                  background: 'rgba(184,227,233,0.12)',
+                  border: '1px solid rgba(184,227,233,0.35)',
                   borderRadius: 10,
                   padding: '1.5rem',
                   marginBottom: '1.5rem'
                 }}>
                   {editingTemplateId && (
-                    <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', background: 'rgba(23, 199, 122, 0.15)', borderRadius: 6, color: '#17c77a', fontWeight: 600, fontSize: 13 }}>
-                      ✏️ Po e modifikoni template-in
+                    <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', background: 'rgba(184,227,233,0.12)', borderRadius: 6, color: '#B8E3E9', fontWeight: 600, fontSize: 13 }}>
+                      Po e modifikoni template-in
                     </div>
                   )}
                   
                   <div style={{
-                      background: 'rgba(23, 199, 122, 0.08)',
-                      border: '1px solid rgba(23, 199, 122, 0.25)',
+                      background: 'rgba(11,46,51,0.6)',
+                      border: '1px solid rgba(184,227,233,0.35)',
                       borderRadius: 10,
                       padding: '1rem',
                       marginBottom: '1.5rem'
                     }}>
-                      <div style={{ fontWeight: 700, color: '#17c77a', marginBottom: '0.75rem' }}>
-                        📄 Template i Projektit
+                      <div style={{ fontWeight: 700, color: '#B8E3E9', marginBottom: '0.75rem' }}>
+                        Template i Projektit
                       </div>
                       {templateInfo.hasTemplate ? (
-                        <div style={{ color: '#c4f0da', marginBottom: '0.75rem' }}>
-                          Aktual: <strong style={{ color: '#1fdc8c' }}>{templateInfo.fileName}</strong>
+                        <div style={{ color: 'rgba(184,227,233,0.85)', marginBottom: '0.75rem' }}>
+                          Aktual: <strong style={{ color: '#B8E3E9' }}>{templateInfo.fileName}</strong>
                         </div>
                       ) : (
-                        <div style={{ color: '#999', marginBottom: '0.75rem' }}>Nuk ka template të ruajtur.</div>
+                        <div style={{ color: 'rgba(184,227,233,0.7)', marginBottom: '0.75rem' }}>Nuk ka template të ruajtur.</div>
                       )}
                       <input
                         type="file"
@@ -692,9 +684,9 @@ const DoreziметStudentesh = () => {
                           width: '100%',
                           padding: '0.75rem 1rem',
                           borderRadius: 8,
-                          border: '1px solid rgba(23,199,122,0.4)',
-                          background: 'rgba(4,10,6,0.7)',
-                          color: '#1fdc8c',
+                          border: '1px solid rgba(184,227,233,0.4)',
+                          background: 'rgba(11,46,51,0.6)',
+                          color: '#B8E3E9',
                           fontSize: 14,
                           boxSizing: 'border-box',
                           cursor: 'pointer',
@@ -707,10 +699,10 @@ const DoreziметStudentesh = () => {
                           style={{
                             flex: 1,
                             padding: '0.75rem 1rem',
-                            background: '#17c77a',
-                            border: 'none',
+                            background: '#0B2E33',
+                            border: '1px solid rgba(184,227,233,0.35)',
                             borderRadius: 8,
-                            color: '#041407',
+                            color: '#B8E3E9',
                             fontWeight: 700,
                             cursor: uploadingTemplate ? 'not-allowed' : 'pointer',
                             opacity: uploadingTemplate ? 0.6 : 1
@@ -736,15 +728,15 @@ const DoreziметStudentesh = () => {
                             }
                           }}
                         >
-                          {uploadingTemplate ? 'Duke ngarkuar...' : '⬆️ Ngarko Template'}
+                          {uploadingTemplate ? 'Duke ngarkuar...' : 'Ngarko Template'}
                         </button>
                         <button
                           style={{
                             flex: 1,
                             padding: '0.75rem 1rem',
-                            background: 'rgba(255, 107, 107, 0.2)',
-                            border: '1px solid rgba(255, 107, 107, 0.4)',
-                            color: '#ff6b6b',
+                            background: 'rgba(184,227,233,0.08)',
+                            border: '1px solid rgba(184,227,233,0.35)',
+                            color: '#B8E3E9',
                             borderRadius: 8,
                             fontWeight: 700,
                             cursor: templateInfo.hasTemplate ? 'pointer' : 'not-allowed',
@@ -762,13 +754,13 @@ const DoreziметStudentesh = () => {
                             }
                           }}
                         >
-                          🗑️ Fshi Template
+                          Fshi Template
                         </button>
                       </div>
                     </div>
                   
                   <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: 14, fontWeight: 600, color: '#17c77a' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: 14, fontWeight: 600, color: '#B8E3E9' }}>
                       Titulli (opsional):
                     </label>
                     <input
@@ -780,9 +772,9 @@ const DoreziметStudentesh = () => {
                         width: '100%',
                         padding: '0.75rem 1rem',
                         borderRadius: 8,
-                        border: '1px solid rgba(23,199,122,0.4)',
-                        background: 'rgba(4,10,6,0.7)',
-                        color: '#1fdc8c',
+                        border: '1px solid rgba(184,227,233,0.4)',
+                        background: 'rgba(11,46,51,0.6)',
+                        color: '#B8E3E9',
                         fontSize: 14,
                         fontFamily: 'inherit',
                         boxSizing: 'border-box'
@@ -790,7 +782,7 @@ const DoreziметStudentesh = () => {
                     />
                   </div>
                   <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: 14, fontWeight: 600, color: '#17c77a' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: 14, fontWeight: 600, color: '#B8E3E9' }}>
                       Përmbajtja/Instruksionet:
                     </label>
                     <textarea
@@ -801,9 +793,9 @@ const DoreziметStudentesh = () => {
                         width: '100%',
                         padding: '1rem',
                         borderRadius: 8,
-                        border: '1px solid rgba(23,199,122,0.4)',
-                        background: 'rgba(4,10,6,0.7)',
-                        color: '#1fdc8c',
+                        border: '1px solid rgba(184,227,233,0.4)',
+                        background: 'rgba(11,46,51,0.6)',
+                        color: '#B8E3E9',
                         fontSize: 14,
                         fontFamily: 'inherit',
                         minHeight: '200px',
@@ -815,10 +807,10 @@ const DoreziметStudentesh = () => {
                   <button
                     style={{
                       padding: '0.75rem 1.5rem',
-                      background: '#17c77a',
-                      border: 'none',
+                      background: '#0B2E33',
+                      border: '1px solid rgba(184,227,233,0.35)',
                       borderRadius: 8,
-                      color: '#041407',
+                      color: '#B8E3E9',
                       fontWeight: 700,
                       cursor: 'pointer',
                       fontSize: 14,
@@ -860,13 +852,13 @@ const DoreziметStudentesh = () => {
                       }
                     }}
                   >
-                    {editingTemplateId ? '💾 Përditëso Template' : '💾 Ruaj Template'}
+                    {editingTemplateId ? 'Përditëso Template' : 'Ruaj Template'}
                   </button>
                 </div>
               )}
 
               {templates.length === 0 ? (
-                <div style={{ ...bannerStyle, background: 'rgba(23, 199, 122, 0.1)' }}>
+                <div style={{ ...bannerStyle, background: 'rgba(184,227,233,0.12)' }}>
                   Nuk ka template/instruksione të ruajtura ende. Kliko butonin më lart për të shtuar një.
                 </div>
               ) : (
@@ -875,23 +867,23 @@ const DoreziметStudentesh = () => {
                     <div
                       key={template.id}
                       style={{
-                        background: 'rgba(16, 24, 20, 0.6)',
-                        border: '1px solid rgba(23, 199, 122, 0.2)',
+                        background: 'rgba(11,46,51,0.6)',
+                        border: '1px solid rgba(184,227,233,0.25)',
                         borderRadius: 10,
                         padding: '1.5rem',
                         transition: 'all 0.2s'
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.75rem' }}>
-                        <h3 style={{ margin: 0, color: '#1fdc8c', fontSize: 18, fontWeight: 700 }}>
+                        <h3 style={{ margin: 0, color: '#B8E3E9', fontSize: 18, fontWeight: 700 }}>
                           {template.title}
                         </h3>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
                           <button
                             style={{
-                              background: 'rgba(23, 199, 122, 0.2)',
-                              border: '1px solid rgba(23, 199, 122, 0.4)',
-                              color: '#17c77a',
+                              background: 'rgba(184,227,233,0.12)',
+                              border: '1px solid rgba(184,227,233,0.35)',
+                              color: '#B8E3E9',
                               padding: '0.4rem 0.8rem',
                               borderRadius: 6,
                               cursor: 'pointer',
@@ -909,13 +901,13 @@ const DoreziметStudentesh = () => {
                               }, 100);
                             }}
                           >
-                            ✏️ Modifiko
+                            Modifiko
                           </button>
                           <button
                             style={{
-                              background: 'rgba(255, 107, 107, 0.2)',
-                              border: '1px solid rgba(255, 107, 107, 0.4)',
-                              color: '#ff6b6b',
+                              background: 'rgba(184,227,233,0.08)',
+                              border: '1px solid rgba(184,227,233,0.35)',
+                              color: '#B8E3E9',
                               padding: '0.4rem 0.8rem',
                               borderRadius: 6,
                               cursor: 'pointer',
@@ -933,22 +925,22 @@ const DoreziметStudentesh = () => {
                               }
                             }}
                           >
-                            ✕ Fshi
+                            Fshi
                           </button>
                         </div>
                       </div>
-                      <div style={{ fontSize: 13, color: '#999', marginBottom: '1rem' }}>
+                      <div style={{ fontSize: 13, color: 'rgba(184,227,233,0.7)', marginBottom: '1rem' }}>
                         Krijuar: {template.createdAt}
                       </div>
                       <div style={{
-                        background: 'rgba(9, 18, 12, 0.5)',
+                        background: 'rgba(11,46,51,0.6)',
                         borderRadius: 8,
                         padding: '1rem',
                         whiteSpace: 'pre-wrap',
                         wordBreak: 'break-word',
                         fontSize: 14,
                         lineHeight: 1.6,
-                        color: '#e0e0e0',
+                        color: 'rgba(184,227,233,0.9)',
                         maxHeight: '300px',
                         overflow: 'auto',
                         marginBottom: '1rem'
@@ -957,14 +949,14 @@ const DoreziметStudentesh = () => {
                       </div>
                       {template.files && template.files.length > 0 && (
                         <div style={{
-                          background: 'rgba(23, 199, 122, 0.08)',
-                          border: '1px solid rgba(23, 199, 122, 0.2)',
+                          background: 'rgba(184,227,233,0.12)',
+                          border: '1px solid rgba(184,227,233,0.35)',
                           borderRadius: 8,
                           padding: '1rem',
                           marginTop: '1rem'
                         }}>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: '#17c77a', marginBottom: '0.75rem' }}>
-                            📎 Fajllat e Lidhur:
+                          <div style={{ fontSize: 13, fontWeight: 600, color: '#B8E3E9', marginBottom: '0.75rem' }}>
+                            Fajllat e Lidhur:
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                             {template.files.map((file, idx) => {
@@ -982,21 +974,21 @@ const DoreziметStudentesh = () => {
                                     display: 'flex',
                                     justifyContent: 'space-between',
                                     alignItems: 'center',
-                                    background: 'rgba(9, 18, 12, 0.6)',
+                                    background: 'rgba(11,46,51,0.6)',
                                     padding: '0.75rem 1rem',
                                     borderRadius: 6,
                                     fontSize: 13,
-                                    border: '1px solid rgba(23,199,122,0.15)'
+                                    border: '1px solid rgba(184,227,233,0.25)'
                                   }}
                                 >
-                                  <div style={{ color: '#e0e0e0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-                                    📄 {file.name} <span style={{ color: '#999', fontSize: 12 }}>({formatFileSize(file.size)})</span>
+                                  <div style={{ color: 'rgba(184,227,233,0.9)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                                    {file.name} <span style={{ color: 'rgba(184,227,233,0.65)', fontSize: 12 }}>({formatFileSize(file.size)})</span>
                                   </div>
                                   <button
                                     style={{
-                                      background: '#17c77a',
-                                      border: 'none',
-                                      color: '#041407',
+                                      background: '#0B2E33',
+                                      border: '1px solid rgba(184,227,233,0.35)',
+                                      color: '#B8E3E9',
                                       padding: '0.4rem 0.8rem',
                                       borderRadius: 4,
                                       cursor: 'pointer',
@@ -1009,7 +1001,7 @@ const DoreziметStudentesh = () => {
                                       alert(`Për të shkarkuar "${file.name}", do të nevojitet integrimi me serverin. Fajlli mund të shkarkohet pasi të ruhet në bazën e të dhënave.`);
                                     }}
                                   >
-                                    ⬇ Shkarko
+                                    Shkarko
                                   </button>
                                 </div>
                               );
@@ -1027,9 +1019,9 @@ const DoreziметStudentesh = () => {
           {/* PROJECTS TAB */}
           {activeTab === 'projects' && (
             <div>
-              <h2 style={{ margin: '0 0 1.5rem 0', color: '#1fdc8c' }}>📁 Lista e Projekteve - {subject || 'Lënda'}</h2>
+              <h2 style={{ margin: '0 0 1.5rem 0', color: '#B8E3E9', textAlign: 'center' }}>Lista e Projekteve - {subject || 'Lënda'}</h2>
               {status.loading && (
-                <div style={{ textAlign: 'center', padding: '2rem', color: '#17c77a' }}>
+                <div style={{ textAlign: 'center', padding: '2rem', color: '#B8E3E9' }}>
                   Duke u ngarkuar projektet...
                 </div>
               )}
@@ -1039,18 +1031,18 @@ const DoreziметStudentesh = () => {
                 </div>
               )}
               {!status.loading && !status.error && submissions.length === 0 && (
-                <div style={{ ...bannerStyle, background: 'rgba(23, 199, 122, 0.1)' }}>
+                <div style={{ ...bannerStyle, background: 'rgba(184,227,233,0.12)' }}>
                   Nuk ka projekte për këtë lëndë ende.
                 </div>
               )}
               {!status.loading && !status.error && submissions.length > 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={{ fontWeight: 600, color: '#17c77a', padding: '0.75rem 1rem', background: 'rgba(23,199,122,0.1)', borderRadius: 10 }}>
+                  <div style={{ fontWeight: 600, color: '#B8E3E9', padding: '0.75rem 1rem', background: 'rgba(184,227,233,0.12)', borderRadius: 10, border: '1px solid rgba(184,227,233,0.35)' }}>
                     Pikët totale: {projectMaxPoints}
                   </div>
                   {periods.length > 0 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      <label style={{ fontSize: 12, color: '#17c77a', fontWeight: 600 }}>Filtro sipas periudhës:</label>
+                      <label style={{ fontSize: 12, color: '#B8E3E9', fontWeight: 600 }}>Filtro sipas periudhës:</label>
                       <select
                         value={selectedPeriod}
                         onChange={(e) => setSelectedPeriod(e.target.value)}
@@ -1058,22 +1050,22 @@ const DoreziметStudentesh = () => {
                           width: '100%',
                           padding: '0.5rem 0.75rem',
                           borderRadius: 10,
-                          border: '1px solid rgba(23,199,122,0.4)',
-                          background: 'rgba(4,10,6,0.7)',
-                          color: '#1fdc8c',
+                          border: '1px solid rgba(184,227,233,0.4)',
+                          background: 'rgba(11,46,51,0.6)',
+                          color: '#B8E3E9',
                           fontSize: 14,
                           fontWeight: 500,
                           cursor: 'pointer'
                         }}
                       >
-                        <option value="">🗂️ Të gjitha periudhat</option>
+                        <option value="">Të gjitha periudhat</option>
                         {periods.map((p, idx) => {
                           const pKey = typeof p === 'string' ? p : p.key;
                           const pTitle = typeof p === 'string' ? null : p.title;
                           const [year, month] = pKey.split('-');
                           const monthNames = ['Janar', 'Shkurt', 'Mars', 'Prill', 'Maj', 'Qershor', 'Korrik', 'Gusht', 'Shtator', 'Tetor', 'Nëntor', 'Dhjetor'];
                           const monthName = monthNames[parseInt(month)] || 'N/A';
-                          const displayText = pTitle ? `📌 ${pTitle}` : `📅 ${monthName} ${year}`;
+                          const displayText = pTitle ? `${pTitle}` : `${monthName} ${year}`;
                           return (
                             <option key={idx} value={pKey}>{displayText}</option>
                           );
@@ -1084,10 +1076,10 @@ const DoreziметStudentesh = () => {
                   <button
                     style={{
                       padding: '0.75rem 1.5rem',
-                      background: '#19c776',
-                      border: 'none',
+                      background: '#0B2E33',
+                      border: '1px solid rgba(184,227,233,0.35)',
                       borderRadius: 10,
-                      color: '#041407',
+                      color: '#B8E3E9',
                       fontWeight: 700,
                       cursor: 'pointer',
                       fontSize: 14,
@@ -1096,7 +1088,7 @@ const DoreziметStudentesh = () => {
                     onClick={handleBulkDownload}
                     disabled={bulkStatus.loading}
                   >
-                    {bulkStatus.loading ? '⬇ Duke shkarkuar...' : '⬇ Shkarko të Gjitha Projektet'}
+                    {bulkStatus.loading ? 'Duke shkarkuar...' : 'Shkarko të Gjitha Projektet'}
                   </button>
                   {bulkStatus.error && (
                     <div style={{ color: '#ff6b6b', fontSize: 14 }}>
@@ -1112,16 +1104,13 @@ const DoreziметStudentesh = () => {
                     {filteredSubmissions.map((submission) => (
                       <div key={submission.id} style={submissionCard}>
                         <div style={studentInfo}>
-                          <div style={{ fontSize: 18, fontWeight: 700, color: '#1fdc8c' }}>
+                          <div style={{ fontSize: 18, fontWeight: 700, color: '#B8E3E9' }}>
                             {submission.student.fullName}
-                          </div>
-                          <div style={{ fontSize: 14, opacity: 0.8, marginTop: 4 }}>
-                            Dorëzuar: {new Date(submission.createdAt).toLocaleString('sq-AL')}
                           </div>
                           <div style={{ fontSize: 14, opacity: 0.7, marginTop: 4 }}>
                             {submission.fileName}
                           </div>
-                          <div style={{ fontSize: 15, fontWeight: 600, marginTop: 8, color: '#17c77a' }}>
+                          <div style={{ fontSize: 15, fontWeight: 600, marginTop: 8, color: '#B8E3E9' }}>
                             Pikët: {editingGrade === submission.id ? (
                               <input
                                 type="number"
@@ -1133,9 +1122,9 @@ const DoreziметStudentesh = () => {
                                   width: 80,
                                   padding: '0.3rem 0.5rem',
                                   borderRadius: 6,
-                                  border: '1px solid rgba(23,199,122,0.5)',
-                                  background: 'rgba(9,18,12,0.9)',
-                                  color: '#fff',
+                                  border: '1px solid rgba(184,227,233,0.4)',
+                                  background: 'rgba(11,46,51,0.6)',
+                                  color: '#B8E3E9',
                                   marginLeft: 8
                                 }}
                                 autoFocus
@@ -1145,48 +1134,68 @@ const DoreziметStudentesh = () => {
                             )}
                           </div>
                         </div>
-                        <div style={{ display: 'flex', gap: 8, flexDirection: isMobile ? 'column' : 'row' }}>
-                          <button
-                            style={downloadButton}
-                            onClick={() => handleDownload(submission.fileUrl, submission.fileName)}
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: isMobile ? 'flex-start' : 'flex-end',
+                            gap: 4,
+                            minWidth: isMobile ? '100%' : 'auto'
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 13,
+                              opacity: 0.8,
+                              textAlign: isMobile ? 'left' : 'right',
+                              marginBottom: 15
+                            }}
                           >
-                            ⬇ Shkarko
-                          </button>
-                          {editingGrade === submission.id ? (
-                            <>
-                              <button
-                                style={{ ...downloadButton, background: '#17c77a' }}
-                                onClick={() => handleUpdateGrade(submission.id)}
-                              >
-                                ✓ Ruaj
-                              </button>
-                              <button
-                                style={{ ...downloadButton, background: '#666' }}
-                                onClick={() => { setEditingGrade(null); }}
-                              >
-                                ✕ Mbylle
-                              </button>
-                            </>
-                          ) : (
+                            Dorëzuar: {new Date(submission.createdAt).toLocaleString('sq-AL')}
+                          </div>
+                          <div style={{ display: 'flex', gap: 8, flexDirection: isMobile ? 'column' : 'row' }}>
                             <button
-                              style={{
-                                padding: '0.5rem 1rem',
-                                background: '#19c776',
-                                border: 'none',
-                                borderRadius: 8,
-                                color: '#041407',
-                                fontWeight: 700,
-                                cursor: 'pointer',
-                                fontSize: 14
-                              }}
-                              onClick={() => {
-                                setEditingGrade(submission.id);
-                                setGradeValues({ ...gradeValues, [submission.id]: submission.piket ?? 0 });
-                              }}
+                              style={downloadButton}
+                              onClick={() => handleDownload(submission.fileUrl, submission.fileName)}
                             >
-                              📝 Vlerëso
+                              Shkarko
                             </button>
-                          )}
+                            {editingGrade === submission.id ? (
+                              <>
+                                <button
+                                  style={{ ...downloadButton, background: '#0B2E33' }}
+                                  onClick={() => handleUpdateGrade(submission.id)}
+                                >
+                                  Ruaj
+                                </button>
+                                <button
+                                  style={{ ...downloadButton, background: 'rgba(11,46,51,0.6)' }}
+                                  onClick={() => { setEditingGrade(null); }}
+                                >
+                                  Mbylle
+                                </button>
+                              </>
+                            ) : (
+                              <button
+                                style={{
+                                  padding: '0.5rem 1rem',
+                                  background: '#0B2E33',
+                                  border: '1px solid rgba(184,227,233,0.35)',
+                                  borderRadius: 8,
+                                  color: '#B8E3E9',
+                                  fontWeight: 700,
+                                  cursor: 'pointer',
+                                  fontSize: 14
+                                }}
+                                onClick={() => {
+                                  setEditingGrade(submission.id);
+                                  setGradeValues({ ...gradeValues, [submission.id]: submission.piket ?? 0 });
+                                }}
+                              >
+                                Vlerëso
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -1198,30 +1207,30 @@ const DoreziметStudentesh = () => {
 
           {/* DEADLINE TAB */}
           {activeTab === 'deadline' && (
-            <div>
-              <h2 style={{ margin: '0 0 1.5rem 0', color: '#1fdc8c' }}>⏰ Afati i Dorëzimit</h2>
+            <div style={{ maxWidth: 740, margin: '0 auto', width: '100%' }}>
+              <h2 style={{ margin: '0 0 1.5rem 0', color: '#B8E3E9', textAlign: 'center' }}>Afati i Dorëzimit</h2>
               {status.error ? (
                 <div style={{ ...bannerStyle, background: 'rgba(220, 38, 38, 0.1)', color: '#ff6b6b' }}>
                   {status.error}
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  <div style={{ background: 'rgba(23,199,122,0.08)', padding: '1rem', borderRadius: 10, border: '1px solid rgba(23,199,122,0.2)' }}>
-                    <div style={{ fontWeight: 600, color: '#17c77a', marginBottom: '0.75rem' }}>📋 Informacioni Aktual</div>
+                  <div style={{ background: 'rgba(184,227,233,0.12)', padding: '1rem', borderRadius: 10, border: '1px solid rgba(184,227,233,0.35)' }}>
+                    <div style={{ fontWeight: 600, color: '#B8E3E9', marginBottom: '0.75rem' }}>Informacioni Aktual</div>
                     {bannerStartDate && bannerEndDate ? (
-                      <div style={{ fontSize: 14, lineHeight: 1.6, color: '#e0e0e0' }}>
+                      <div style={{ fontSize: 14, lineHeight: 1.6, color: 'rgba(184,227,233,0.9)' }}>
                         <div>Fillon: {bannerStartDate.toLocaleString('sq-AL')}</div>
                         <div>Përfundon: {bannerEndDate.toLocaleString('sq-AL')}</div>
                       </div>
                     ) : (
-                      <div style={{ fontSize: 14, color: '#999' }}>Nuk ka afat të dhënë aktualisht.</div>
+                      <div style={{ fontSize: 14, color: 'rgba(184,227,233,0.7)' }}>Nuk ka afat të dhënë aktualisht.</div>
                     )}
                   </div>
 
                   {showDeadline ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, background: 'rgba(23,199,122,0.1)', padding: '1.5rem', borderRadius: 10, border: '1px solid rgba(23,199,122,0.3)' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, background: 'rgba(184,227,233,0.12)', padding: '1.5rem', borderRadius: 10, border: '1px solid rgba(184,227,233,0.35)' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: '1rem' }}>
-                        <label style={{ fontSize: 12, color: '#17c77a', fontWeight: 600 }}>Emërtimi i Dorëzimit (opsional):</label>
+                        <label style={{ fontSize: 12, color: '#B8E3E9', fontWeight: 600 }}>Emërtimi i Dorëzimit (opsional):</label>
                         <input
                           type="text"
                           placeholder="Vendos titullin e Assignment..."
@@ -1231,9 +1240,9 @@ const DoreziметStudentesh = () => {
                             width: '100%',
                             padding: '0.5rem 0.75rem',
                             borderRadius: 10,
-                            border: '1px solid rgba(23,199,122,0.4)',
-                            background: 'rgba(4,10,6,0.7)',
-                            color: '#1fdc8c',
+                            border: '1px solid rgba(184,227,233,0.4)',
+                            background: 'rgba(11,46,51,0.6)',
+                            color: '#B8E3E9',
                             fontSize: 14,
                             fontWeight: 500,
                             outline: 'none'
@@ -1241,7 +1250,7 @@ const DoreziметStudentesh = () => {
                         />
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <label style={{ fontSize: 12, color: '#17c77a', fontWeight: 600 }}>Fillon (DD/MM/YYYY & HH:MM:SS):</label>
+                        <label style={{ fontSize: 12, color: '#B8E3E9', fontWeight: 600 }}>Fillon (DD/MM/YYYY & HH:MM:SS):</label>
                         <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                           <input
                             type="text"
@@ -1253,9 +1262,9 @@ const DoreziметStudentesh = () => {
                             style={{
                               padding: '0.5rem',
                               borderRadius: 8,
-                              border: '1px solid rgba(23,199,122,0.5)',
-                              background: 'rgba(9,18,12,0.9)',
-                              color: '#fff',
+                              border: '1px solid rgba(184,227,233,0.5)',
+                              background: 'rgba(11,46,51,0.6)',
+                              color: '#B8E3E9',
                               fontSize: 14,
                               width: 120
                             }}
@@ -1272,13 +1281,13 @@ const DoreziметStudentesh = () => {
                               width: 60,
                               padding: '0.5rem',
                               borderRadius: 8,
-                              border: '1px solid rgba(23,199,122,0.5)',
-                              background: 'rgba(9,18,12,0.9)',
-                              color: '#fff',
+                              border: '1px solid rgba(184,227,233,0.5)',
+                              background: 'rgba(11,46,51,0.6)',
+                              color: '#B8E3E9',
                               fontSize: 14
                             }}
                           />
-                          <span style={{ color: '#17c77a', fontWeight: 700 }}>:</span>
+                          <span style={{ color: '#B8E3E9', fontWeight: 700 }}>:</span>
                           <input
                             type="number"
                             min="0"
@@ -1291,13 +1300,13 @@ const DoreziметStudentesh = () => {
                               width: 60,
                               padding: '0.5rem',
                               borderRadius: 8,
-                              border: '1px solid rgba(23,199,122,0.5)',
-                              background: 'rgba(9,18,12,0.9)',
-                              color: '#fff',
+                              border: '1px solid rgba(184,227,233,0.5)',
+                              background: 'rgba(11,46,51,0.6)',
+                              color: '#B8E3E9',
                               fontSize: 14
                             }}
                           />
-                          <span style={{ color: '#17c77a', fontWeight: 700 }}>:</span>
+                          <span style={{ color: '#B8E3E9', fontWeight: 700 }}>:</span>
                           <input
                             type="number"
                             min="0"
@@ -1310,17 +1319,17 @@ const DoreziметStudentesh = () => {
                               width: 60,
                               padding: '0.5rem',
                               borderRadius: 8,
-                              border: '1px solid rgba(23,199,122,0.5)',
-                              background: 'rgba(9,18,12,0.9)',
-                              color: '#fff',
+                              border: '1px solid rgba(184,227,233,0.5)',
+                              background: 'rgba(11,46,51,0.6)',
+                              color: '#B8E3E9',
                               fontSize: 14
                             }}
                           />
                         </div>
-                        <span style={{ fontSize: 10, color: '#17c77a', opacity: 0.7 }}>Orë 00-23, minuta dhe sekonda 00-59</span>
+                        <span style={{ fontSize: 10, color: 'rgba(184,227,233,0.7)' }}>Orë 00-23, minuta dhe sekonda 00-59</span>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <label style={{ fontSize: 12, color: '#17c77a', fontWeight: 600 }}>Përfundon (DD/MM/YYYY & HH:MM:SS):</label>
+                        <label style={{ fontSize: 12, color: '#B8E3E9', fontWeight: 600 }}>Përfundon (DD/MM/YYYY & HH:MM:SS):</label>
                         <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                           <input
                             type="text"
@@ -1332,9 +1341,9 @@ const DoreziметStudentesh = () => {
                             style={{
                               padding: '0.5rem',
                               borderRadius: 8,
-                              border: '1px solid rgba(23,199,122,0.5)',
-                              background: 'rgba(9,18,12,0.9)',
-                              color: '#fff',
+                              border: '1px solid rgba(184,227,233,0.5)',
+                              background: 'rgba(11,46,51,0.6)',
+                              color: '#B8E3E9',
                               fontSize: 14,
                               width: 120
                             }}
@@ -1351,13 +1360,13 @@ const DoreziметStudentesh = () => {
                               width: 60,
                               padding: '0.5rem',
                               borderRadius: 8,
-                              border: '1px solid rgba(23,199,122,0.5)',
-                              background: 'rgba(9,18,12,0.9)',
-                              color: '#fff',
+                              border: '1px solid rgba(184,227,233,0.5)',
+                              background: 'rgba(11,46,51,0.6)',
+                              color: '#B8E3E9',
                               fontSize: 14
                             }}
                           />
-                          <span style={{ color: '#17c77a', fontWeight: 700 }}>:</span>
+                          <span style={{ color: '#B8E3E9', fontWeight: 700 }}>:</span>
                           <input
                             type="number"
                             min="0"
@@ -1370,13 +1379,13 @@ const DoreziметStudentesh = () => {
                               width: 60,
                               padding: '0.5rem',
                               borderRadius: 8,
-                              border: '1px solid rgba(23,199,122,0.5)',
-                              background: 'rgba(9,18,12,0.9)',
-                              color: '#fff',
+                              border: '1px solid rgba(184,227,233,0.5)',
+                              background: 'rgba(11,46,51,0.6)',
+                              color: '#B8E3E9',
                               fontSize: 14
                             }}
                           />
-                          <span style={{ color: '#17c77a', fontWeight: 700 }}>:</span>
+                          <span style={{ color: '#B8E3E9', fontWeight: 700 }}>:</span>
                           <input
                             type="number"
                             min="0"
@@ -1389,27 +1398,27 @@ const DoreziметStudentesh = () => {
                               width: 60,
                               padding: '0.5rem',
                               borderRadius: 8,
-                              border: '1px solid rgba(23,199,122,0.5)',
-                              background: 'rgba(9,18,12,0.9)',
-                              color: '#fff',
+                              border: '1px solid rgba(184,227,233,0.5)',
+                              background: 'rgba(11,46,51,0.6)',
+                              color: '#B8E3E9',
                               fontSize: 14
                             }}
                           />
                         </div>
-                        <span style={{ fontSize: 10, color: '#17c77a', opacity: 0.7 }}>Orë 00-23, minuta dhe sekonda 00-59</span>
+                        <span style={{ fontSize: 10, color: 'rgba(184,227,233,0.7)' }}>Orë 00-23, minuta dhe sekonda 00-59</span>
                       </div>
                       <div style={{ display: 'flex', gap: 8 }}>
                         <button
-                          style={{ ...downloadButton, background: '#17c77a', padding: '0.5rem 1rem' }}
+                          style={{ ...downloadButton, background: '#0B2E33', padding: '0.5rem 1rem' }}
                           onClick={handleSetDeadline}
                         >
-                          ✓ Ruaj
+                          Ruaj
                         </button>
                         <button
-                          style={{ ...downloadButton, background: '#666', padding: '0.5rem 1rem' }}
+                          style={{ ...downloadButton, background: 'rgba(11,46,51,0.6)', padding: '0.5rem 1rem' }}
                           onClick={() => { setShowDeadline(false); }}
                         >
-                          ✕ Mbylle
+                          Mbylle
                         </button>
                       </div>
                     </div>
@@ -1417,10 +1426,10 @@ const DoreziметStudentesh = () => {
                     <button
                       style={{
                         padding: '0.75rem 1.5rem',
-                        background: '#0fa36a',
-                        border: 'none',
+                        background: '#0B2E33',
+                        border: '1px solid rgba(184,227,233,0.35)',
                         borderRadius: 10,
-                        color: '#041407',
+                        color: '#B8E3E9',
                         fontWeight: 700,
                         cursor: 'pointer',
                         fontSize: 14,
@@ -1428,7 +1437,7 @@ const DoreziметStudentesh = () => {
                       }}
                       onClick={() => { setShowDeadline(true); }}
                     >
-                      🗓️ Ndrysho Afatin
+                      Ndrysho Afatin
                     </button>
                   )}
                 </div>
@@ -1439,14 +1448,14 @@ const DoreziметStudentesh = () => {
           {/* GRADES TAB */}
           {activeTab === 'grades' && (
             <div>
-              <h2 style={{ margin: '0 0 1.5rem 0', color: '#1fdc8c' }}>📊 Menaxhimi i Pikëve</h2>
+              <h2 style={{ margin: '0 0 1.5rem 0', color: '#B8E3E9', textAlign: 'center' }}>Menaxhimi i Pikëve</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ background: 'rgba(23,199,122,0.08)', padding: '1rem', borderRadius: 10, border: '1px solid rgba(23,199,122,0.2)' }}>
-                  <div style={{ fontWeight: 600, color: '#17c77a' }}>Pikët Totale të Projektit: {projectMaxPoints}</div>
+                <div style={{ background: 'rgba(184,227,233,0.12)', padding: '1rem', borderRadius: 10, border: '1px solid rgba(184,227,233,0.35)' }}>
+                  <div style={{ fontWeight: 600, color: '#B8E3E9' }}>Pikët Totale të Projektit: {projectMaxPoints}</div>
                 </div>
 
                 {showBulkGrade ? (
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', background: 'rgba(23,199,122,0.1)', padding: '1rem', borderRadius: 10 }}>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', background: 'rgba(184,227,233,0.12)', padding: '1rem', borderRadius: 10 }}>
                     <input
                       type="number"
                       min="0"
@@ -1458,33 +1467,33 @@ const DoreziметStudentesh = () => {
                         flex: 1,
                         padding: '0.5rem',
                         borderRadius: 8,
-                        border: '1px solid rgba(23,199,122,0.5)',
-                        background: 'rgba(9,18,12,0.9)',
-                        color: '#fff',
+                        border: '1px solid rgba(184,227,233,0.5)',
+                        background: 'rgba(11,46,51,0.6)',
+                        color: '#B8E3E9',
                         fontSize: 14
                       }}
                     />
                     <button
-                      style={{ ...downloadButton, background: '#17c77a' }}
+                      style={{ ...downloadButton, background: '#0B2E33' }}
                       onClick={handleSetProjectMax}
                     >
-                      ✓ Ruaj
+                      Ruaj
                     </button>
                     <button
-                      style={{ ...downloadButton, background: '#666' }}
+                      style={{ ...downloadButton, background: 'rgba(11,46,51,0.6)' }}
                       onClick={() => { setShowBulkGrade(false); setBulkGradeValue(''); }}
                     >
-                      ✕ Mbylle
+                      Mbylle
                     </button>
                   </div>
                 ) : (
                   <button
                     style={{
                       padding: '0.75rem 1.5rem',
-                      background: '#19c776',
-                      border: 'none',
+                      background: '#0B2E33',
+                      border: '1px solid rgba(184,227,233,0.35)',
                       borderRadius: 10,
-                      color: '#041407',
+                      color: '#B8E3E9',
                       fontWeight: 700,
                       cursor: 'pointer',
                       fontSize: 14,
@@ -1492,7 +1501,7 @@ const DoreziметStudentesh = () => {
                     }}
                     onClick={() => { setShowBulkGrade(true); }}
                   >
-                    ⚙️ Ndrysho Pikëve Totale
+                    Ndrysho Pikëve Totale
                   </button>
                 )}
               </div>
