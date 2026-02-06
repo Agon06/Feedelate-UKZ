@@ -111,10 +111,10 @@ const AdminRegisterSubjects = () => {
     };
 
     const pageStyle = {
-        color: '#fff',
+        color: '#B8E3E9',
         width: '100vw',
         height: '100vh',
-        background: 'radial-gradient(circle at 20% 20%, rgba(27,148,92,0.15), transparent 35%), radial-gradient(circle at 80% 0%, rgba(23,199,122,0.12), transparent 30%), linear-gradient(180deg, rgba(9,16,12,1) 0%, rgba(12,26,18,1) 50%, rgba(8,18,12,1) 100%)',
+        background: 'linear-gradient(180deg, #6B7280 0%, #0B2E33 60%, #0B2E33 100%)',
         margin: 0,
         fontFamily: 'Inter, system-ui, Arial, sans-serif',
         boxSizing: 'border-box',
@@ -128,8 +128,8 @@ const AdminRegisterSubjects = () => {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: isMobile ? '0.85rem 1.5rem' : '1rem 2.5rem',
-        minHeight: 64,
+        padding: isMobile ? '0.6rem 1.25rem' : '0.75rem 2rem',
+        minHeight: 52,
         width: '100%',
         boxSizing: 'border-box',
         zIndex: 100,
@@ -137,7 +137,7 @@ const AdminRegisterSubjects = () => {
     };
 
     const brandStyle = {
-        color: '#17c77a',
+        color: '#B8E3E9',
         fontWeight: 800,
         fontSize: isMobile ? 18 : 22,
         letterSpacing: 0.6,
@@ -154,18 +154,18 @@ const AdminRegisterSubjects = () => {
         width: 40,
         height: 40,
         borderRadius: 20,
-        background: 'rgba(23, 199, 122, 0.12)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        background: 'rgba(184,227,233,0.12)',
+        border: '1px solid rgba(184,227,233,0.3)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         fontSize: 18,
-        color: '#fbd38d'
+        color: '#B8E3E9'
     };
 
     const containerStyle = {
         width: '100%',
-        padding: '2rem',
+        padding: isMobile ? '1.25rem' : '1.5rem 2rem 2rem',
         boxSizing: 'border-box',
         flex: 1,
         overflowY: 'auto',
@@ -176,19 +176,21 @@ const AdminRegisterSubjects = () => {
     };
 
     const backButtonStyle = {
-        width: 40,
+        width: 'auto',
         height: 40,
         borderRadius: 8,
-        background: 'rgba(23, 199, 122, 0.1)',
-        border: '1px solid rgba(23, 199, 122, 0.3)',
+        background: 'rgba(11,46,51,0.6)',
+        border: '1px solid rgba(184,227,233,0.35)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        color: '#17c77a',
+        color: '#B8E3E9',
         cursor: 'pointer',
         fontSize: 20,
         transition: 'all 200ms ease',
-        marginBottom: '2rem'
+        marginBottom: '2rem',
+        padding: '0 0.9rem',
+        fontWeight: 600
     };
 
     const titleStyle = {
@@ -196,12 +198,13 @@ const AdminRegisterSubjects = () => {
         fontWeight: 800,
         margin: 0,
         letterSpacing: '-0.5px',
-        marginBottom: '1rem'
+        marginBottom: '1rem',
+        textAlign: 'center'
     };
 
     const subtitleStyle = {
         fontSize: isMobile ? 12 : 14,
-        opacity: 0.65,
+        opacity: 0.75,
         margin: 0,
         letterSpacing: '0.3px'
     };
@@ -215,7 +218,6 @@ const AdminRegisterSubjects = () => {
                 <div style={{ flex: 1 }} />
                 <div style={actionsStyle}>
                     <RoleSwitcher currentRole="admin" />
-                    <div style={bellStyle}>🔔</div>
                     <UserMenu userName={adminName} userType="admin" />
                 </div>
             </div>
@@ -226,17 +228,30 @@ const AdminRegisterSubjects = () => {
                     maxWidth: '1400px',
                     boxSizing: 'border-box'
                 }}>
-                <button
-                    style={backButtonStyle}
-                    onClick={() => navigate('/admin')}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(23, 199, 122, 0.2)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(23, 199, 122, 0.1)'}
-                >
-                    ←
-                </button>
+                  
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '1rem',
+                        marginBottom: '1.25rem'
+                    }}>
+                        <button
+                            style={{ ...backButtonStyle, marginBottom: 0 }}
+                            onClick={() => navigate('/admin')}
+                            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(23, 199, 122, 0.2)'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(23, 199, 122, 0.1)'}
+                        >
+                            Kthehu
+                        </button>
 
-                <h1 style={titleStyle}>Regjistro Lendet</h1>
-                <p style={subtitleStyle}>Menaxho lendet e studimit</p>
+                        <div style={{ flex: 1, textAlign: 'center' }}>
+                            <h1 style={{ ...titleStyle, marginBottom: '0.35rem' }}>Regjistro Lendet</h1>
+                            <p style={{ ...subtitleStyle, textAlign: 'center' }}>Menaxho lendet e studimit</p>
+                        </div>
+
+                        <div style={{ width: 96 }} />
+                    </div>
 
                 {/* Error Message */}
                 {error && (
@@ -257,10 +272,10 @@ const AdminRegisterSubjects = () => {
                     <div style={{
                         marginTop: '1rem',
                         padding: '1rem',
-                        background: 'rgba(34, 197, 94, 0.15)',
-                        borderLeft: '4px solid #22c55e',
+                        background: 'rgba(184,227,233,0.15)',
+                        borderLeft: '4px solid #B8E3E9',
                         borderRadius: 8,
-                        color: '#86efac'
+                        color: '#B8E3E9'
                     }}>
                         {success}
                     </div>
@@ -276,24 +291,24 @@ const AdminRegisterSubjects = () => {
                         onClick={() => setShowModal(true)}
                         style={{
                             padding: '0.75rem 1.5rem',
-                            background: 'linear-gradient(135deg, #17c77a 0%, #0ec783 100%)',
-                            color: '#fff',
-                            border: 'none',
+                            background: '#0B2E33',
+                            color: '#B8E3E9',
+                            border: '1px solid rgba(184,227,233,0.35)',
                             borderRadius: 8,
                             fontWeight: 600,
                             fontSize: 16,
                             cursor: 'pointer',
                             transition: 'all 200ms ease',
-                            boxShadow: '0 4px 12px rgba(23, 199, 122, 0.3)'
+                            boxShadow: '0 4px 12px rgba(11,46,51,0.3)'
                         }}
                         onMouseEnter={(e) => {
-                            e.currentTarget.style.boxShadow = '0 6px 16px rgba(23, 199, 122, 0.4)';
+                            e.currentTarget.style.boxShadow = '0 6px 16px rgba(11,46,51,0.45)';
                         }}
                         onMouseLeave={(e) => {
-                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(23, 199, 122, 0.3)';
+                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(11,46,51,0.3)';
                         }}
                     >
-                        + Regjistro Lendin
+                        Regjistro Lenden
                     </button>
                 </div>
 
@@ -306,9 +321,9 @@ const AdminRegisterSubjects = () => {
                     <div style={{
                         marginTop: '3rem',
                         padding: '2rem',
-                        background: 'rgba(16, 24, 20, 0.6)',
+                        background: 'rgba(11,46,51,0.6)',
                         borderRadius: 12,
-                        border: '1px solid rgba(23, 199, 122, 0.2)',
+                        border: '1px solid rgba(184,227,233,0.25)',
                         textAlign: 'center',
                         opacity: 0.7
                     }}>
@@ -331,7 +346,7 @@ const AdminRegisterSubjects = () => {
                                     <h3 style={{
                                         fontSize: 18,
                                         fontWeight: 700,
-                                        color: '#17c77a',
+                                        color: '#B8E3E9',
                                         marginBottom: '1rem',
                                         letterSpacing: '-0.3px'
                                     }}>
@@ -344,38 +359,38 @@ const AdminRegisterSubjects = () => {
                                                 key={subject.id}
                                                 style={{
                                                     padding: '1rem',
-                                                    background: 'rgba(16, 24, 20, 0.6)',
+                                                    background: 'rgba(11,46,51,0.6)',
                                                     borderRadius: 8,
-                                                    border: '1px solid rgba(23, 199, 122, 0.2)',
+                                                    border: '1px solid rgba(184,227,233,0.25)',
                                                     transition: 'all 200ms ease',
                                                     cursor: 'pointer'
                                                 }}
                                                 onMouseEnter={(e) => {
-                                                    e.currentTarget.style.background = 'rgba(16, 24, 20, 0.8)';
-                                                    e.currentTarget.style.borderColor = 'rgba(23, 199, 122, 0.4)';
+                                                    e.currentTarget.style.background = 'rgba(11,46,51,0.75)';
+                                                    e.currentTarget.style.borderColor = 'rgba(184,227,233,0.5)';
                                                 }}
                                                 onMouseLeave={(e) => {
-                                                    e.currentTarget.style.background = 'rgba(16, 24, 20, 0.6)';
-                                                    e.currentTarget.style.borderColor = 'rgba(23, 199, 122, 0.2)';
+                                                    e.currentTarget.style.background = 'rgba(11,46,51,0.6)';
+                                                    e.currentTarget.style.borderColor = 'rgba(184,227,233,0.25)';
                                                 }}
                                             >
-                                                <p style={{ fontSize: 13, fontWeight: 600, margin: '0 0 0.5rem 0', color: '#fff' }}>
+                                                <p style={{ fontSize: 13, fontWeight: 600, margin: '0 0 0.5rem 0', color: '#B8E3E9' }}>
                                                     {subject.emriLendes}
                                                 </p>
                                                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', fontSize: 11, opacity: 0.7 }}>
                                                     <span style={{
                                                         padding: '0.3rem 0.6rem',
-                                                        background: 'rgba(23, 199, 122, 0.15)',
+                                                        background: 'rgba(184,227,233,0.12)',
                                                         borderRadius: 4,
-                                                        color: '#17c77a'
+                                                        color: '#B8E3E9'
                                                     }}>
                                                         Semestri {subject.semestri}
                                                     </span>
                                                     <span style={{
                                                         padding: '0.3rem 0.6rem',
-                                                        background: subject.isZgjedhore ? 'rgba(139, 92, 246, 0.15)' : 'rgba(251, 191, 36, 0.15)',
+                                                        background: subject.isZgjedhore ? 'rgba(79,124,130,0.2)' : 'rgba(184,227,233,0.12)',
                                                         borderRadius: 4,
-                                                        color: subject.isZgjedhore ? '#c4b5fd' : '#fbbf24'
+                                                        color: subject.isZgjedhore ? '#B8E3E9' : 'rgba(184,227,233,0.9)'
                                                     }}>
                                                         {subject.isZgjedhore ? 'Zgjedhore' : 'Obligative'}
                                                     </span>
@@ -415,12 +430,12 @@ const AdminRegisterSubjects = () => {
                     {/* Modal Content */}
                     <div
                         style={{
-                            background: 'linear-gradient(180deg, rgba(16, 24, 20, 0.95) 0%, rgba(12, 20, 16, 0.95) 100%)',
+                            background: 'linear-gradient(180deg, rgba(11,46,51,0.95) 0%, rgba(11,46,51,0.9) 100%)',
                             borderRadius: 16,
                             padding: '2.5rem',
                             maxWidth: '500px',
                             width: isMobile ? '90%' : '100%',
-                            border: '1px solid rgba(23, 199, 122, 0.3)',
+                            border: '1px solid rgba(184,227,233,0.35)',
                             boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
                             animation: 'slideUp 300ms ease'
                         }}
@@ -430,7 +445,7 @@ const AdminRegisterSubjects = () => {
                             fontSize: 24,
                             fontWeight: 800,
                             margin: '0 0 1.5rem 0',
-                            color: '#fff',
+                            color: '#B8E3E9',
                             letterSpacing: '-0.5px'
                         }}>
                             Regjistro Lendin
@@ -460,7 +475,7 @@ const AdminRegisterSubjects = () => {
                                     display: 'block',
                                     fontSize: 13,
                                     fontWeight: 600,
-                                    color: '#17c77a',
+                                    color: '#B8E3E9',
                                     marginBottom: '0.5rem',
                                     textTransform: 'uppercase',
                                     letterSpacing: '0.5px'
@@ -475,22 +490,22 @@ const AdminRegisterSubjects = () => {
                                     style={{
                                         width: '100%',
                                         padding: '0.85rem 1rem',
-                                        background: 'rgba(255, 255, 255, 0.08)',
-                                        border: '1px solid rgba(23, 199, 122, 0.3)',
+                                        background: 'rgba(11,46,51,0.6)',
+                                        border: '1px solid rgba(184,227,233,0.35)',
                                         borderRadius: 8,
-                                        color: '#fff',
+                                        color: '#B8E3E9',
                                         fontSize: 14,
                                         fontFamily: 'Inter, system-ui, Arial, sans-serif',
                                         boxSizing: 'border-box',
                                         transition: 'all 200ms ease'
                                     }}
                                     onFocus={(e) => {
-                                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
-                                        e.currentTarget.style.borderColor = 'rgba(23, 199, 122, 0.6)';
+                                        e.currentTarget.style.background = 'rgba(11,46,51,0.75)';
+                                        e.currentTarget.style.borderColor = 'rgba(184,227,233,0.6)';
                                     }}
                                     onBlur={(e) => {
-                                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                                        e.currentTarget.style.borderColor = 'rgba(23, 199, 122, 0.3)';
+                                        e.currentTarget.style.background = 'rgba(11,46,51,0.6)';
+                                        e.currentTarget.style.borderColor = 'rgba(184,227,233,0.35)';
                                     }}
                                 />
                             </div>
@@ -501,7 +516,7 @@ const AdminRegisterSubjects = () => {
                                     display: 'block',
                                     fontSize: 13,
                                     fontWeight: 600,
-                                    color: '#17c77a',
+                                    color: '#B8E3E9',
                                     marginBottom: '0.5rem',
                                     textTransform: 'uppercase',
                                     letterSpacing: '0.5px'
@@ -514,10 +529,10 @@ const AdminRegisterSubjects = () => {
                                     style={{
                                         width: '100%',
                                         padding: '0.85rem 1rem',
-                                        background: 'rgba(255, 255, 255, 0.08)',
-                                        border: '1px solid rgba(23, 199, 122, 0.3)',
+                                        background: 'rgba(11,46,51,0.6)',
+                                        border: '1px solid rgba(184,227,233,0.35)',
                                         borderRadius: 8,
-                                        color: '#fff',
+                                        color: '#B8E3E9',
                                         fontSize: 14,
                                         fontFamily: 'Inter, system-ui, Arial, sans-serif',
                                         boxSizing: 'border-box',
@@ -525,12 +540,12 @@ const AdminRegisterSubjects = () => {
                                         transition: 'all 200ms ease'
                                     }}
                                     onFocus={(e) => {
-                                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
-                                        e.currentTarget.style.borderColor = 'rgba(23, 199, 122, 0.6)';
+                                        e.currentTarget.style.background = 'rgba(11,46,51,0.75)';
+                                        e.currentTarget.style.borderColor = 'rgba(184,227,233,0.6)';
                                     }}
                                     onBlur={(e) => {
-                                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                                        e.currentTarget.style.borderColor = 'rgba(23, 199, 122, 0.3)';
+                                        e.currentTarget.style.background = 'rgba(11,46,51,0.6)';
+                                        e.currentTarget.style.borderColor = 'rgba(184,227,233,0.35)';
                                     }}
                                 >
                                     <option value="">Zgjidh Vitin</option>
@@ -546,7 +561,7 @@ const AdminRegisterSubjects = () => {
                                     display: 'block',
                                     fontSize: 13,
                                     fontWeight: 600,
-                                    color: '#17c77a',
+                                    color: '#B8E3E9',
                                     marginBottom: '0.5rem',
                                     textTransform: 'uppercase',
                                     letterSpacing: '0.5px'
@@ -562,10 +577,10 @@ const AdminRegisterSubjects = () => {
                                     style={{
                                         width: '100%',
                                         padding: '0.85rem 1rem',
-                                        background: !formData.year ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.08)',
-                                        border: '1px solid rgba(23, 199, 122, 0.3)',
+                                        background: !formData.year ? 'rgba(11,46,51,0.4)' : 'rgba(11,46,51,0.6)',
+                                        border: '1px solid rgba(184,227,233,0.35)',
                                         borderRadius: 8,
-                                        color: '#fff',
+                                        color: '#B8E3E9',
                                         fontSize: 14,
                                         fontFamily: 'Inter, system-ui, Arial, sans-serif',
                                         boxSizing: 'border-box',
@@ -575,13 +590,13 @@ const AdminRegisterSubjects = () => {
                                     }}
                                     onFocus={(e) => {
                                         if (formData.year) {
-                                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
-                                            e.currentTarget.style.borderColor = 'rgba(23, 199, 122, 0.6)';
+                                            e.currentTarget.style.background = 'rgba(11,46,51,0.75)';
+                                            e.currentTarget.style.borderColor = 'rgba(184,227,233,0.6)';
                                         }
                                     }}
                                     onBlur={(e) => {
-                                        e.currentTarget.style.background = !formData.year ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.08)';
-                                        e.currentTarget.style.borderColor = 'rgba(23, 199, 122, 0.3)';
+                                        e.currentTarget.style.background = !formData.year ? 'rgba(11,46,51,0.4)' : 'rgba(11,46,51,0.6)';
+                                        e.currentTarget.style.borderColor = 'rgba(184,227,233,0.35)';
                                     }}
                                 >
                                     <option value="">Zgjidh Semestrin</option>
@@ -597,7 +612,7 @@ const AdminRegisterSubjects = () => {
                                     display: 'block',
                                     fontSize: 13,
                                     fontWeight: 600,
-                                    color: '#17c77a',
+                                    color: '#B8E3E9',
                                     marginBottom: '0.5rem',
                                     textTransform: 'uppercase',
                                     letterSpacing: '0.5px'
@@ -610,10 +625,10 @@ const AdminRegisterSubjects = () => {
                                     style={{
                                         width: '100%',
                                         padding: '0.85rem 1rem',
-                                        background: 'rgba(255, 255, 255, 0.08)',
-                                        border: '1px solid rgba(23, 199, 122, 0.3)',
+                                        background: 'rgba(11,46,51,0.6)',
+                                        border: '1px solid rgba(184,227,233,0.35)',
                                         borderRadius: 8,
-                                        color: '#fff',
+                                        color: '#B8E3E9',
                                         fontSize: 14,
                                         fontFamily: 'Inter, system-ui, Arial, sans-serif',
                                         boxSizing: 'border-box',
@@ -621,12 +636,12 @@ const AdminRegisterSubjects = () => {
                                         transition: 'all 200ms ease'
                                     }}
                                     onFocus={(e) => {
-                                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
-                                        e.currentTarget.style.borderColor = 'rgba(23, 199, 122, 0.6)';
+                                        e.currentTarget.style.background = 'rgba(11,46,51,0.75)';
+                                        e.currentTarget.style.borderColor = 'rgba(184,227,233,0.6)';
                                     }}
                                     onBlur={(e) => {
-                                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                                        e.currentTarget.style.borderColor = 'rgba(23, 199, 122, 0.3)';
+                                        e.currentTarget.style.background = 'rgba(11,46,51,0.6)';
+                                        e.currentTarget.style.borderColor = 'rgba(184,227,233,0.35)';
                                     }}
                                 >
                                     <option value="">Zgjidh Llojin</option>
@@ -651,9 +666,9 @@ const AdminRegisterSubjects = () => {
                                 style={{
                                     flex: 1,
                                     padding: '0.85rem 1.5rem',
-                                    background: 'rgba(255, 255, 255, 0.08)',
-                                    color: '#fff',
-                                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                                    background: 'rgba(11,46,51,0.6)',
+                                    color: '#B8E3E9',
+                                    border: '1px solid rgba(184,227,233,0.35)',
                                     borderRadius: 8,
                                     fontWeight: 600,
                                     fontSize: 14,
@@ -663,12 +678,12 @@ const AdminRegisterSubjects = () => {
                                 }}
                                 onMouseEnter={(e) => {
                                     if (!loading) {
-                                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
+                                        e.currentTarget.style.background = 'rgba(184,227,233,0.12)';
                                     }
                                 }}
                                 onMouseLeave={(e) => {
                                     if (!loading) {
-                                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                                        e.currentTarget.style.background = 'rgba(11,46,51,0.6)';
                                     }
                                 }}
                             >
@@ -680,24 +695,24 @@ const AdminRegisterSubjects = () => {
                                 style={{
                                     flex: 1,
                                     padding: '0.85rem 1.5rem',
-                                    background: loading ? 'rgba(23, 199, 122, 0.5)' : 'linear-gradient(135deg, #17c77a 0%, #0ec783 100%)',
-                                    color: '#fff',
-                                    border: 'none',
+                                    background: loading ? 'rgba(184,227,233,0.2)' : '#0B2E33',
+                                    color: '#B8E3E9',
+                                    border: '1px solid rgba(184,227,233,0.35)',
                                     borderRadius: 8,
                                     fontWeight: 600,
                                     fontSize: 14,
                                     cursor: loading ? 'not-allowed' : 'pointer',
                                     transition: 'all 200ms ease',
-                                    boxShadow: '0 4px 12px rgba(23, 199, 122, 0.3)'
+                                    boxShadow: '0 4px 12px rgba(11,46,51,0.3)'
                                 }}
                                 onMouseEnter={(e) => {
                                     if (!loading) {
-                                        e.currentTarget.style.boxShadow = '0 6px 16px rgba(23, 199, 122, 0.4)';
+                                        e.currentTarget.style.boxShadow = '0 6px 16px rgba(11,46,51,0.45)';
                                     }
                                 }}
                                 onMouseLeave={(e) => {
                                     if (!loading) {
-                                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(23, 199, 122, 0.3)';
+                                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(11,46,51,0.3)';
                                     }
                                 }}
                             >
@@ -737,12 +752,12 @@ const AdminRegisterSubjects = () => {
                     }
                     
                     select option {
-                        background: #0a0e0c;
-                        color: #fff;
+                        background: #0B2E33;
+                        color: #B8E3E9;
                     }
                     
                     input::placeholder {
-                        color: rgba(255, 255, 255, 0.4);
+                        color: rgba(184, 227, 233, 0.6);
                     }
                     
                     /* Scrollbar for whole page and containers */
@@ -751,16 +766,16 @@ const AdminRegisterSubjects = () => {
                     }
                     
                     ::-webkit-scrollbar-track {
-                        background: rgba(23, 199, 122, 0.08);
+                        background: rgba(184, 227, 233, 0.12);
                     }
                     
                     ::-webkit-scrollbar-thumb {
-                        background: rgba(23, 199, 122, 0.5);
+                        background: rgba(184, 227, 233, 0.5);
                         border-radius: 6px;
                     }
                     
                     ::-webkit-scrollbar-thumb:hover {
-                        background: rgba(23, 199, 122, 0.7);
+                        background: rgba(184, 227, 233, 0.7);
                     }
                 `}
             </style>

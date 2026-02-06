@@ -82,19 +82,6 @@ const AdminDashboard = () => {
         gap: isMobile ? 12 : 18
     };
 
-    const bellStyle = {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        background: 'rgba(184,227,233,0.12)',
-        border: '1px solid rgba(184,227,233,0.3)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: 18,
-        color: '#B8E3E9'
-    };
-
     const adminBadge = {
         display: 'flex',
         alignItems: 'center',
@@ -192,9 +179,6 @@ const AdminDashboard = () => {
                 <div style={{ flex: 1 }} />
                 <div style={actionsStyle}>
                     <RoleSwitcher currentRole="admin" />
-                    <div style={bellStyle} aria-label="notifications" role="img">
-                        🔔
-                    </div>
                     <UserMenu userName={adminName} userType="admin" />
                 </div>
             </div>

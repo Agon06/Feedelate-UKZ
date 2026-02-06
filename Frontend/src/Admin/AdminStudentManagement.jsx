@@ -317,9 +317,6 @@ const AdminStudentManagement = () => {
                 <div style={brandStyle}>Feedelate</div>
                 <div style={{ flex: 1 }} />
                 <div style={actionsStyle}>
-                    <div style={bellStyle} aria-label="notifications" role="img">
-                        🔔
-                    </div>
                     <UserMenu userName={adminName} userType="admin" />
                 </div>
             </div>
@@ -338,7 +335,7 @@ const AdminStudentManagement = () => {
                             e.target.style.borderColor = 'rgba(184,227,233,0.35)';
                         }}
                     >
-                        ← Kthehu
+                        Kthehu
                     </button>
                     <h1 style={titleStyle}>Menaxho Studentët</h1>
                 </div>
@@ -779,9 +776,6 @@ const AdminStudentManagement = () => {
                             }
                         }
                     `}</style>
-                    <span style={{ fontSize: '18px' }}>
-                        {notification.type === 'success' ? '✓' : '✕'}
-                    </span>
                     {notification.message}
                 </div>
             )}

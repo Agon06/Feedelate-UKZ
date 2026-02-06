@@ -143,8 +143,7 @@ const AdminProfessorManagement = () => {
         display: 'flex',
         alignItems: 'center',
         gap: '1rem',
-        marginBottom: '1rem',
-        width: '100%'
+        marginBottom: '1rem'
     };
 
     const backButtonStyle = {
@@ -166,9 +165,7 @@ const AdminProfessorManagement = () => {
         fontSize: isMobile ? '24px' : '28px',
         fontWeight: 800,
         margin: 0,
-        letterSpacing: '-0.5px',
-        textAlign: 'center',
-        flex: 1
+        letterSpacing: '-0.5px'
     };
 
     const tableContainerStyle = {
@@ -454,9 +451,7 @@ const AdminProfessorManagement = () => {
                 <div style={brandStyle}>Feedelate</div>
                 <div style={{ flex: 1 }} />
                 <div style={actionsStyle}>
-                    <div style={bellStyle} aria-label="notifications" role="img">
-                        🔔
-                    </div>
+                    
                     <UserMenu userName={adminName} userType="admin" />
                 </div>
             </div>

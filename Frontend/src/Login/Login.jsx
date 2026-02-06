@@ -205,7 +205,7 @@ const Login = () => {
   const pageStyle = {
     color: '#fff',
     minHeight: '100vh',
-    background: 'radial-gradient(circle at 20% 20%, rgba(27,148,92,0.15), transparent 35%), radial-gradient(circle at 80% 0%, rgba(23,199,122,0.12), transparent 30%), linear-gradient(180deg, rgba(9,16,12,1) 0%, rgba(12,26,18,1) 50%, rgba(8,18,12,1) 100%)',
+    background: 'linear-gradient(180deg, #94A3B8 0%, #0B2E33 100%)',
     padding: isMobile ? '1rem' : '2rem',
     margin: 0,
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif',
@@ -213,22 +213,26 @@ const Login = () => {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative'
+    position: 'relative',
+    scrollBehavior: 'smooth',
+    overflowY: 'auto'
   };
 
   const cardStyle = {
-    background: 'rgba(16, 24, 20, 0.95)',
+    background: 'rgba(11, 46, 51, 0.9)',
     backdropFilter: 'blur(10px)',
     color: '#fff',
-    padding: isMobile ? '2rem 1.5rem' : '3rem 2.5rem',
+    padding: isMobile ? '1.4rem 1.15rem' : '2.1rem 1.85rem',
     borderRadius: '14px',
-    border: '1px solid rgba(23, 199, 122, 0.15)',
-    boxShadow: '0 20px 60px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.05)',
+    border: '1px solid rgba(184, 227, 233, 0.2)',
+    boxShadow: '0 20px 60px rgba(0,0,0,0.35), inset 0 1px 1px rgba(184,227,233,0.08)',
     width: '100%',
     maxWidth: isMobile ? '100%' : 520,
     textAlign: 'center',
     position: 'relative',
-    zIndex: 1
+    zIndex: 1,
+    // maxHeight: '90vh',
+    // overflowY: 'auto'
   };
 
   const inputStyle = {
@@ -262,8 +266,8 @@ const Login = () => {
   };
 
   const logoStyle = {
-    width: '20px',
-    height: '20px'
+    width: '16px',
+    height: '16px'
   };
 
   const typeButtonStyle = {
@@ -284,7 +288,7 @@ const Login = () => {
     <div style={pageStyle}>
       <div style={cardStyle}>
         {/* Header */}
-        <div style={{ marginBottom: '3rem' }}>
+        <div style={{ marginBottom: '1.9rem' }}>
           <img 
             src="https://uni-gjilan.net/wp-content/themes/kadrizeka/img/uni-gjilan_sq.png" 
             alt="Uni Gjilan Logo"
@@ -295,7 +299,7 @@ const Login = () => {
             }}
           />
           <h1 style={{ 
-            margin: '0 0 0.75rem 0', 
+            margin: '0 0 0.4rem 0', 
             fontSize: '2.8rem', 
             fontWeight: 900, 
             letterSpacing: '-0.02em',
@@ -306,27 +310,27 @@ const Login = () => {
           <div style={{
             height: '2px',
             width: '50px',
-            background: 'linear-gradient(90deg, #17c77a 0%, rgba(23,199,122,0) 100%)',
+            background: 'linear-gradient(90deg, #B8E3E9 0%, rgba(184,227,233,0) 100%)',
             margin: '0 auto 0'
           }}></div>
         </div>
 
         {/* User Type Selection */}
         {!userType && (
-          <div style={{ marginBottom: '2.5rem' }}>
+          <div style={{ marginBottom: '1.7rem' }}>
             <div style={{
               display: 'flex',
               gap: '1rem',
-              marginBottom: '2rem'
+              marginBottom: '1.25rem'
             }}>
               <button
                 onClick={() => setUserType('student')}
                 style={{
                   flex: 1,
                   padding: '1.5rem 1.25rem',
-                  border: '2px solid rgba(23, 199, 122, 0.25)',
+                  border: '2px solid rgba(184, 227, 233, 0.25)',
                   borderRadius: '10px',
-                  background: 'rgba(23, 199, 122, 0.08)',
+                  background: 'rgba(184, 227, 233, 0.08)',
                   color: '#fff',
                   cursor: 'pointer',
                   transition: 'all 250ms ease',
@@ -337,13 +341,13 @@ const Login = () => {
                   textAlign: 'center'
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.borderColor = '#17c77a';
-                  e.target.style.background = 'rgba(23, 199, 122, 0.15)';
-                  e.target.style.boxShadow = '0 0 20px rgba(23, 199, 122, 0.2)';
+                  e.target.style.borderColor = '#B8E3E9';
+                  e.target.style.background = 'rgba(184, 227, 233, 0.15)';
+                  e.target.style.boxShadow = '0 0 20px rgba(184, 227, 233, 0.2)';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.borderColor = 'rgba(23, 199, 122, 0.25)';
-                  e.target.style.background = 'rgba(23, 199, 122, 0.08)';
+                  e.target.style.borderColor = 'rgba(184, 227, 233, 0.25)';
+                  e.target.style.background = 'rgba(184, 227, 233, 0.08)';
                   e.target.style.boxShadow = 'none';
                 }}
               >
@@ -354,9 +358,9 @@ const Login = () => {
                 style={{
                   flex: 1,
                   padding: '1.5rem 1.25rem',
-                  border: '2px solid rgba(23, 199, 122, 0.25)',
+                  border: '2px solid rgba(184, 227, 233, 0.25)',
                   borderRadius: '10px',
-                  background: 'rgba(23, 199, 122, 0.08)',
+                  background: 'rgba(184, 227, 233, 0.08)',
                   color: '#fff',
                   cursor: 'pointer',
                   transition: 'all 250ms ease',
@@ -367,13 +371,13 @@ const Login = () => {
                   textAlign: 'center'
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.borderColor = '#17c77a';
-                  e.target.style.background = 'rgba(23, 199, 122, 0.15)';
-                  e.target.style.boxShadow = '0 0 20px rgba(23, 199, 122, 0.2)';
+                  e.target.style.borderColor = '#B8E3E9';
+                  e.target.style.background = 'rgba(184, 227, 233, 0.15)';
+                  e.target.style.boxShadow = '0 0 20px rgba(184, 227, 233, 0.2)';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.borderColor = 'rgba(23, 199, 122, 0.25)';
-                  e.target.style.background = 'rgba(23, 199, 122, 0.08)';
+                  e.target.style.borderColor = 'rgba(184, 227, 233, 0.25)';
+                  e.target.style.background = 'rgba(184, 227, 233, 0.08)';
                   e.target.style.boxShadow = 'none';
                 }}
               >
@@ -386,13 +390,13 @@ const Login = () => {
         {/* Authentication Form */}
         {userType && (
           <>
-            <div style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ marginBottom: '1.7rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <button
                 onClick={() => setUserType(null)}
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: '#17c77a',
+                  color: '#B8E3E9',
                   cursor: 'pointer',
                   fontSize: '0.85rem',
                   padding: 0,
@@ -409,7 +413,7 @@ const Login = () => {
               <p style={{
                 margin: 0,
                 fontSize: '0.9rem',
-                color: '#17c77a',
+                color: '#B8E3E9',
                 fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em'
@@ -421,21 +425,21 @@ const Login = () => {
             {/* Form Container - Only show for students who check first time login */}
             {userType === 'student' && firstTime && (
               <div style={{
-                background: 'rgba(23, 199, 122, 0.06)',
-                border: '1px solid rgba(23, 199, 122, 0.15)',
+                background: 'rgba(184, 227, 233, 0.08)',
+                border: '1px solid rgba(184, 227, 233, 0.25)',
                 borderRadius: '10px',
-                padding: '2rem',
-                marginBottom: '2.5rem',
+                padding: '1.5rem',
+                marginBottom: '2rem',
                 textAlign: 'left'
               }}>
                 {/* Academic Year & Card ID */}
-                <div style={{ marginBottom: '1.5rem' }}>
-                    <div style={{ marginBottom: '1.25rem' }}>
+                <div style={{ marginBottom: '1.25rem' }}>
+                    <div style={{ marginBottom: '1rem' }}>
                       <label style={{ 
-                        fontSize: '0.8rem', 
-                        color: '#a5b9b1',
+                        fontSize: '0.75rem', 
+                        color: 'rgba(184, 227, 233, 0.75)',
                         display: 'block',
-                        marginBottom: '0.6rem',
+                        marginBottom: '0.5rem',
                         fontWeight: 700,
                         textTransform: 'uppercase',
                         letterSpacing: '0.04em'
@@ -447,18 +451,18 @@ const Login = () => {
                         onChange={e => setSelectedYear(e.target.value)}
                         style={{ 
                           width: '100%',
-                          padding: '0.85rem',
-                          fontSize: '0.95rem',
+                          padding: '0.65rem 0.8rem',
+                          fontSize: '0.9rem',
                           color: '#e5f0eb',
-                          borderRadius: '8px',
-                          border: '1px solid rgba(23, 199, 122, 0.25)',
-                          background: 'rgba(9, 16, 12, 0.5)',
+                          borderRadius: '7px',
+                          border: '1px solid rgba(184, 227, 233, 0.35)',
+                          background: 'rgba(11, 46, 51, 0.5)',
                           fontWeight: 500,
                           cursor: 'pointer',
                           transition: 'border-color 200ms'
                         }}
-                        onMouseEnter={(e) => e.target.style.borderColor = 'rgba(23, 199, 122, 0.5)'}
-                        onMouseLeave={(e) => e.target.style.borderColor = 'rgba(23, 199, 122, 0.25)'}
+                        onMouseEnter={(e) => e.target.style.borderColor = 'rgba(184, 227, 233, 0.6)'}
+                        onMouseLeave={(e) => e.target.style.borderColor = 'rgba(184, 227, 233, 0.35)'}
                       >
                         {academicYears.map((year) => (
                           <option key={year} value={year}>{year}</option>
@@ -468,10 +472,10 @@ const Login = () => {
 
                     <div>
                       <label style={{ 
-                        fontSize: '0.8rem', 
-                        color: '#a5b9b1',
+                        fontSize: '0.75rem', 
+                        color: 'rgba(184, 227, 233, 0.75)',
                         display: 'block',
-                        marginBottom: '0.6rem',
+                        marginBottom: '0.5rem',
                         fontWeight: 700,
                         textTransform: 'uppercase',
                         letterSpacing: '0.04em'
@@ -484,11 +488,11 @@ const Login = () => {
                         onChange={handleStudentCardIdChange}
                         style={{ 
                           width: '100%',
-                          padding: '0.85rem',
-                          fontSize: '0.95rem',
-                          border: idError ? '1px solid rgba(255, 100, 100, 0.4)' : '1px solid rgba(23, 199, 122, 0.25)',
-                          background: idError ? 'rgba(255, 100, 100, 0.05)' : 'rgba(9, 16, 12, 0.5)',
-                          borderRadius: '8px',
+                          padding: '0.65rem 0.8rem',
+                          fontSize: '0.9rem',
+                          border: idError ? '1px solid rgba(255, 100, 100, 0.4)' : '1px solid rgba(184, 227, 233, 0.35)',
+                          background: idError ? 'rgba(255, 100, 100, 0.05)' : 'rgba(11, 46, 51, 0.5)',
+                          borderRadius: '7px',
                           color: '#e5f0eb',
                           fontWeight: 500,
                           transition: 'border-color 200ms',
@@ -496,8 +500,8 @@ const Login = () => {
                         }}
                         placeholder="Vendosni 8 shifra"
                         maxLength="8"
-                        onFocus={(e) => e.target.style.borderColor = 'rgba(23, 199, 122, 0.5)'}
-                        onBlur={(e) => e.target.style.borderColor = idError ? 'rgba(255, 100, 100, 0.4)' : 'rgba(23, 199, 122, 0.25)'}
+                        onFocus={(e) => e.target.style.borderColor = 'rgba(184, 227, 233, 0.6)'}
+                        onBlur={(e) => e.target.style.borderColor = idError ? 'rgba(255, 100, 100, 0.4)' : 'rgba(184, 227, 233, 0.35)'}
                       />
                     </div>
 
@@ -521,7 +525,7 @@ const Login = () => {
 
             {/* First time login checkbox - only for students */}
             {userType === 'student' && (
-              <div style={{ marginBottom: '1.75rem', textAlign: 'left' }}>
+              <div style={{ marginBottom: '1.2rem', textAlign: 'left' }}>
                 <label style={{ 
                   display: 'flex', 
                   alignItems: 'center', 
@@ -540,7 +544,7 @@ const Login = () => {
                       width: '18px', 
                       height: '18px', 
                       cursor: 'pointer',
-                      accentColor: '#17c77a'
+                      accentColor: '#B8E3E9'
                     }}
                   />
                   Kyçem për herë të parë
@@ -565,49 +569,49 @@ const Login = () => {
 
             <button onClick={handleGoogleLogin} style={{
               width: '100%',
-              padding: '1.1rem',
+              padding: '0.7rem 1rem',
               border: '1px solid rgba(23, 199, 122, 0.3)',
-              borderRadius: '10px',
-              background: 'linear-gradient(135deg, rgba(23, 199, 122, 0.15) 0%, rgba(23, 199, 122, 0.08) 100%)',
-              color: '#17c77a',
-              fontSize: '0.95rem',
+              borderRadius: '8px',
+              background: 'linear-gradient(135deg, rgba(184, 227, 233, 0.2) 0%, rgba(184, 227, 233, 0.1) 100%)',
+              color: '#B8E3E9',
+              fontSize: '0.85rem',
               fontWeight: 700,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '0.75rem',
+              gap: '0.5rem',
               letterSpacing: '0.02em',
               transition: 'all 250ms ease',
               textTransform: 'uppercase',
-              boxShadow: '0 4px 12px rgba(23, 199, 122, 0.15)'
+              boxShadow: '0 4px 12px rgba(184, 227, 233, 0.18)'
             }}
             onMouseEnter={(e) => {
-              e.target.style.background = 'linear-gradient(135deg, rgba(23, 199, 122, 0.25) 0%, rgba(23, 199, 122, 0.15) 100%)';
-              e.target.style.borderColor = '#17c77a';
-              e.target.style.boxShadow = '0 8px 24px rgba(23, 199, 122, 0.25)';
+              e.target.style.background = 'linear-gradient(135deg, rgba(184, 227, 233, 0.3) 0%, rgba(184, 227, 233, 0.18) 100%)';
+              e.target.style.borderColor = '#B8E3E9';
+              e.target.style.boxShadow = '0 8px 24px rgba(184, 227, 233, 0.28)';
             }}
             onMouseLeave={(e) => {
-              e.target.style.background = 'linear-gradient(135deg, rgba(23, 199, 122, 0.15) 0%, rgba(23, 199, 122, 0.08) 100%)';
-              e.target.style.borderColor = 'rgba(23, 199, 122, 0.3)';
-              e.target.style.boxShadow = '0 4px 12px rgba(23, 199, 122, 0.15)';
+              e.target.style.background = 'linear-gradient(135deg, rgba(184, 227, 233, 0.2) 0%, rgba(184, 227, 233, 0.1) 100%)';
+              e.target.style.borderColor = 'rgba(184, 227, 233, 0.3)';
+              e.target.style.boxShadow = '0 4px 12px rgba(184, 227, 233, 0.18)';
             }}>
               <svg style={logoStyle} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path fill="#17c77a" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#17c77a" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#17c77a" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                <path fill="#17c77a" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                <path fill="#B8E3E9" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#B8E3E9" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#B8E3E9" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                <path fill="#B8E3E9" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
               </svg>
               Kyçu me Google
             </button>
 
             <p style={{ 
-              marginTop: '1.75rem', 
+              marginTop: '1rem', 
               color: '#7a8d86', 
               fontSize: '0.8rem',
               fontWeight: 500,
               letterSpacing: '0.01em',
-              margin: '1.75rem 0 0 0'
+              margin: '1rem 0 0 0'
             }}>
               Përdorni llogarinë tuaj @uni-gjilan.net
             </p>
