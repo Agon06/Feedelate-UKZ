@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import JSZip from 'jszip';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getProfesorIdeas, getStudentSubmissions, getIdeaDeadline, updateIdeaDeadline, uploadLendaTemplate, getLendaTemplateInfo, deleteLendaTemplate, addFeedbackToIdea } from '../services/profesorApi';
+import { getProfesorIdeas, getStudentSubmissions, getIdeaDeadline, updateIdeaDeadline, uploadLendaTemplate, getLendaTemplateInfo, deleteLendaTemplate } from '../services/profesorApi';
 import './idetep.css';
 
 const Idetep = () => {
@@ -28,8 +28,6 @@ const Idetep = () => {
   const [periods, setPeriods] = useState([]);
   const [deadlineTitle, setDeadlineTitle] = useState('');
   const [activeTab, setActiveTab] = useState('ideas');
-  const [selectedIdea, setSelectedIdea] = useState(null);
-  const [ideaFeedback, setIdeaFeedback] = useState('');
   const [toastMessage, setToastMessage] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState({ open: false, message: '', onConfirm: null });
   const [showDeadlineForm, setShowDeadlineForm] = useState(false);
@@ -1260,7 +1258,15 @@ const Idetep = () => {
                     <div 
                       key={`${idea.type}-${idea.id}`} 
                       style={{ ...ideaItem, cursor: 'pointer' }}
-                      onClick={() => setSelectedIdea(idea)}
+                      onClick={() => {
+                        navigate('/profesor/feedback', {
+                          state: {
+                            ideaId: idea.id,
+                            lendaId,
+                            subject: subjectName
+                          }
+                        });
+                      }}
                       onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(184, 227, 233, 0.12)'}
                       onMouseLeave={(e) => e.currentTarget.style.background = '#0B2E33'}
                     >
@@ -1555,220 +1561,6 @@ const Idetep = () => {
 
         </div>
       </div>
-
-      {/* Modal për detajet e idesë */}
-      {selectedIdea && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          background: 'rgba(0,0,0,0.6)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: isMobile ? '1rem' : 0
-        }}>
-          <div style={{
-            ...modalStyle,
-            position: 'relative'
-          }}>
-            <button 
-              style={closeButtonStyle}
-              onClick={() => {
-                setSelectedIdea(null);
-                setIdeaFeedback('');
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(184, 227, 233, 0.12)';
-                e.currentTarget.style.borderColor = '#B8E3E9';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.borderColor = 'rgba(184,227,233,0.3)';
-              }}
-            >
-              ✕
-            </button>
-
-            <div style={columnsStyle}>
-              {/* KOLONA E MAJTË - Detajet e idesë */}
-              <div style={columnCard}>
-                <div style={{ fontSize: 16, fontWeight: 700, color: '#B8E3E9', marginBottom: '1rem' }}>
-                  Idetë për {subjectName}
-                </div>
-                
-                <div style={{ marginBottom: '1rem' }}>
-                  <div style={{ fontSize: 12, opacity: 0.75, marginBottom: '0.5rem' }}>Tituli</div>
-                  <div style={{ fontSize: 15, fontWeight: 600 }}>{selectedIdea.title}</div>
-                </div>
-
-                <div style={{ marginBottom: '1rem' }}>
-                  <div style={{ fontSize: 12, opacity: 0.75, marginBottom: '0.5rem' }}>Shkurtesa</div>
-                  <div style={{ fontSize: 14, fontWeight: 500, background: 'rgba(184,227,233,0.12)', padding: '0.5rem', borderRadius: 8, color: '#B8E3E9' }}>
-                    {selectedIdea.shorthand}
-                  </div>
-                </div>
-
-                {selectedIdea.studentName && (
-                  <div style={{ marginBottom: '1rem' }}>
-                    <div style={{ fontSize: 12, opacity: 0.75, marginBottom: '0.5rem' }}>Studenti</div>
-                    <div style={{ fontSize: 14, fontWeight: 500 }}>{selectedIdea.studentName}</div>
-                  </div>
-                )}
-
-                {/* Seksioni i feedback-ut */}
-                <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(184,227,233,0.2)' }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: '#B8E3E9', marginBottom: '0.75rem' }}>
-                    Feedback
-                  </div>
-                  <textarea
-                    value={ideaFeedback}
-                    onChange={(e) => setIdeaFeedback(e.target.value)}
-                    placeholder="Shkruaj feedback për këtë ide..."
-                    style={{
-                      width: '100%',
-                      minHeight: '100px',
-                      padding: '0.75rem',
-                      borderRadius: 8,
-                      border: '1px solid rgba(184,227,233,0.3)',
-                      background: 'rgba(11,46,51,0.6)',
-                      color: '#B8E3E9',
-                      fontFamily: 'inherit',
-                      resize: 'vertical',
-                      fontSize: 13
-                    }}
-                  />
-                </div>
-
-                {/* Butonat */}
-                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', flexWrap: 'wrap' }}>
-                  <button
-                    style={{
-                      ...primaryButton,
-                      flex: 1,
-                      minWidth: '100px'
-                    }}
-                    onClick={async () => {
-                      // Ruaj feedback në backend
-                      if (ideaFeedback.trim()) {
-                        try {
-                          await addFeedbackToIdea(PROFESOR_ID, selectedIdea.id, {
-                            feedback: ideaFeedback.trim()
-                          });
-                          setToastMessage({ type: 'success', text: 'Feedback u ruajt me sukses!' });
-                          setIdeaFeedback('');
-                          setTimeout(() => setToastMessage(null), 4000);
-                        } catch (error) {
-                          setToastMessage({ type: 'error', text: 'Gabim: ' + (error.message || 'Nuk u ruajt feedback') });
-                          setTimeout(() => setToastMessage(null), 4000);
-                        }
-                      } else {
-                        setToastMessage({ type: 'error', text: 'Shkruaj feedback para se të ruash' });
-                        setTimeout(() => setToastMessage(null), 4000);
-                      }
-                    }}
-                  >
-                    Ruaj Feedback
-                  </button>
-                  <button
-                    style={{
-                      ...secondaryButton,
-                      flex: 1,
-                      minWidth: '100px'
-                    }}
-                    onClick={() => {
-                      // Modifiko idenë
-                      setToastMessage({ type: 'info', text: 'Modifiko funkcion në zhvillim' });
-                      setTimeout(() => setToastMessage(null), 4000);
-                    }}
-                  >
-                    ✎ Modifiko
-                  </button>
-                  <button
-                    style={{
-                      borderRadius: 12,
-                      border: '1px solid rgba(255,82,82,0.5)',
-                      background: 'transparent',
-                      color: '#ff5252',
-                      fontWeight: 600,
-                      padding: '0.8rem 1.6rem',
-                      cursor: 'pointer',
-                      flex: 1,
-                      minWidth: '100px'
-                    }}
-                    onClick={() => {
-                      setConfirmDialog({
-                        open: true,
-                        message: 'A jeni të sigurt që dëshironi të fshini këtë ide?',
-                        onConfirm: () => {
-                          setToastMessage({ type: 'success', text: 'Ideja u fshi me sukses' });
-                          setSelectedIdea(null);
-                          setIdeaFeedback('');
-                          setTimeout(() => setToastMessage(null), 4000);
-                          setConfirmDialog({ open: false, message: '', onConfirm: null });
-                        }
-                      });
-                    }}
-                  >
-                    Fshi
-                  </button>
-                  <button
-                    style={{
-                      borderRadius: 12,
-                      border: '1px solid rgba(184,227,233,0.4)',
-                      background: 'transparent',
-                      color: '#B8E3E9',
-                      fontWeight: 600,
-                      padding: '0.8rem 1.6rem',
-                      cursor: 'pointer',
-                      flex: 1,
-                      minWidth: '100px'
-                    }}
-                    onClick={() => {
-                      // Shfaq feedback-un për këtë ide
-                      navigate('/profesor/feedback', { 
-                        state: { 
-                          ideaId: selectedIdea.id,
-                          lendaId, 
-                          subject: subjectName 
-                        } 
-                      });
-                    }}
-                  >
-                    Feedback
-                  </button>
-                </div>
-              </div>
-
-              {/* KOLONA E DJATHTË - Informacion lënde */}
-              <div style={columnCard}>
-                <div style={{ fontSize: 16, fontWeight: 700, color: '#B8E3E9', marginBottom: '1rem' }}>
-                  Lënda
-                </div>
-                
-                <div style={{ fontSize: 14, fontWeight: 500, marginBottom: '2rem' }}>
-                  {subjectName}
-                </div>
-
-                <div style={{
-                  background: 'rgba(184, 227, 233, 0.12)',
-                  border: '1px solid rgba(184, 227, 233, 0.35)',
-                  borderRadius: 10,
-                  padding: '1rem',
-                  fontSize: 13,
-                  lineHeight: 1.6,
-                  color: '#B8E3E9'
-                }}>
-                  Mund të shtohen më shumë detaje të lëndës këtu sipas nevojës.
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Confirmation Dialog */}
       {confirmDialog.open && (

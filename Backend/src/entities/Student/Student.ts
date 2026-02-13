@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 import { Idete } from "./Idete";
 import { DorezimiIdes } from "./dorezimiIdes";
 import { dorzimiProjektit } from "./dorzimiProjektit";
+import { stdZgjedhore } from "./stdZgjedhore";
 
 @Entity("studentet")
 export class Student {
@@ -47,6 +48,9 @@ export class Student {
 
   @OneToMany(() => dorzimiProjektit, (dorezim) => dorezim.student, { cascade: false })
   dorezimeProjektit: dorzimiProjektit[];
+
+  @OneToMany(() => stdZgjedhore, (zgjedhore) => zgjedhore.student, { cascade: false })
+  zgjedhoreList: stdZgjedhore[];
 
   @CreateDateColumn()
   createdAt: Date;

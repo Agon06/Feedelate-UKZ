@@ -3,6 +3,7 @@ import { Idete } from "./Idete";
 import { DorezimiIdes } from "./dorezimiIdes";
 import { dorzimiProjektit } from "./dorzimiProjektit";
 import { Profesor } from "../Profesor/Profesor";
+import { stdZgjedhore } from "./stdZgjedhore";
 
 @Entity("lendet")
 export class Lendet {
@@ -74,6 +75,9 @@ export class Lendet {
 
     @OneToMany(() => dorzimiProjektit, (dorezim) => dorezim.lenda)
     dorezimeProjektit: dorzimiProjektit[];
+
+    @OneToMany(() => stdZgjedhore, (zgjedhore) => zgjedhore.lenda)
+    studentZgjedhore: stdZgjedhore[];
 
     @CreateDateColumn()
     createdAt: Date;

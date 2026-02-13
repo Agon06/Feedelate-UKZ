@@ -12,15 +12,15 @@ async function runMigration() {
 
     console.log('✓ Connected to database');
 
-    const sql = 'ALTER TABLE lendet ADD COLUMN ideaDeadlinesJson JSON NULL;';
+    const sql = 'ALTER TABLE studentet ADD COLUMN academicYear VARCHAR(32) NULL;';
     await connection.execute(sql);
 
-    console.log('✓ Migration successful: ideaDeadlinesJson column added');
+    console.log('✓ Migration successful: academicYear column added to studentet table');
 
     await connection.end();
   } catch (error) {
     if (error.code === 'ER_DUP_FIELDNAME') {
-      console.log('✓ Column already exists');
+      console.log('✓ academicYear column already exists');
     } else {
       console.error('✗ Migration failed:', error.message);
     }

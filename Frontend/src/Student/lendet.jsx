@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getStudentYearData, getStudentById } from '../services/studentApi';
+import { getStudentYearData, getStudentById, addStudentElective, removeStudentElective } from '../services/studentApi';
 import './StudentTheme.css';
 
 const Lendet = () => {
@@ -64,26 +64,18 @@ const Lendet = () => {
   const navigate = useNavigate();
 
   const STUDENT_ID = student.id;
+  
+  // Determine if student can interact with this year's content
+  const currentYearNumber = parseInt(yearId, 10) || 1;
+  const canInteractWithYear = vitiStudimeve >= currentYearNumber;
 
   // Move all hooks before any conditional returns
-  const electiveStorageKey = useMemo(() => `selectedElectives:${STUDENT_ID}:${yearId}`, [STUDENT_ID, yearId]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showElectivePicker, setShowElectivePicker] = useState(false);
   const [selectedElectives, setSelectedElectives] = useState([]);
   const [activeModal, setActiveModal] = useState({ open: false, subject: null });
   const [yearData, setYearData] = useState(null);
   const [status, setStatus] = useState({ loading: true, error: null });
-
-  useEffect(() => {
-    if (!student.id && !loadingStudent) {
-      navigate('/');
-    }
-  }, [navigate, student.id, loadingStudent]);
-
-  // Early return after all hooks are defined
-  if (!student.id || loadingStudent) {
-    return null;
-  }
 
   const baseSemesters = useMemo(() => {
     const parsed = Number(yearId);
@@ -119,6 +111,79 @@ const Lendet = () => {
     return baseSemesters[baseSemesters.length - 1];
   }, [baseSemesters, yearData]);
 
+  const handleElectiveToggle = useCallback(async (course) => {
+    if (!canInteractWithYear) return;
+
+    const exists = selectedElectives.some((item) => item.id === course.id);
+
+    try {
+      if (exists) {
+        await removeStudentElective(STUDENT_ID, course.id);
+        setSelectedElectives((prev) => prev.filter((item) => item.id !== course.id));
+      } else {
+        await addStudentElective(STUDENT_ID, course.id);
+        setSelectedElectives((prev) => [...prev, course]);
+      }
+      setShowElectivePicker(false);
+    } catch (error) {
+      console.error('Error toggling elective:', error);
+      alert(error.message || 'Ndodhi një gabim gjatë zgjedhjes së lëndës');
+    }
+  }, [STUDENT_ID, selectedElectives, canInteractWithYear]);
+
+  const handleRemoveElective = useCallback(async (e, course) => {
+    e.stopPropagation(); // Prevent opening the modal when clicking X
+    if (!canInteractWithYear) return;
+
+    try {
+      await removeStudentElective(STUDENT_ID, course.id);
+      setSelectedElectives((prev) => prev.filter((item) => item.id !== course.id));
+    } catch (error) {
+      console.error('Error removing elective:', error);
+      alert(error.message || 'Ndodhi një gabim gjatë heqjes së lëndës');
+    }
+  }, [STUDENT_ID, canInteractWithYear]);
+
+  const openSubjectModal = useCallback((subject) => {
+    setActiveModal({ open: true, subject });
+  }, []);
+
+  const closeSubjectModal = useCallback(() => {
+    setActiveModal({ open: false, subject: null });
+  }, []);
+
+  const handleModalChoice = useCallback((choice) => {
+    if (choice === 'idea') {
+      navigate('/student/ide', {
+        state: {
+          subject: activeModal.subject?.name,
+          lendaId: activeModal.subject?.id,
+          yearId,
+        },
+      });
+      setActiveModal({ open: false, subject: null });
+    } else if (choice === 'project') {
+      navigate('/student/dorzimiProjektit', {
+        state: {
+          subject: activeModal.subject?.name,
+          lendaId: activeModal.subject?.id,
+          yearId,
+        },
+      });
+      setActiveModal({ open: false, subject: null });
+    } else {
+      setActiveModal({ open: false, subject: null });
+    }
+  }, [activeModal.subject, navigate, yearId]);
+
+  const handleBack = useCallback(() => navigate('/student'), [navigate]);
+
+  useEffect(() => {
+    if (!student.id && !loadingStudent) {
+      navigate('/');
+    }
+  }, [navigate, student.id, loadingStudent]);
+
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
     onResize();
@@ -135,18 +200,8 @@ const Lendet = () => {
         const data = await getStudentYearData(STUDENT_ID, yearId);
         if (!isMounted) return;
         setYearData(data);
-        const stored = localStorage.getItem(electiveStorageKey);
-        let initialElectives = Array.isArray(data?.selectedElectives) ? data.selectedElectives : [];
-        if (stored) {
-          try {
-            const parsed = JSON.parse(stored);
-            if (Array.isArray(parsed)) {
-              initialElectives = parsed;
-            }
-          } catch (e) {
-            console.warn('Could not parse stored electives', e);
-          }
-        }
+        // Use selectedElectives from API response
+        const initialElectives = Array.isArray(data?.selectedElectives) ? data.selectedElectives : [];
         setSelectedElectives(initialElectives);
         setStatus({ loading: false, error: null });
       } catch (error) {
@@ -163,15 +218,43 @@ const Lendet = () => {
     return () => {
       isMounted = false;
     };
-  }, [STUDENT_ID, yearId, electiveStorageKey]);
+  }, [STUDENT_ID, yearId]);
 
-  // Save to localStorage whenever selectedElectives change
-  useEffect(() => {
-    localStorage.setItem(electiveStorageKey, JSON.stringify(selectedElectives));
-  }, [electiveStorageKey, selectedElectives]);
+  // Early return after ALL hooks are defined
+  if (!student.id || loadingStudent) {
+    return null;
+  }
 
   const studentName = yearData?.student?.fullName ?? 'Student';
   const avatarLetter = yearData?.student?.emri?.[0]?.toUpperCase() ?? 'S';
+
+  const renderStateBanner = () => {
+    if (status.loading) {
+      return (
+        <div style={{ ...bannerStyle, background: 'rgba(79,124,130,0.35)', borderColor: 'rgba(184,227,233,0.25)' }}>
+          Po ngarkohen të dhënat...
+        </div>
+      );
+    }
+
+    if (status.error) {
+      return (
+        <div style={{ ...bannerStyle, background: 'rgba(255,82,82,0.1)', borderColor: 'rgba(255,82,82,0.4)' }}>
+          {status.error}
+        </div>
+      );
+    }
+
+    if (!yearData) {
+      return (
+        <div style={{ ...bannerStyle, background: 'rgba(255,255,255,0.05)' }}>
+          Nuk ekzistojnë të dhëna për këtë vit.
+        </div>
+      );
+    }
+
+    return null;
+  };
 
   const pageStyle = {
     color: '#B8E3E9',
@@ -443,78 +526,6 @@ const Lendet = () => {
     textAlign: 'center'
   };
 
-  const handleElectiveToggle = useCallback((course) => {
-    setSelectedElectives((prev) => {
-      const exists = prev.some((item) => item.id === course.id);
-      return exists ? prev.filter((item) => item.id !== course.id) : [...prev, course];
-    });
-    // Mbyll popover-in pasi u zgjodh/hoq një lëndë zgjedhore
-    setShowElectivePicker(false);
-  }, []);
-
-  const openSubjectModal = useCallback((subject) => {
-    setActiveModal({ open: true, subject });
-  }, []);
-
-  const closeSubjectModal = useCallback(() => {
-    setActiveModal({ open: false, subject: null });
-  }, []);
-
-  const handleModalChoice = useCallback((choice) => {
-    if (choice === 'idea') {
-      navigate('/student/ide', {
-        state: {
-          subject: activeModal.subject?.name,
-          lendaId: activeModal.subject?.id,
-          yearId,
-        },
-      });
-      setActiveModal({ open: false, subject: null });
-    } else if (choice === 'project') {
-      navigate('/student/dorzimiProjektit', {
-        state: {
-          subject: activeModal.subject?.name,
-          lendaId: activeModal.subject?.id,
-          yearId,
-        },
-      });
-      setActiveModal({ open: false, subject: null });
-    } else {
-      // Placeholder for deadlines route
-      setActiveModal({ open: false, subject: null });
-    }
-  }, [activeModal.subject, navigate, yearId]);
-
-  const handleBack = useCallback(() => navigate('/student'), [navigate]);
-
-  const renderStateBanner = () => {
-    if (status.loading) {
-      return (
-        <div style={{ ...bannerStyle, background: 'rgba(79,124,130,0.35)', borderColor: 'rgba(184,227,233,0.25)' }}>
-          Po ngarkohen të dhënat...
-        </div>
-      );
-    }
-
-    if (status.error) {
-      return (
-        <div style={{ ...bannerStyle, background: 'rgba(255,82,82,0.1)', borderColor: 'rgba(255,82,82,0.4)' }}>
-          {status.error}
-        </div>
-      );
-    }
-
-    if (!yearData) {
-      return (
-        <div style={{ ...bannerStyle, background: 'rgba(255,255,255,0.05)' }}>
-          Nuk ekzistojnë të dhëna për këtë vit.
-        </div>
-      );
-    }
-
-    return null;
-  };
-
   return (
     <div style={pageStyle} className="student-theme">
       {/* TEST: Shfaq vitiStudimeve */}
@@ -564,20 +575,27 @@ const Lendet = () => {
                           marginBottom: 8,
                           border: picked ? '1px solid rgba(184,227,233,0.6)' : '1px solid rgba(184,227,233,0.25)',
                           color: '#B8E3E9',
-                          cursor: 'pointer'
+                          cursor: canInteractWithYear ? 'pointer' : 'not-allowed',
+                          opacity: canInteractWithYear ? 1 : 0.6
                         }}
                         role="button"
-                        tabIndex={0}
-                        onClick={() => handleElectiveToggle(elective)}
-                        onKeyDown={(event) => {
+                        tabIndex={canInteractWithYear ? 0 : -1}
+                        onClick={canInteractWithYear ? () => handleElectiveToggle(elective) : undefined}
+                        onKeyDown={canInteractWithYear ? (event) => {
                           if (event.key === 'Enter' || event.key === ' ') {
                             event.preventDefault();
                             handleElectiveToggle(elective);
                           }
-                        }}
+                        } : undefined}
+                        aria-disabled={!canInteractWithYear}
                       >
                         {elective.name}
                         {picked && <span style={{ display: 'block', fontSize: 12, marginTop: 4, color: '#B8E3E9' }}>E zgjedhur</span>}
+                        {!canInteractWithYear && (
+                          <span style={{ display: 'block', fontSize: 12, marginTop: 4, color: '#fbd38d' }}>
+                            Vetëm shikim
+                          </span>
+                        )}
                       </div>
                     );
                   })}
@@ -653,20 +671,65 @@ const Lendet = () => {
                     ...subjectItem,
                     border: '1px solid rgba(184,227,233,0.6)',
                     color: '#B8E3E9',
-                    cursor: 'pointer'
+                    cursor: canInteractWithYear ? 'pointer' : 'not-allowed',
+                    opacity: canInteractWithYear ? 1 : 0.6,
+                    position: 'relative'
                   }}
                   role="button"
-                  tabIndex={0}
-                  onClick={() => openSubjectModal({ ...course, isElective: true })}
-                  onKeyDown={(event) => {
+                  tabIndex={canInteractWithYear ? 0 : -1}
+                  onClick={canInteractWithYear ? () => openSubjectModal({ ...course, isElective: true }) : undefined}
+                  onKeyDown={canInteractWithYear ? (event) => {
                     if (event.key === 'Enter' || event.key === ' ') {
                       event.preventDefault();
                       openSubjectModal({ ...course, isElective: true });
                     }
-                  }}
+                  } : undefined}
+                  aria-disabled={!canInteractWithYear}
                 >
+                  {canInteractWithYear && (
+                    <button
+                      style={{
+                        position: 'absolute',
+                        top: 6,
+                        right: 6,
+                        width: 22,
+                        height: 22,
+                        borderRadius: 11,
+                        background: 'rgba(255,82,82,0.2)',
+                        border: '1px solid rgba(255,82,82,0.5)',
+                        color: '#ff5252',
+                        fontSize: 14,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: 0,
+                        lineHeight: 1,
+                        transition: 'all 0.2s ease'
+                      }}
+                      onClick={(e) => handleRemoveElective(e, course)}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(255,82,82,0.4)';
+                        e.currentTarget.style.borderColor = 'rgba(255,82,82,0.8)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'rgba(255,82,82,0.2)';
+                        e.currentTarget.style.borderColor = 'rgba(255,82,82,0.5)';
+                      }}
+                      title="Hiq lëndën zgjedhore"
+                      aria-label="Hiq lëndën zgjedhore"
+                    >
+                      ✕
+                    </button>
+                  )}
                   {course.name}
                   <span style={{ fontSize: 12, display: 'block', marginTop: 4, color: '#B8E3E9' }}>Zgjedhore</span>
+                  {!canInteractWithYear && (
+                    <span style={{ display: 'block', fontSize: 12, marginTop: 4, color: '#fbd38d' }}>
+                      Vetëm shikim
+                    </span>
+                  )}
                 </div>
               ))}
             </div>

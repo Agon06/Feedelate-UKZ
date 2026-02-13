@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getStudentIdeas, createStudentIdea, updateStudentIdea, deleteStudentIdea } from '../services/studentApi';
+import { getStudentIdeas, createStudentIdea, updateStudentIdea, deleteStudentIdea, getIdeaFeedback } from '../services/studentApi';
 import './Ide.css';
 import './StudentTheme.css';
 
@@ -36,6 +36,22 @@ const IdeaPage = () => {
   const [isDeletingId, setIsDeletingId] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [confirmDialog, setConfirmDialog] = useState({ open: false, message: '', onConfirm: null });
+  // Feedback modal state
+  const [feedbackModal, setFeedbackModal] = useState({ open: false, feedback: '', loading: false, error: null, idea: null });
+
+  // Fetch feedback when modal opens
+  useEffect(() => {
+    if (feedbackModal.open && feedbackModal.idea && feedbackModal.loading) {
+      (async () => {
+        try {
+          const res = await getIdeaFeedback(feedbackModal.idea.id);
+          setFeedbackModal((prev) => ({ ...prev, feedback: res.feedback || '', loading: false, error: null }));
+        } catch (err) {
+          setFeedbackModal((prev) => ({ ...prev, feedback: '', loading: false, error: err?.message || 'Nuk u lexua feedback-u.' }));
+        }
+      })();
+    }
+  }, [feedbackModal.open, feedbackModal.idea, feedbackModal.loading, STUDENT_ID]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -398,6 +414,13 @@ const IdeaPage = () => {
                       >
                         {isDeletingId === idea.id ? 'Duke fshirë...' : 'Fshi'}
                       </button>
+                      <button
+                        type="button"
+                        style={actionButton}
+                        onClick={() => setFeedbackModal({ open: true, feedback: '', loading: true, error: null, idea })}
+                      >
+                        Feedback
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -606,6 +629,99 @@ const IdeaPage = () => {
           </div>
         </div>
       )}
+
+      {/* Feedback Modal */}
+      {feedbackModal.open && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.7)',
+          zIndex: 2000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1rem'
+        }}>
+          <div style={{
+            background: '#0B2E33',
+            border: '1px solid rgba(184,227,233,0.2)',
+            borderRadius: 20,
+            padding: '2rem',
+            minWidth: 320,
+            maxWidth: 500,
+            width: '100%',
+            boxShadow: '0 25px 60px rgba(0,0,0,0.55)',
+            position: 'relative'
+          }}>
+            <button
+              style={{
+                position: 'absolute',
+                top: 12,
+                right: 12,
+                background: 'transparent',
+                border: '1px solid rgba(184,227,233,0.25)',
+                color: '#B8E3E9',
+                fontSize: 22,
+                cursor: 'pointer',
+                borderRadius: 20,
+                width: 36,
+                height: 36,
+                transition: 'all 0.2s ease'
+              }}
+              onClick={() => setFeedbackModal({ open: false, feedback: '', loading: false, error: null, idea: null })}
+              aria-label="Mbyll feedback"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(184,227,233,0.1)';
+                e.currentTarget.style.borderColor = 'rgba(184,227,233,0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.borderColor = 'rgba(184,227,233,0.25)';
+              }}
+            >
+              ✕
+            </button>
+            <h3 style={{ color: '#B8E3E9', marginBottom: 20, fontSize: 20, textAlign: 'center', fontWeight: 700 }}>
+              Feedback nga Profesori
+            </h3>
+            {feedbackModal.loading ? (
+              <div style={{ color: '#B8E3E9', textAlign: 'center', padding: '2rem 0', opacity: 0.8 }}>
+                Duke lexuar feedback...
+              </div>
+            ) : feedbackModal.error ? (
+              <div style={{ 
+                color: '#ffc6c6',
+                background: 'rgba(255,82,82,0.1)',
+                border: '1px solid rgba(255,82,82,0.4)',
+                borderRadius: 12,
+                textAlign: 'center',
+                padding: '1.5rem',
+                marginTop: '1rem'
+              }}>
+                {feedbackModal.error}
+              </div>
+            ) : (
+              <div style={{ 
+                color: '#B8E3E9',
+                background: 'rgba(79,124,130,0.2)',
+                border: '1px solid rgba(184,227,233,0.15)',
+                borderRadius: 14,
+                padding: '1.5rem',
+                whiteSpace: 'pre-line',
+                lineHeight: 1.6,
+                maxHeight: '300px',
+                overflowY: 'auto'
+              }}>
+                {feedbackModal.feedback ? feedbackModal.feedback : 'Nuk ka ende feedback të vendosur për këtë ide.'}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

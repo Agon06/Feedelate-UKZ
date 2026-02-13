@@ -131,6 +131,30 @@ export const deleteStudentDorezim = (studentId, dorezimId) =>
     method: 'DELETE',
   });
 
+// Lëndet zgjedhore
+export const getStudentElectives = (studentId, yearId) => {
+  const params = new URLSearchParams();
+  if (yearId) {
+    params.set('yearId', yearId);
+  }
+  const query = params.toString();
+  return request(`/studentet/${studentId}/zgjedhore${query ? `?${query}` : ''}`);
+};
+
+export const addStudentElective = (studentId, lendaId) =>
+  request(`/studentet/${studentId}/zgjedhore`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ lendaId }),
+  });
+
+export const removeStudentElective = (studentId, lendaId) =>
+  request(`/studentet/${studentId}/zgjedhore/${lendaId}`, {
+    method: 'DELETE',
+  });
+
 export default {
   getStudentDashboard,
   getStudentYearData,
@@ -149,4 +173,7 @@ export default {
   createStudentProject,
   updateStudentProject,
   deleteStudentProject,
+  getStudentElectives,
+  addStudentElective,
+  removeStudentElective,
 };

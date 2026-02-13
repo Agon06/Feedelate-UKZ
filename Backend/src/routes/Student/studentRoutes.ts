@@ -13,6 +13,7 @@ import { DorezimiIdes } from "../../entities/Student/dorezimiIdes";
 import { Projekti } from "../../entities/Student/projekti";
 import { dorzimiProjektit } from "../../entities/Student/dorzimiProjektit";
 import { MenaxhimiAfateve } from "../../entities/Student/menaxhimiAfateve";
+import { stdZgjedhore } from "../../entities/Student/stdZgjedhore";
 
 
 const router = Router();
@@ -23,6 +24,7 @@ const dorezimRepository = AppDataSource.getRepository(DorezimiIdes);
 const projektiRepository = AppDataSource.getRepository(Projekti);
 const dorezimProjektitRepository = AppDataSource.getRepository(dorzimiProjektit);
 const menaxhimiAfateveRepository = AppDataSource.getRepository(MenaxhimiAfateve);
+const stdZgjedhoreRepository = AppDataSource.getRepository(stdZgjedhore);
 //e thirr repositorin e testi
 
 
@@ -229,15 +231,159 @@ router.get("/:id/lendet/:yearId", async (req: Request, res: Response) => {
         semester: lenda.semestri,
       }));
 
+    // Merr lëndët zgjedhore që studenti i ka zgjedhur për këtë vit
+    const zgjedhoreRecords = await stdZgjedhoreRepository.find({
+      where: { studentId },
+      relations: ["lenda"],
+    });
+
+    const selectedElectives = zgjedhoreRecords
+      .filter((record) => record.lenda?.viti === yearParam && record.lenda?.isZgjedhore)
+      .map((record) => ({
+        id: record.lenda.id,
+        name: record.lenda.emriLendes,
+        semester: record.lenda.semestri,
+      }));
+
     res.json({
       student: formatStudentSummary(student),
       year: { id: String(yearParam), title: getYearLabel(yearParam) },
       semesters: semestersPayload,
       electives,
-      selectedElectives: [],
+      selectedElectives,
     });
   } catch (error) {
     res.status(500).json({ message: "Error fetching lendet", error });
+  }
+});
+
+// ================= LËNDET ZGJEDHORE ENDPOINTS =================
+
+// GET: Merr listen e lëndëve zgjedhore që studenti i ka zgjedhur
+router.get("/:id/zgjedhore", async (req: Request, res: Response) => {
+  const studentId = Number(req.params.id);
+  const yearParam = req.query.yearId ? Number(req.query.yearId) : undefined;
+
+  if (Number.isNaN(studentId)) {
+    return res.status(400).json({ message: "Student id is invalid" });
+  }
+
+  try {
+    const student = await studentRepository.findOneBy({ id: studentId });
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const zgjedhoreRecords = await stdZgjedhoreRepository.find({
+      where: { studentId },
+      relations: ["lenda"],
+    });
+
+    // Filter by year if provided
+    let filteredRecords = zgjedhoreRecords;
+    if (yearParam && !Number.isNaN(yearParam)) {
+      filteredRecords = zgjedhoreRecords.filter((record) => record.lenda?.viti === yearParam);
+    }
+
+    const selectedElectives = filteredRecords.map((record) => ({
+      id: record.lenda.id,
+      name: record.lenda.emriLendes,
+      semester: record.lenda.semestri,
+      year: record.lenda.viti,
+      isElective: record.lenda.isZgjedhore,
+    }));
+
+    res.json(selectedElectives);
+  } catch (error) {
+    console.error("Error fetching zgjedhore:", error);
+    res.status(500).json({ message: "Error fetching zgjedhore", error: String(error) });
+  }
+});
+
+// POST: Shto një lëndë zgjedhore për studentin
+router.post("/:id/zgjedhore", async (req: Request, res: Response) => {
+  const studentId = Number(req.params.id);
+  const { lendaId } = req.body;
+
+  if (Number.isNaN(studentId)) {
+    return res.status(400).json({ message: "Student id is invalid" });
+  }
+
+  const parsedLendaId = Number(lendaId);
+  if (!parsedLendaId || Number.isNaN(parsedLendaId)) {
+    return res.status(400).json({ message: "lendaId është i detyrueshëm" });
+  }
+
+  try {
+    const student = await studentRepository.findOneBy({ id: studentId });
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const lenda = await lendeRepository.findOneBy({ id: parsedLendaId });
+    if (!lenda) {
+      return res.status(404).json({ message: "Lënda nuk u gjet" });
+    }
+
+    if (!lenda.isZgjedhore) {
+      return res.status(400).json({ message: "Kjo lëndë nuk është zgjedhore" });
+    }
+
+    // Kontrollo nëse ekziston tashmë
+    const existing = await stdZgjedhoreRepository.findOne({
+      where: { studentId, lendaId: parsedLendaId },
+    });
+
+    if (existing) {
+      return res.status(400).json({ message: "Kjo lëndë zgjedhore është zgjedhur tashmë" });
+    }
+
+    const zgjedhore = stdZgjedhoreRepository.create({
+      studentId,
+      lendaId: parsedLendaId,
+    });
+
+    await stdZgjedhoreRepository.save(zgjedhore);
+
+    res.status(201).json({
+      message: "Lënda zgjedhore u shtua me sukses",
+      elective: {
+        id: lenda.id,
+        name: lenda.emriLendes,
+        semester: lenda.semestri,
+        year: lenda.viti,
+      },
+    });
+  } catch (error) {
+    console.error("Error adding zgjedhore:", error);
+    res.status(500).json({ message: "Error adding zgjedhore", error: String(error) });
+  }
+});
+
+// DELETE: Largo një lëndë zgjedhore për studentin
+router.delete("/:id/zgjedhore/:lendaId", async (req: Request, res: Response) => {
+  const studentId = Number(req.params.id);
+  const lendaId = Number(req.params.lendaId);
+
+  if (Number.isNaN(studentId) || Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: "Invalid IDs" });
+  }
+
+  try {
+    const zgjedhore = await stdZgjedhoreRepository.findOne({
+      where: { studentId, lendaId },
+    });
+
+    if (!zgjedhore) {
+      return res.status(404).json({ message: "Lënda zgjedhore nuk u gjet" });
+    }
+
+    await stdZgjedhoreRepository.remove(zgjedhore);
+
+    res.json({ message: "Lënda zgjedhore u largua me sukses" });
+  } catch (error) {
+    console.error("Error removing zgjedhore:", error);
+    res.status(500).json({ message: "Error removing zgjedhore", error: String(error) });
   }
 });
 
