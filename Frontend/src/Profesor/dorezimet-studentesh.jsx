@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import JSZip from 'jszip';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { getStudentProjectSubmissions, updateProjectGrade, updateProjectMaxPoints, updateProjectDeadline, addInstructionTemplate, getInstructionTemplates, updateInstructionTemplate, deleteInstructionTemplate, uploadLendaTemplate, getLendaTemplateInfo, deleteLendaTemplate } from '../services/profesorApi';
+import { getStudentProjectSubmissions, updateProjectGrade, updateProjectMaxPoints, updateProjectDeadline, addInstructionTemplate, getInstructionTemplates, updateInstructionTemplate, deleteInstructionTemplate, uploadLendaTemplate, getLendaTemplateInfo, deleteLendaTemplate, exportProjectResults } from '../services/profesorApi';
 import '../Student/StudentTheme.css';
 
 const DoreziметStudentesh = () => {
@@ -289,6 +289,15 @@ const DoreziметStudentesh = () => {
       alert('Pikët totale u përditësuan!');
     } catch (error) {
       alert('Error: ' + (error.message || 'Nuk u ruajtën pikët totale'));
+    }
+  };
+
+  const handleExportResults = async () => {
+    try {
+      await exportProjectResults(PROFESOR_ID);
+      alert('Rezultatet u shkarkuan me sukses!');
+    } catch (error) {
+      alert('Error: ' + (error.message || 'Nuk u shkarkuan rezultatet'));
     }
   };
 
@@ -602,6 +611,20 @@ const DoreziметStudentesh = () => {
             onClick={() => setActiveTab('grades')}
           >
             Pikët
+          </button>
+          <button
+            style={{
+              ...tabButtonStyle(false),
+              background: '#0B2E33',
+              border: '1px solid rgba(184,227,233,0.35)',
+              color: '#B8E3E9',
+              fontWeight: 700,
+              marginTop: '1rem'
+            }}
+            onClick={handleExportResults}
+            title="Shkarko rezultatet në Excel/CSV"
+          >
+            📥 Eksporto Rezultatet
           </button>
           <button
             style={sidebarBackButtonStyle}

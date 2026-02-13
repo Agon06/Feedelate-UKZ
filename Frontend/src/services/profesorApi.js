@@ -251,6 +251,29 @@ export const addFeedbackToSubmission = (profesorId, dorezimId, feedbackData) =>
     body: JSON.stringify(feedbackData),
   });
 
+// Eksporto rezultatet e projekteve në CSV
+export const exportProjectResults = async (profesorId) => {
+  const response = await fetch(`${API_BASE_URL}/profesoret/${profesorId}/projekti/export-results`, {
+    method: 'GET',
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'Error exporting results' }));
+    throw new Error(error.message || 'Error exporting results');
+  }
+
+  // Shkarko file-in
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `rezultate-projektet-${Date.now()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+};
+
 export default {
   getProfesorDashboard,
   getProfesorYearData,
@@ -281,4 +304,5 @@ export default {
   updateInstructionTemplate,
   deleteInstructionTemplate,
   addFeedbackToSubmission,
+  exportProjectResults,
 };

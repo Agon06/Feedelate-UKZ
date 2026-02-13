@@ -1396,4 +1396,75 @@ router.delete("/:id/lendet/:lendaId/template", async (req: Request, res: Respons
   }
 });
 
+// ============ EKSPORTI I REZULTATEVE TË PROJEKTEVE ============
+
+// GET: Eksporto rezultatet e të gjitha projekteve në CSV
+router.get("/:id/projekti/export-results", async (req: Request, res: Response) => {
+  const profesorId = Number(req.params.id);
+  
+  if (Number.isNaN(profesorId)) {
+    return res.status(400).json({ message: "Profesor id is invalid" });
+  }
+
+  try {
+    const profesor = await profesorRepository.findOneBy({ id: profesorId });
+    if (!profesor) {
+      return res.status(404).json({ message: "Profesor not found" });
+    }
+
+    // Merr të gjitha lëndët e profesorit përmes mapping-ut
+    const mappings = await mappingRepository.find({
+      where: { profesorId },
+      relations: ["lendet"],
+    });
+
+    if (!mappings || mappings.length === 0) {
+      return res.status(404).json({ message: "Nuk keni asnjë lëndë të regjistruar" });
+    }
+
+    const lendaIds = mappings.map((m) => m.lendetId);
+
+    // Merr të gjitha dorëzimet e projekteve për këto lëndë
+    const dorezime = await dorezimProjektitRepository.find({
+      where: lendaIds.map((lendaId) => ({ lenda: { id: lendaId } })),
+      relations: ["student", "lenda"],
+      order: { lenda: { id: "ASC" }, student: { mbiemri: "ASC" } },
+    });
+
+    if (!dorezime || dorezime.length === 0) {
+      return res.status(404).json({ message: "Nuk ka dorëzime projektesh për lëndët tuaja" });
+    }
+
+    // Krijo CSV content
+    const csvHeader = "Emri,Mbiemri,Emri i Projekti,Lënda,Pikët,Statusi,Data e Dorëzimit\n";
+    
+    const csvRows = dorezime.map((d) => {
+      const emri = d.student?.emri || "N/A";
+      const mbiemri = d.student?.mbiemri || "N/A";
+      const emriProjekti = d.fileName || "N/A";
+      const lenda = d.lenda?.emriLendes || "N/A";
+      const piket = d.piket || 0;
+      const statusi = d.statusi || "N/A";
+      const dataDorezimit = d.createdAt 
+        ? new Date(d.createdAt).toLocaleDateString("sq-AL")
+        : "N/A";
+
+      return `"${emri}","${mbiemri}","${emriProjekti}","${lenda}",${piket},"${statusi}","${dataDorezimit}"`;
+    }).join("\n");
+
+    const csvContent = csvHeader + csvRows;
+
+    // Vendos headers për download
+    const fileName = `rezultate-projektet-${Date.now()}.csv`;
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+    
+    // Shto BOM për UTF-8 që të shfaqen karakteret shqip saktë në Excel dhe dërgo CSV
+    res.send("\uFEFF" + csvContent);
+  } catch (error) {
+    console.error("Error exporting results:", error);
+    res.status(500).json({ message: "Error exporting results", error: String(error) });
+  }
+});
+
 export default router;
