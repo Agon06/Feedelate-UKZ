@@ -11,6 +11,7 @@ const isGoogleConfigured = process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CL
 router.get(
   "/google",
   (req, res, next) => {
+    console.log('✅ /google route hit:', req.query);
     if (!isGoogleConfigured) {
       return res.status(503).json({ 
         error: "SSO_NOT_CONFIGURED",
@@ -40,6 +41,7 @@ router.get(
 router.get(
   "/google/callback",
   (req: Request, res: Response, next) => {
+    console.log('✅ /google/callback route hit:', { query: req.query, hasUser: !!req.user });
     if (!isGoogleConfigured) {
       const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
       return res.redirect(`${frontendUrl}/login?error=sso_not_configured`);
@@ -74,10 +76,12 @@ router.get(
     (req as any).academicYear = academicYear;
     (req as any).studentCardId = studentCardId;
     passport.authenticate("google", async (err: any, user: any) => {
+      console.log('✅ Passport authentication result:', { hasError: !!err, hasUser: !!user });
       if (err || !user) {
+        console.error('❌ Authentication error:', err);
         const message = err?.message || "auth_failed";
         if (isPopup) {
-          const script = `<!DOCTYPE html><html><head><meta charset=\"utf-8\" /><title>Auth error</title></head><body><script>(function(){try{var msg=${JSON.stringify(message)};var target='${frontendUrl}';if(window.opener){window.opener.postMessage({type:'auth-error', message: msg}, target);}window.close();}catch(e){console.error(e);}})();<\/script></body></html>`;
+          const script = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Auth Error</title></head><body style="font-family:Arial;padding:20px;text-align:center;"><h2 style="color:red;">❌ Error</h2><p>${message}</p><script>try{if(window.opener&&!window.opener.closed){window.opener.postMessage({type:"auth-error",message:"${message}"},"*")}setTimeout(function(){window.close()},2000)}catch(e){window.close()}<\/script></body></html>`;
           return res.send(script);
         }
         return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent(message)}`);
@@ -87,7 +91,7 @@ router.get(
         if (loginErr) {
           const message = loginErr.message || "auth_failed";
           if (isPopup) {
-            const script = `<!DOCTYPE html><html><head><meta charset=\"utf-8\" /><title>Auth error</title></head><body><script>(function(){try{var msg=${JSON.stringify(message)};var target='${frontendUrl}';if(window.opener){window.opener.postMessage({type:'auth-error', message: msg}, target);}window.close();}catch(e){console.error(e);}})();<\/script></body></html>`;
+            const script = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Auth Error</title></head><body style="font-family:Arial;padding:20px;text-align:center;"><h2 style="color:red;">❌ Error</h2><p>${message}</p><script>try{if(window.opener&&!window.opener.closed){window.opener.postMessage({type:"auth-error",message:"${message}"},"*")}setTimeout(function(){window.close()},2000)}catch(e){window.close()}<\/script></body></html>`;
             return res.send(script);
           }
           return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent(message)}`);
@@ -117,6 +121,7 @@ router.get(
         (req.session as any).user = user;
 
         if (isPopup) {
+          console.log('✅ Popup login successful, sending postMessage for user:', user.email);
           const payload = {
             user: {
               id: user.id,
@@ -129,7 +134,7 @@ router.get(
             },
             type: user.type,
           };
-          const script = `<!DOCTYPE html><html><head><meta charset=\"utf-8\" /><title>Signing in...</title></head><body><script>(function(){try{var payload=${JSON.stringify(payload)};var target='${frontendUrl}';if(window.opener){window.opener.postMessage({type:'auth', payload: payload}, target);}window.close();}catch(e){console.error(e);}})();<\/script></body></html>`;
+          const script = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Signing in...</title></head><body style="font-family:Arial;padding:20px;text-align:center;"><script>try{if(window.opener&&!window.opener.closed){window.opener.postMessage({type:"auth",payload:${JSON.stringify(payload)}},"*");setTimeout(function(){window.close()},100)}else{window.close()}}catch(e){console.error(e);window.close()}<\/script></body></html>`;
           return res.send(script);
         }
 

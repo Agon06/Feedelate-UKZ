@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, redirect } from 'react-router-dom';
 import { getStudentById } from '../services/studentApi';
 
 
@@ -68,10 +68,10 @@ const Login = () => {
 
     // Listen for popup postMessage from backend
     const onMessage = (event) => {
-      // Ensure message comes from backend origin
-      if (event.origin !== 'http://localhost:5000') return;
+      // console.log('Message received from:', event.origin);
       const data = event.data;
       if (data && data.type === 'auth' && data.payload) {
+        // console.log('Auth payload received:', data.payload);
         const { user, type } = data.payload;
         try {
           localStorage.setItem('authenticated', 'true');
@@ -86,7 +86,6 @@ const Login = () => {
                 navigate('/student', { replace: true });
               })
               .catch(() => {
-                // fallback if fetch fails
                 localStorage.setItem('student', JSON.stringify(user));
                 localStorage.removeItem('profesor');
                 localStorage.removeItem('admin');
@@ -102,15 +101,12 @@ const Login = () => {
             localStorage.removeItem('student');
             localStorage.removeItem('profesor');
             navigate('/admin', { replace: true });
-          } else {
-            localStorage.setItem('student', JSON.stringify(user));
-            navigate('/login');
           }
         } catch (err) {
+          // console.error('Error processing login:', err);
           setError('Failed to process login data.');
         }
       } else if (data && data.type === 'auth-error') {
-        // Show error on main page
         setError(data.message || 'Authentication failed.');
       }
     };
