@@ -25,7 +25,7 @@ const AdminProfessorManagement = () => {
 
     useEffect(() => {
         // Load user data from localStorage
-        const student = localStorage.getItem('student');
+        const student = localStorage.getItem('admin') || localStorage.getItem('student');
         if (student) {
             try {
                 const userData = JSON.parse(student);

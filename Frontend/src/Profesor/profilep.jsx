@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 const Profilep = () => {
     const navigate = useNavigate();
-    const student = JSON.parse(localStorage.getItem('student') || '{}');
+    const student = JSON.parse(localStorage.getItem('profesor') || localStorage.getItem('student') || '{}');
     const PROFESOR_ID = student.id || 1;
     const [profesorData, setProfesorData] = useState(null);
     const [loading, setLoading] = useState(true);

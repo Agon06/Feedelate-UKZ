@@ -3,7 +3,7 @@ import { getProfesorProjects, createProfesorProject, deleteProfesorProject } fro
 import '../Student/StudentTheme.css';
 
 const Projektip = () => {
-  const student = JSON.parse(localStorage.getItem('student') || '{}');
+  const student = JSON.parse(localStorage.getItem('profesor') || localStorage.getItem('student') || '{}');
   const PROFESOR_ID = student.id || 1;
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -31,7 +31,7 @@ const Dorezimip = () => {
       if (!lendaId) return;
       
       try {
-        const student = JSON.parse(localStorage.getItem('student') || '{}');
+        const student = JSON.parse(localStorage.getItem('profesor') || localStorage.getItem('student') || '{}');
         const PROFESOR_ID = student.id || 1;
         const data = await getProfesorTemplate(PROFESOR_ID, lendaId);
         console.log('Template fetched:', data);

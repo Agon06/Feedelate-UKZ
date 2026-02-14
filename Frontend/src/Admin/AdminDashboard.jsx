@@ -9,8 +9,8 @@ const AdminDashboard = () => {
     const [avatarLetter, setAvatarLetter] = useState('A');
 
     useEffect(() => {
-        // Load user data from localStorage
-        const student = localStorage.getItem('student');
+        // Load user data from localStorage - try admin first, fallback to student
+        const student = localStorage.getItem('admin') || localStorage.getItem('student');
         if (student) {
             try {
                 const userData = JSON.parse(student);

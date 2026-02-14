@@ -10,8 +10,8 @@ const AcademicYearSelection = () => {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // Load user data from localStorage
-    const student = localStorage.getItem('student');
+    // Load user data from localStorage - try profesor first, fallback to student
+    const student = localStorage.getItem('profesor') || localStorage.getItem('student');
     if (student) {
       try {
         const userData = JSON.parse(student);

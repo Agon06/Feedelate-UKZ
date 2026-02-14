@@ -10,11 +10,11 @@ const ProfesorDashboard = () => {
   const [avatarLetter, setAvatarLetter] = useState('P');
 
   useEffect(() => {
-    // Load user data from localStorage
-    const student = localStorage.getItem('student');
-    if (student) {
+    // Load user data from localStorage - try profesor first, fallback to student for compatibility
+    const storedUser = localStorage.getItem('profesor') || localStorage.getItem('student');
+    if (storedUser) {
       try {
-        const userData = JSON.parse(student);
+        const userData = JSON.parse(storedUser);
         const firstName = userData.emri || 'Profesor';
         const lastName = userData.mbiemri || '';
         const fullName = `${firstName} ${lastName}`.trim();
@@ -85,7 +85,7 @@ const ProfesorDashboard = () => {
   const backButtonStyle = {
     background: 'none',
     border: 'none',
-    color: '#17c77a',
+    color: '#B8E3E9',
     fontSize: isMobile ? 20 : 24,
     cursor: 'pointer',
     display: 'flex',
@@ -112,7 +112,7 @@ const ProfesorDashboard = () => {
     width: 42,
     height: 42,
     borderRadius: 21,
-    background: '#525252',
+    background: '#4F7C82',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

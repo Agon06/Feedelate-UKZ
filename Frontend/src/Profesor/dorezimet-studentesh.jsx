@@ -9,7 +9,7 @@ const DoreziметStudentesh = () => {
   const location = useLocation();
   const { subject, lendaId } = location.state || {};
 
-  const student = JSON.parse(localStorage.getItem('student') || '{}');
+  const student = JSON.parse(localStorage.getItem('profesor') || localStorage.getItem('student') || '{}');
   const PROFESOR_ID = student.id || 1;
   const [submissions, setSubmissions] = useState([]);
   const [status, setStatus] = useState({ loading: true, error: null });
@@ -20,6 +20,15 @@ const DoreziметStudentesh = () => {
   const [showBulkGrade, setShowBulkGrade] = useState(false);
   const [bulkGradeValue, setBulkGradeValue] = useState('');
   const [projectMaxPoints, setProjectMaxPoints] = useState(100);
+  
+  // Project deadline management - new system like ideas
+  const [projectDeadline, setProjectDeadline] = useState({ start: '', end: '', title: '' });
+  const [projectDeadlinesList, setProjectDeadlinesList] = useState([]);
+  const [showDeadlineForm, setShowDeadlineForm] = useState(false);
+  const [selectedDeadlineIndex, setSelectedDeadlineIndex] = useState(null);
+  const [deadlineStatus, setDeadlineStatus] = useState({ loading: true, saving: false, error: null, message: null });
+  
+  // Old deadline states - keeping for compatibility during transition
   const [showDeadline, setShowDeadline] = useState(false);
   const [deadlineStartDate, setDeadlineStartDate] = useState('');
   const [deadlineStartHour, setDeadlineStartHour] = useState('');
@@ -77,6 +86,41 @@ const DoreziметStudentesh = () => {
     return `${dateObj.getFullYear()}-${pad2(dateObj.getMonth() + 1)}-${pad2(dateObj.getDate())}T${pad2(dateObj.getHours())}:${pad2(dateObj.getMinutes())}:${pad2(dateObj.getSeconds())}`;
   };
 
+  // New helper functions for project deadline management (like ideas)
+  const setProjectDatePart = (field, dateStr) => {
+    if (!dateStr) {
+      setProjectDeadline((prev) => ({ ...prev, [field]: '' }));
+      return;
+    }
+    const defaultTime = field === 'end' ? '23:59' : '00:00';
+    setProjectDeadline((prev) => ({ ...prev, [field]: `${dateStr}T${defaultTime}` }));
+  };
+
+  const get24hParts = (value) => {
+    if (!value) return { hour: '00', minute: '00' };
+    const parts = value.split('T')[1];
+    if (!parts) return { hour: '00', minute: '00' };
+    const [h, m] = parts.split(':');
+    return { hour: pad2(Number(h) || 0), minute: pad2(Number(m) || 0) };
+  };
+
+  const setProjectTime24 = (field, hourStr, minuteStr) => {
+    const h = pad2(Math.min(Math.max(Number(hourStr) || 0, 0), 23));
+    const m = pad2(Math.min(Math.max(Number(minuteStr) || 0, 0), 59));
+    setProjectDeadline((prev) => {
+      const current = prev[field];
+      const datePart = current?.split('T')[0] || new Date().toISOString().slice(0, 10);
+      return { ...prev, [field]: `${datePart}T${h}:${m}` };
+    });
+  };
+
+  const formatProjectDateDisplay = (value) => {
+    if (!value) return 'Nuk është caktuar';
+    const [datePart, timePart] = value.split('T');
+    const timeClean = (timePart ?? '').slice(0, 5);
+    return timeClean ? `${datePart} ${timeClean}`.trim() : datePart;
+  };
+
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
     onResize();
@@ -117,7 +161,22 @@ const DoreziметStudentesh = () => {
         setDeadlineEndMinute(endTimeParts.m);
         setDeadlineEndSecond(endTimeParts.s);
 
+        // Load new project deadlines list (from JSON field in database)
+        if (Array.isArray(data?.lenda?.projectDeadlinesJson) && data.lenda.projectDeadlinesJson.length > 0) {
+          setProjectDeadlinesList(data.lenda.projectDeadlinesJson);
+        } else if (startDateIso && endDateIso) {
+          // Migrate old single deadline to new system
+          setProjectDeadlinesList([{
+            title: 'Afat i projektit',
+            start: startDateIso.slice(0, 16),
+            end: endDateIso.slice(0, 16)
+          }]);
+        } else {
+          setProjectDeadlinesList([]);
+        }
+
         setStatus({ loading: false, error: null });
+        setDeadlineStatus({ loading: false, saving: false, error: null, message: null });
       } catch (error) {
         if (!isMounted) return;
         setStatus({
@@ -294,7 +353,17 @@ const DoreziметStudentesh = () => {
 
   const handleExportResults = async () => {
     try {
-      await exportProjectResults(PROFESOR_ID);
+      // Export with current lenda and selected period filter
+      await exportProjectResults(PROFESOR_ID, lendaId, selectedPeriod, {
+        deadlineStartDate,
+        deadlineStartHour,
+        deadlineStartMinute,
+        deadlineStartSecond,
+        deadlineEndDate,
+        deadlineEndHour,
+        deadlineEndMinute,
+        deadlineEndSecond
+      });
       alert('Rezultatet u shkarkuan me sukses!');
     } catch (error) {
       alert('Error: ' + (error.message || 'Nuk u shkarkuan rezultatet'));
@@ -325,7 +394,7 @@ const DoreziметStudentesh = () => {
   useEffect(() => {
     const computed = calculatePeriods();
     setPeriods(computed);
-  }, [calculatePeriods, deadlineStartDate, deadlineEndDate, submissions]);
+  }, [calculatePeriods]);
 
   const filteredSubmissions = useMemo(() => {
     if (!selectedPeriod) return submissions;
@@ -356,6 +425,129 @@ const DoreziметStudentesh = () => {
     });
   }, [submissions, selectedPeriod, periods, deadlineStartDate, deadlineStartHour, deadlineStartMinute, deadlineStartSecond, deadlineEndDate, deadlineEndHour, deadlineEndMinute, deadlineEndSecond]);
 
+  // New handleSaveProjectDeadline - works like ideas
+  const handleSaveProjectDeadline = async () => {
+    if (!lendaId) {
+      setDeadlineStatus({ loading: false, saving: false, error: 'Zgjidh lëndën përpara se të caktosh afatin.', message: null });
+      return;
+    }
+
+    const baseItem = {
+      title: projectDeadline.title?.trim() || 'Afat pa titull',
+      start: projectDeadline.start || '',
+      end: projectDeadline.end || '',
+    };
+
+    if (!baseItem.start || !baseItem.end) {
+      setDeadlineStatus({ loading: false, saving: false, error: 'Plotëso si fillimin ashtu edhe mbarimin e afatit.', message: null });
+      return;
+    }
+
+    const updatedDeadlinesList = (() => {
+      if (selectedDeadlineIndex === null || selectedDeadlineIndex === undefined) {
+        console.log('➕ Adding new project deadline to list');
+        return [...projectDeadlinesList, baseItem];
+      }
+      console.log(`✏️ Updating project deadline at index ${selectedDeadlineIndex}`);
+      return projectDeadlinesList.map((item, idx) => (idx === selectedDeadlineIndex ? baseItem : item));
+    })();
+
+    console.log(`📤 Sending project deadlines to backend:`, { count: updatedDeadlinesList.length, list: updatedDeadlinesList });
+
+    const payload = {
+      projectStartDate: projectDeadline.start ? `${projectDeadline.start}:00` : null,
+      projectDeadline: projectDeadline.end ? `${projectDeadline.end}:00` : null,
+      projectDeadlinesJson: updatedDeadlinesList,
+    };
+
+    if (payload.projectStartDate && payload.projectDeadline && payload.projectStartDate > payload.projectDeadline) {
+      setDeadlineStatus({ loading: false, saving: false, error: 'Data e fillimit duhet të jetë para afatit.', message: null });
+      return;
+    }
+
+    setDeadlineStatus({ loading: false, saving: true, error: null, message: null });
+    try {
+      const response = await updateProjectDeadline(PROFESOR_ID, lendaId, payload);
+      const startValue = response.lenda?.projectStartDate ? response.lenda.projectStartDate.slice(0, 16) : '';
+      const endValue = response.lenda?.projectDeadline ? response.lenda.projectDeadline.slice(0, 16) : '';
+      
+      setProjectDeadline({ start: startValue, end: endValue, title: baseItem.title });
+
+      // Update deadlines list from backend response
+      if (Array.isArray(response.lenda?.projectDeadlinesJson) && response.lenda.projectDeadlinesJson.length > 0) {
+        console.log('✅ Backend returned:', response.lenda.projectDeadlinesJson.length, 'project afate');
+        setProjectDeadlinesList(response.lenda.projectDeadlinesJson);
+      } else {
+        console.log('⚠️ Backend did not return JSON, using local list');
+        setProjectDeadlinesList(updatedDeadlinesList);
+      }
+
+      // Reload periods
+      calculatePeriods();
+
+      // Hide form after saving
+      setShowDeadlineForm(false);
+      setSelectedDeadlineIndex(null);
+
+      setDeadlineStatus({ loading: false, saving: false, error: null, message: 'Afati u ruajt me sukses.' });
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setDeadlineStatus(prev => ({ ...prev, message: null }));
+      }, 3000);
+    } catch (error) {
+      setDeadlineStatus({ loading: false, saving: false, error: error?.message ?? 'Nuk u ruajt afati.', message: null });
+    }
+  };
+
+  const handleClearProjectDeadline = async () => {
+    if (!lendaId) {
+      setDeadlineStatus({ loading: false, saving: false, error: 'Zgjidh lëndën përpara.', message: null });
+      return;
+    }
+
+    if (selectedDeadlineIndex === null || selectedDeadlineIndex === undefined) {
+      setDeadlineStatus({ loading: false, saving: false, error: 'Zgjidh një afat për ta fshirë.', message: null });
+      return;
+    }
+
+    const updatedDeadlinesList = projectDeadlinesList.filter((_, idx) => idx !== selectedDeadlineIndex);
+    console.log(`🗑️ Removing project deadline at index ${selectedDeadlineIndex}`, { remaining: updatedDeadlinesList.length });
+
+    const payload = {
+      projectStartDate: updatedDeadlinesList.length > 0 ? updatedDeadlinesList[updatedDeadlinesList.length - 1].start + ':00' : null,
+      projectDeadline: updatedDeadlinesList.length > 0 ? updatedDeadlinesList[updatedDeadlinesList.length - 1].end + ':00' : null,
+      projectDeadlinesJson: updatedDeadlinesList,
+    };
+
+    setDeadlineStatus({ loading: false, saving: true, error: null, message: null });
+    try {
+      const response = await updateProjectDeadline(PROFESOR_ID, lendaId, payload);
+      
+      if (Array.isArray(response.lenda?.projectDeadlinesJson)) {
+        setProjectDeadlinesList(response.lenda.projectDeadlinesJson);
+      } else {
+        setProjectDeadlinesList(updatedDeadlinesList);
+      }
+
+      setProjectDeadline({ start: '', end: '', title: '' });
+      setShowDeadlineForm(false);
+      setSelectedDeadlineIndex(null);
+
+      // Reload periods
+      calculatePeriods();
+
+      setDeadlineStatus({ loading: false, saving: false, error: null, message: 'Afati u fshi me sukses.' });
+      
+      setTimeout(() => {
+        setDeadlineStatus(prev => ({ ...prev, message: null }));
+      }, 3000);
+    } catch (error) {
+      setDeadlineStatus({ loading: false, saving: false, error: error?.message ?? 'Nuk u fshi afati.', message: null });
+    }
+  };
+
+  // Old handleSetDeadline - keeping for compatibility
   const handleSetDeadline = async () => {
     const startDate = parseDateParts(deadlineStartDate, deadlineStartHour, deadlineStartMinute, deadlineStartSecond);
     const endDate = parseDateParts(deadlineEndDate, deadlineEndHour, deadlineEndMinute, deadlineEndSecond);
@@ -1228,243 +1420,304 @@ const DoreziметStudentesh = () => {
             </div>
           )}
 
-          {/* DEADLINE TAB */}
+          {/* DEADLINE TAB - NEW SYSTEM LIKE IDEAS */}
           {activeTab === 'deadline' && (
-            <div style={{ maxWidth: 740, margin: '0 auto', width: '100%' }}>
-              <h2 style={{ margin: '0 0 1.5rem 0', color: '#B8E3E9', textAlign: 'center' }}>Afati i Dorëzimit</h2>
-              {status.error ? (
-                <div style={{ ...bannerStyle, background: 'rgba(220, 38, 38, 0.1)', color: '#ff6b6b' }}>
-                  {status.error}
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  <div style={{ background: 'rgba(184,227,233,0.12)', padding: '1rem', borderRadius: 10, border: '1px solid rgba(184,227,233,0.35)' }}>
-                    <div style={{ fontWeight: 600, color: '#B8E3E9', marginBottom: '0.75rem' }}>Informacioni Aktual</div>
-                    {bannerStartDate && bannerEndDate ? (
-                      <div style={{ fontSize: 14, lineHeight: 1.6, color: 'rgba(184,227,233,0.9)' }}>
-                        <div>Fillon: {bannerStartDate.toLocaleString('sq-AL')}</div>
-                        <div>Përfundon: {bannerEndDate.toLocaleString('sq-AL')}</div>
-                      </div>
-                    ) : (
-                      <div style={{ fontSize: 14, color: 'rgba(184,227,233,0.7)' }}>Nuk ka afat të dhënë aktualisht.</div>
-                    )}
+            <div style={{ display: 'grid', gridTemplateColumns: showDeadlineForm ? '1fr 340px' : '1fr', gap: '1.5rem' }}>
+              {/* Form on left - hidden by default */}
+              {showDeadlineForm && (
+                <div style={{ background: 'rgba(11,46,51,0.75)', borderRadius: 18, border: '1px solid rgba(184,227,233,0.25)', padding: '1rem 1.1rem', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#B8E3E9', display: 'flex', alignItems: 'center', gap: 10, letterSpacing: '0.2px' }}>
+                    Afati i dorëzimit të projektit
+                    {deadlineStatus.loading && <span style={{ fontSize: 12, color: '#cfeee0' }}>Duke u lexuar...</span>}
+                    {deadlineStatus.error && <span style={{ fontSize: 12, color: '#f8b4b4' }}>{deadlineStatus.error}</span>}
+                    {deadlineStatus.message && <span style={{ fontSize: 12, color: '#7be7b2' }}>{deadlineStatus.message}</span>}
                   </div>
-
-                  {showDeadline ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, background: 'rgba(184,227,233,0.12)', padding: '1.5rem', borderRadius: 10, border: '1px solid rgba(184,227,233,0.35)' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: '1rem' }}>
-                        <label style={{ fontSize: 12, color: '#B8E3E9', fontWeight: 600 }}>Emërtimi i Dorëzimit (opsional):</label>
+                  
+                  <div style={{ marginBottom: '1rem' }}>
+                    <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 4 }}>Emërtimi i dorëzimit (opsional)</div>
+                    <input
+                      type="text"
+                      placeholder="Vendos titullin e Assignment."
+                      value={projectDeadline.title || ''}
+                      onChange={(e) => setProjectDeadline(prev => ({ ...prev, title: e.target.value }))}
+                      style={{
+                        width: '100%',
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: 10,
+                        border: '1px solid rgba(184,227,233,0.35)',
+                        background: 'rgba(11,46,51,0.6)',
+                        color: '#B8E3E9',
+                        fontSize: 14,
+                        fontWeight: 500,
+                        outline: 'none'
+                      }}
+                      disabled={deadlineStatus.loading || deadlineStatus.saving}
+                    />
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
+                    <div>
+                      <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 4 }}>Fillimi</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.5rem', alignItems: 'center' }}>
                         <input
-                          type="text"
-                          placeholder="Vendos titullin e Assignment..."
-                          value={deadlineTitle}
-                          onChange={(e) => setDeadlineTitle(e.target.value)}
+                          type="date"
                           style={{
                             width: '100%',
-                            padding: '0.5rem 0.75rem',
-                            borderRadius: 10,
-                            border: '1px solid rgba(184,227,233,0.4)',
+                            borderRadius: 12,
+                            border: '1px solid rgba(184,227,233,0.25)',
                             background: 'rgba(11,46,51,0.6)',
                             color: '#B8E3E9',
-                            fontSize: 14,
-                            fontWeight: 500,
-                            outline: 'none'
+                            padding: '0.65rem 0.75rem'
                           }}
+                          value={projectDeadline.start ? projectDeadline.start.split('T')[0] : ''}
+                          onChange={(e) => setProjectDatePart('start', e.target.value)}
+                          disabled={deadlineStatus.loading || deadlineStatus.saving}
                         />
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <label style={{ fontSize: 12, color: '#B8E3E9', fontWeight: 600 }}>Fillon (DD/MM/YYYY & HH:MM:SS):</label>
-                        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            autoComplete="off"
-                            value={deadlineStartDate}
-                            onChange={(e) => setDeadlineStartDate(e.target.value)}
-                            placeholder="DD/MM/YYYY"
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(90px, 1fr))', gap: '0.5rem', marginTop: 8 }}>
+                          <select
                             style={{
-                              padding: '0.5rem',
-                              borderRadius: 8,
-                              border: '1px solid rgba(184,227,233,0.5)',
+                              width: '100%',
+                              borderRadius: 10,
+                              border: '1px solid rgba(184,227,233,0.25)',
                               background: 'rgba(11,46,51,0.6)',
                               color: '#B8E3E9',
-                              fontSize: 14,
-                              width: 120
+                              padding: '0.55rem 0.6rem'
                             }}
-                          />
-                          <input
-                            type="number"
-                            min="0"
-                            max="23"
-                            inputMode="numeric"
-                            value={deadlineStartHour}
-                            onChange={(e) => setDeadlineStartHour(e.target.value)}
-                            placeholder="HH"
+                            value={get24hParts(projectDeadline.start).hour}
+                            onChange={(e) => setProjectTime24('start', e.target.value, get24hParts(projectDeadline.start).minute)}
+                            disabled={deadlineStatus.loading || deadlineStatus.saving}
+                          >
+                            {Array.from({ length: 24 }, (_, i) => pad2(i)).map((h) => (
+                              <option key={h} value={h}>{h}</option>
+                            ))}
+                          </select>
+                          <select
                             style={{
-                              width: 60,
-                              padding: '0.5rem',
-                              borderRadius: 8,
-                              border: '1px solid rgba(184,227,233,0.5)',
+                              width: '100%',
+                              borderRadius: 10,
+                              border: '1px solid rgba(184,227,233,0.25)',
                               background: 'rgba(11,46,51,0.6)',
                               color: '#B8E3E9',
-                              fontSize: 14
+                              padding: '0.55rem 0.6rem'
                             }}
-                          />
-                          <span style={{ color: '#B8E3E9', fontWeight: 700 }}>:</span>
-                          <input
-                            type="number"
-                            min="0"
-                            max="59"
-                            inputMode="numeric"
-                            value={deadlineStartMinute}
-                            onChange={(e) => setDeadlineStartMinute(e.target.value)}
-                            placeholder="MM"
-                            style={{
-                              width: 60,
-                              padding: '0.5rem',
-                              borderRadius: 8,
-                              border: '1px solid rgba(184,227,233,0.5)',
-                              background: 'rgba(11,46,51,0.6)',
-                              color: '#B8E3E9',
-                              fontSize: 14
-                            }}
-                          />
-                          <span style={{ color: '#B8E3E9', fontWeight: 700 }}>:</span>
-                          <input
-                            type="number"
-                            min="0"
-                            max="59"
-                            inputMode="numeric"
-                            value={deadlineStartSecond}
-                            onChange={(e) => setDeadlineStartSecond(e.target.value)}
-                            placeholder="SS"
-                            style={{
-                              width: 60,
-                              padding: '0.5rem',
-                              borderRadius: 8,
-                              border: '1px solid rgba(184,227,233,0.5)',
-                              background: 'rgba(11,46,51,0.6)',
-                              color: '#B8E3E9',
-                              fontSize: 14
-                            }}
-                          />
+                            value={get24hParts(projectDeadline.start).minute}
+                            onChange={(e) => setProjectTime24('start', get24hParts(projectDeadline.start).hour, e.target.value)}
+                            disabled={deadlineStatus.loading || deadlineStatus.saving}
+                          >
+                            {Array.from({ length: 60 }, (_, i) => pad2(i)).map((m) => (
+                              <option key={m} value={m}>{m}</option>
+                            ))}
+                          </select>
                         </div>
-                        <span style={{ fontSize: 10, color: 'rgba(184,227,233,0.7)' }}>Orë 00-23, minuta dhe sekonda 00-59</span>
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <label style={{ fontSize: 12, color: '#B8E3E9', fontWeight: 600 }}>Përfundon (DD/MM/YYYY & HH:MM:SS):</label>
-                        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            autoComplete="off"
-                            value={deadlineEndDate}
-                            onChange={(e) => setDeadlineEndDate(e.target.value)}
-                            placeholder="DD/MM/YYYY"
-                            style={{
-                              padding: '0.5rem',
-                              borderRadius: 8,
-                              border: '1px solid rgba(184,227,233,0.5)',
-                              background: 'rgba(11,46,51,0.6)',
-                              color: '#B8E3E9',
-                              fontSize: 14,
-                              width: 120
-                            }}
-                          />
-                          <input
-                            type="number"
-                            min="0"
-                            max="23"
-                            inputMode="numeric"
-                            value={deadlineEndHour}
-                            onChange={(e) => setDeadlineEndHour(e.target.value)}
-                            placeholder="HH"
-                            style={{
-                              width: 60,
-                              padding: '0.5rem',
-                              borderRadius: 8,
-                              border: '1px solid rgba(184,227,233,0.5)',
-                              background: 'rgba(11,46,51,0.6)',
-                              color: '#B8E3E9',
-                              fontSize: 14
-                            }}
-                          />
-                          <span style={{ color: '#B8E3E9', fontWeight: 700 }}>:</span>
-                          <input
-                            type="number"
-                            min="0"
-                            max="59"
-                            inputMode="numeric"
-                            value={deadlineEndMinute}
-                            onChange={(e) => setDeadlineEndMinute(e.target.value)}
-                            placeholder="MM"
-                            style={{
-                              width: 60,
-                              padding: '0.5rem',
-                              borderRadius: 8,
-                              border: '1px solid rgba(184,227,233,0.5)',
-                              background: 'rgba(11,46,51,0.6)',
-                              color: '#B8E3E9',
-                              fontSize: 14
-                            }}
-                          />
-                          <span style={{ color: '#B8E3E9', fontWeight: 700 }}>:</span>
-                          <input
-                            type="number"
-                            min="0"
-                            max="59"
-                            inputMode="numeric"
-                            value={deadlineEndSecond}
-                            onChange={(e) => setDeadlineEndSecond(e.target.value)}
-                            placeholder="SS"
-                            style={{
-                              width: 60,
-                              padding: '0.5rem',
-                              borderRadius: 8,
-                              border: '1px solid rgba(184,227,233,0.5)',
-                              background: 'rgba(11,46,51,0.6)',
-                              color: '#B8E3E9',
-                              fontSize: 14
-                            }}
-                          />
-                        </div>
-                        <span style={{ fontSize: 10, color: 'rgba(184,227,233,0.7)' }}>Orë 00-23, minuta dhe sekonda 00-59</span>
-                      </div>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <button
-                          style={{ ...downloadButton, background: '#0B2E33', padding: '0.5rem 1rem' }}
-                          onClick={handleSetDeadline}
-                        >
-                          Ruaj
-                        </button>
-                        <button
-                          style={{ ...downloadButton, background: 'rgba(11,46,51,0.6)', padding: '0.5rem 1rem' }}
-                          onClick={() => { setShowDeadline(false); }}
-                        >
-                          Mbylle
-                        </button>
                       </div>
                     </div>
-                  ) : (
+                    
+                    <div>
+                      <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 4 }}>Mbarimi</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.5rem', alignItems: 'center' }}>
+                        <input
+                          type="date"
+                          style={{
+                            width: '100%',
+                            borderRadius: 12,
+                            border: '1px solid rgba(184,227,233,0.25)',
+                            background: 'rgba(11,46,51,0.6)',
+                            color: '#B8E3E9',
+                            padding: '0.65rem 0.75rem'
+                          }}
+                          value={projectDeadline.end ? projectDeadline.end.split('T')[0] : ''}
+                          onChange={(e) => setProjectDatePart('end', e.target.value)}
+                          disabled={deadlineStatus.loading || deadlineStatus.saving}
+                        />
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(90px, 1fr))', gap: '0.5rem', marginTop: 8 }}>
+                          <select
+                            style={{
+                              width: '100%',
+                              borderRadius: 10,
+                              border: '1px solid rgba(184,227,233,0.25)',
+                              background: 'rgba(11,46,51,0.6)',
+                              color: '#B8E3E9',
+                              padding: '0.55rem 0.6rem'
+                            }}
+                            value={get24hParts(projectDeadline.end).hour}
+                            onChange={(e) => setProjectTime24('end', e.target.value, get24hParts(projectDeadline.end).minute)}
+                            disabled={deadlineStatus.loading || deadlineStatus.saving}
+                          >
+                            {Array.from({ length: 24 }, (_, i) => pad2(i)).map((h) => (
+                              <option key={h} value={h}>{h}</option>
+                            ))}
+                          </select>
+                          <select
+                            style={{
+                              width: '100%',
+                              borderRadius: 10,
+                              border: '1px solid rgba(184,227,233,0.25)',
+                              background: 'rgba(11,46,51,0.6)',
+                              color: '#B8E3E9',
+                              padding: '0.55rem 0.6rem'
+                            }}
+                            value={get24hParts(projectDeadline.end).minute}
+                            onChange={(e) => setProjectTime24('end', get24hParts(projectDeadline.end).hour, e.target.value)}
+                            disabled={deadlineStatus.loading || deadlineStatus.saving}
+                          >
+                            {Array.from({ length: 60 }, (_, i) => pad2(i)).map((m) => (
+                              <option key={m} value={m}>{m}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                     <button
                       style={{
-                        padding: '0.75rem 1.5rem',
+                        borderRadius: 12,
+                        border: '1px solid rgba(184,227,233,0.4)',
                         background: '#0B2E33',
-                        border: '1px solid rgba(184,227,233,0.35)',
-                        borderRadius: 10,
                         color: '#B8E3E9',
                         fontWeight: 700,
+                        padding: '0.65rem 1.2rem',
                         cursor: 'pointer',
-                        fontSize: 14,
-                        width: '100%'
+                        transition: 'all 200ms ease'
                       }}
-                      onClick={() => { setShowDeadline(true); }}
+                      onClick={handleSaveProjectDeadline}
+                      disabled={deadlineStatus.loading || deadlineStatus.saving}
                     >
-                      Ndrysho Afatin
+                      {deadlineStatus.saving ? 'Duke ruajtur...' : 'Ruaj afatin'}
                     </button>
-                  )}
+                    <button
+                      style={{
+                        borderRadius: 12,
+                        border: '1px solid rgba(184,227,233,0.4)',
+                        background: 'rgba(11,46,51,0.6)',
+                        color: '#B8E3E9',
+                        fontWeight: 600,
+                        padding: '0.65rem 1.2rem',
+                        cursor: 'pointer',
+                        transition: 'all 200ms ease'
+                      }}
+                      onClick={handleClearProjectDeadline}
+                      disabled={deadlineStatus.loading || deadlineStatus.saving || (!projectDeadline.start && !projectDeadline.end) || selectedDeadlineIndex === null}
+                    >
+                      Hiq afatin
+                    </button>
+                  </div>
                 </div>
               )}
+
+              {/* List on right */}
+              <div style={{ background: 'rgba(11,46,51,0.75)', borderRadius: 18, border: '1px solid rgba(184,227,233,0.35)', padding: '1rem 1.1rem', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                <button
+                  style={{
+                    borderRadius: 12,
+                    border: '1px solid rgba(184,227,233,0.4)',
+                    background: '#0B2E33',
+                    color: '#B8E3E9',
+                    fontWeight: 700,
+                    padding: '0.8rem 1.6rem',
+                    cursor: 'pointer',
+                    transition: 'all 200ms ease',
+                    width: '100%',
+                    marginBottom: '1rem'
+                  }}
+                  onClick={() => {
+                    setShowDeadlineForm(true);
+                    setProjectDeadline({ start: '', end: '', title: '' });
+                    setSelectedDeadlineIndex(null);
+                  }}
+                >
+                  + Shto afat të ri
+                </button>
+
+                <div style={{ fontSize: 12, opacity: 0.75, marginBottom: '0.75rem' }}>Afatet ekzistues:</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '400px', minHeight: '200px', overflowY: 'auto', overflowX: 'visible', paddingRight: '0.5rem' }}>
+                  {projectDeadlinesList.length === 0 ? (
+                    <div style={{ textAlign: 'center', opacity: 0.6, padding: '1rem' }}>
+                      Nuk ka afate të ruajtuara
+                    </div>
+                  ) : (
+                    projectDeadlinesList.map((deadline, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'flex-start',
+                          alignItems: 'center',
+                          padding: '0.75rem 0.9rem',
+                          borderRadius: 14,
+                          background: '#0B2E33',
+                          border: '1px solid rgba(184,227,233,0.2)',
+                          width: '100%',
+                          overflow: 'visible',
+                          minWidth: 0,
+                          gap: '0.75rem',
+                          cursor: 'pointer',
+                          marginBottom: '0.5rem'
+                        }}
+                        onClick={() => {
+                          setShowDeadlineForm(true);
+                          setProjectDeadline(deadline);
+                          setSelectedDeadlineIndex(idx);
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(184, 227, 233, 0.12)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = '#0B2E33'}
+                      >
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, fontSize: 13 }}>
+                            {deadline.title || 'Afat pa titull'}
+                          </div>
+                          <div style={{ fontSize: 11, opacity: 0.7, marginTop: 3 }}>
+                            {formatProjectDateDisplay(deadline.start)} → {formatProjectDateDisplay(deadline.end)}
+                          </div>
+                        </div>
+                        <button
+                          style={{
+                            borderRadius: 10,
+                            border: '1px solid rgba(184,227,233,0.35)',
+                            background: 'transparent',
+                            color: '#B8E3E9',
+                            fontSize: 12,
+                            padding: '0.35rem 0.6rem',
+                            cursor: 'pointer',
+                            marginLeft: 8,
+                            transition: 'all 200ms ease'
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowDeadlineForm(true);
+                            setProjectDeadline(deadline);
+                            setSelectedDeadlineIndex(idx);
+                          }}
+                        >
+                          Modifiko
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(184,227,233,0.2)' }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#B8E3E9', marginBottom: '0.5rem' }}>
+                    Afati aktual:
+                  </div>
+                  <div style={{ fontSize: 12, opacity: 0.85 }}>
+                    {projectDeadline.start && projectDeadline.end ? (
+                      <>
+                        {projectDeadline.title && (
+                          <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>
+                            {projectDeadline.title}
+                          </div>
+                        )}
+                        <div>{formatProjectDateDisplay(projectDeadline.start)}</div>
+                        <div style={{ marginTop: '0.25rem' }}>{formatProjectDateDisplay(projectDeadline.end)}</div>
+                      </>
+                    ) : (
+                      <span style={{ opacity: 0.6 }}>Nuk ka afat të zgjedhur</span>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

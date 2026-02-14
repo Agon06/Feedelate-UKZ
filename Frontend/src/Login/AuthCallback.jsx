@@ -13,8 +13,22 @@ const AuthCallback = () => {
     if (userParam && typeParam) {
       try {
         const userData = JSON.parse(decodeURIComponent(userParam));
-        localStorage.setItem('student', JSON.stringify(userData));
+        // Store user based on their type to avoid overwriting different user types
+        if (typeParam === 'student') {
+          localStorage.setItem('student', JSON.stringify(userData));
+          localStorage.removeItem('profesor');
+          localStorage.removeItem('admin');
+        } else if (typeParam === 'profesor') {
+          localStorage.setItem('profesor', JSON.stringify(userData));
+          localStorage.removeItem('student');
+          localStorage.removeItem('admin');
+        } else if (typeParam === 'admin') {
+          localStorage.setItem('admin', JSON.stringify(userData));
+          localStorage.removeItem('student');
+          localStorage.removeItem('profesor');
+        }
         localStorage.setItem('authenticated', 'true');
+        localStorage.setItem('userType', typeParam);
         
         // Replace history entry to prevent back button returning to callback
         window.history.replaceState({}, document.title, window.location.pathname);

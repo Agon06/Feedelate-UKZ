@@ -15,7 +15,6 @@ import { Projekti } from "./entities/Student/projekti";
 import { dorzimiProjektit } from "./entities/Student/dorzimiProjektit";
 import { ProfesorLendetMapping } from "./entities/Student/ProfesorLendetMapping";
 import { Test } from "./entities/test";
-import { MenaxhimiAfateve } from "./entities/Student/menaxhimiAfateve";
 import { stdZgjedhore } from "./entities/Student/stdZgjedhore";
 
 dotenv.config();
@@ -43,7 +42,6 @@ export const AppDataSource = new DataSource({
     dorzimiProjektit,
     ProfesorLendetMapping,
     Test,
-    MenaxhimiAfateve,
     stdZgjedhore
   ],
   migrations: ["dist/migrations/**/*.js"],

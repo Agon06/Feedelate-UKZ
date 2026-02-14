@@ -9,7 +9,7 @@ const Idetep = () => {
   const navigate = useNavigate();
   const subjectName = location.state?.subject ?? 'Lëndë e pa specifikuar';
   const lendaId = location.state?.lendaId ?? null;
-  const student = JSON.parse(localStorage.getItem('student') || '{}');
+  const student = JSON.parse(localStorage.getItem('profesor') || localStorage.getItem('student') || '{}');
   const PROFESOR_ID = student.id || 1;
 
   const [ideas, setIdeas] = useState([]);

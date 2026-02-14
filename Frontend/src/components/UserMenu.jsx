@@ -17,7 +17,10 @@ const UserMenu = ({ userName, userType = 'student' }) => {
 
       // Clear localStorage
       localStorage.removeItem('student');
+      localStorage.removeItem('profesor');
+      localStorage.removeItem('admin');
       localStorage.removeItem('authenticated');
+      localStorage.removeItem('userType');
 
       // Redirect to login
       navigate('/login', { replace: true });
@@ -25,7 +28,10 @@ const UserMenu = ({ userName, userType = 'student' }) => {
       console.error('Logout failed:', error);
       // Still clear localStorage and redirect even if API call fails
       localStorage.removeItem('student');
+      localStorage.removeItem('profesor');
+      localStorage.removeItem('admin');
       localStorage.removeItem('authenticated');
+      localStorage.removeItem('userType');
       navigate('/login', { replace: true });
     }
   };

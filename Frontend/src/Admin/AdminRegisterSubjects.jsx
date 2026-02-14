@@ -38,7 +38,7 @@ const AdminRegisterSubjects = () => {
     };
 
     useEffect(() => {
-        const student = localStorage.getItem('student');
+        const student = localStorage.getItem('admin') || localStorage.getItem('student');
         if (student) {
             try {
                 const userData = JSON.parse(student);

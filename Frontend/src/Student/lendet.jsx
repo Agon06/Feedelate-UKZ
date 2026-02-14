@@ -25,40 +25,37 @@ const Lendet = () => {
         })
         .finally(() => setLoadingStudent(false));
     }
-  }, [student, loadingStudent]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [student.id, student.academicYear]);
 
   const academicYear = student.academicYear || '';
 
   // Calculate vitiStudimeve
   let vitiStudimeve = 0;
   if (academicYear) {
-    // academicYear format: '2025/2026'
+    // academicYear format: '2023/2024'
     const [startYearStr, endYearStr] = academicYear.split('/');
     const startYear = parseInt(startYearStr, 10);
     const endYear = parseInt(endYearStr, 10);
     const currentMonth = now.getMonth() + 1; // 1-12
     const currentYear = now.getFullYear();
 
-    // Periudha: tetor (10) i startYear deri shtator (9) i endYear
-    let inCurrentAcademicYear = false;
-    if (
-      (currentYear === startYear && currentMonth >= 10) ||
-      (currentYear === endYear && currentMonth <= 9)
-    ) {
-      inCurrentAcademicYear = true;
+    // Calculate which academic year we're currently in
+    let currentAcademicYearStart;
+    if (currentMonth >= 10) {
+      // October-December: we're in year starting this year
+      currentAcademicYearStart = currentYear;
+    } else {
+      // January-September: we're in year that started last year
+      currentAcademicYearStart = currentYear - 1;
     }
 
-    if (inCurrentAcademicYear) {
-      vitiStudimeve = 1;
-    } else if (
-      (currentYear === startYear + 1 && currentMonth >= 10) ||
-      (currentYear === endYear + 1 && currentMonth <= 9) ||
-      (currentYear === endYear && currentMonth > 9)
-    ) {
-      vitiStudimeve = 2;
-    } else {
-      vitiStudimeve = 3;
-    }
+    // Calculate how many years have passed since student's enrollment
+    vitiStudimeve = currentAcademicYearStart - startYear + 1;
+    
+    // Cap at reasonable maximum (e.g., 4 years for bachelor)
+    if (vitiStudimeve > 4) vitiStudimeve = 4;
+    if (vitiStudimeve < 1) vitiStudimeve = 1;
   }
   const { yearId } = useParams();
   const navigate = useNavigate();

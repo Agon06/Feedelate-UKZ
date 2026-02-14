@@ -6,7 +6,7 @@ import '../Student/StudentTheme.css';
 const Lendetp = () => { 
   const { yearId } = useParams();
   const navigate = useNavigate();
-  const student = JSON.parse(localStorage.getItem('student') || '{}');
+  const student = JSON.parse(localStorage.getItem('profesor') || localStorage.getItem('student') || '{}');
   const PROFESOR_ID = student.id || 1;
   const electiveStorageKey = useMemo(() => `selectedElectives:${PROFESOR_ID}:${yearId}`, [PROFESOR_ID, yearId]);
   const [isMobile, setIsMobile] = useState(false);

@@ -75,23 +75,32 @@ const Login = () => {
         const { user, type } = data.payload;
         try {
           localStorage.setItem('authenticated', 'true');
+          localStorage.setItem('userType', type);
           // Fetch full student profile if type is student
           if (type === 'student' && user?.id) {
             getStudentById(user.id)
               .then((fullStudent) => {
                 localStorage.setItem('student', JSON.stringify(fullStudent));
+                localStorage.removeItem('profesor');
+                localStorage.removeItem('admin');
                 navigate('/student', { replace: true });
               })
               .catch(() => {
                 // fallback if fetch fails
                 localStorage.setItem('student', JSON.stringify(user));
+                localStorage.removeItem('profesor');
+                localStorage.removeItem('admin');
                 navigate('/student', { replace: true });
               });
           } else if (type === 'profesor') {
-            localStorage.setItem('student', JSON.stringify(user));
+            localStorage.setItem('profesor', JSON.stringify(user));
+            localStorage.removeItem('student');
+            localStorage.removeItem('admin');
             navigate('/profesor', { replace: true });
           } else if (type === 'admin') {
-            localStorage.setItem('student', JSON.stringify(user));
+            localStorage.setItem('admin', JSON.stringify(user));
+            localStorage.removeItem('student');
+            localStorage.removeItem('profesor');
             navigate('/admin', { replace: true });
           } else {
             localStorage.setItem('student', JSON.stringify(user));
@@ -128,25 +137,34 @@ const Login = () => {
       try {
         const userData = JSON.parse(decodeURIComponent(userParam));
         localStorage.setItem('authenticated', 'true');
+        localStorage.setItem('userType', typeParam);
         // Fetch full student profile if type is student
         if (typeParam === 'student' && userData?.id) {
           getStudentById(userData.id)
             .then((fullStudent) => {
               localStorage.setItem('student', JSON.stringify(fullStudent));
+              localStorage.removeItem('profesor');
+              localStorage.removeItem('admin');
               window.history.replaceState({}, document.title, '/student');
               navigate('/student', { replace: true });
             })
             .catch(() => {
               localStorage.setItem('student', JSON.stringify(userData));
+              localStorage.removeItem('profesor');
+              localStorage.removeItem('admin');
               window.history.replaceState({}, document.title, '/student');
               navigate('/student', { replace: true });
             });
         } else if (typeParam === 'profesor') {
-          localStorage.setItem('student', JSON.stringify(userData));
+          localStorage.setItem('profesor', JSON.stringify(userData));
+          localStorage.removeItem('student');
+          localStorage.removeItem('admin');
           window.history.replaceState({}, document.title, '/profesor');
           navigate('/profesor', { replace: true });
         } else if (typeParam === 'admin') {
-          localStorage.setItem('student', JSON.stringify(userData));
+          localStorage.setItem('admin', JSON.stringify(userData));
+          localStorage.removeItem('student');
+          localStorage.removeItem('profesor');
           window.history.replaceState({}, document.title, '/admin');
           navigate('/admin', { replace: true });
         }

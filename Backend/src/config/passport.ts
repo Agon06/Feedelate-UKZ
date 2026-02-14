@@ -23,19 +23,28 @@ passport.deserializeUser(async (data: any, done) => {
     let userEmail = data.email;
     let userData: any = null;
 
-    const student = await studentRepository.findOneBy({ email: userEmail });
+    const student = await studentRepository.findOne({ 
+      where: { email: userEmail },
+      select: ['id', 'emri', 'mbiemri', 'email', 'nrIdCard', 'academicYear', 'ssoProvider', 'ssoProviderId', 'profilePicture', 'roles', 'createdAt', 'updatedAt']
+    });
     if (student) {
       roles.add("student");
       userData = student; // Use first found as base data
     }
 
-    const profesor = await profesorRepository.findOneBy({ email: userEmail });
+    const profesor = await profesorRepository.findOne({ 
+      where: { email: userEmail },
+      select: ['id', 'emri', 'mbiemri', 'email', 'ssoProvider', 'ssoProviderId', 'profilePicture', 'roles', 'createdAt', 'updatedAt']
+    });
     if (profesor) {
       roles.add("profesor");
       userData = userData || profesor;
     }
 
-    const admin = await adminRepository.findOneBy({ email: userEmail });
+    const admin = await adminRepository.findOne({ 
+      where: { email: userEmail },
+      select: ['id', 'emri', 'mbiemri', 'email', 'username', 'adminLevel', 'telefoni', 'roles', 'createdAt', 'updatedAt']
+    });
     if (admin) {
       roles.add("admin");
       userData = userData || admin;
@@ -126,13 +135,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
               userData = admin;
               isNewUser = false;
               userRoles = admin.roles ? JSON.parse(admin.roles) : ["admin"];
-              // Update SSO info if not already set
-              if (!admin.ssoProvider) {
-                admin.ssoProvider = "google";
-                admin.ssoProviderId = profile.id;
-                admin.profilePicture = profile.photos?.[0]?.value || admin.profilePicture;
-                await adminRepository.save(admin);
-              }
+              // Note: Admin entity doesn't have SSO fields, just use existing admin
             }
           }
         }

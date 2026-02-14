@@ -743,6 +743,7 @@ router.get("/:id/projekte-studentesh/:lendaId", async (req: Request, res: Respon
         projectMaxPoints: lenda.projectMaxPoints ?? 100,
         projectStartDate: formatLocalDate(lenda.projectStartDate),
         projectDeadline: formatLocalDate(lenda.projectDeadline),
+        projectDeadlinesJson: lenda.projectDeadlinesJson ?? [],
       },
       submissions: submissionsData,
     });
@@ -914,7 +915,7 @@ router.put("/:id/lendet/:lendaId/project-max", async (req: Request, res: Respons
 router.put("/:id/lendet/:lendaId/project-deadline", async (req: Request, res: Response) => {
   const profesorId = Number(req.params.id);
   const lendaId = Number(req.params.lendaId);
-  const { projectStartDate, projectDeadline } = req.body;
+  const { projectStartDate, projectDeadline, projectDeadlinesJson } = req.body;
 
   if (Number.isNaN(profesorId) || Number.isNaN(lendaId)) {
     return res.status(400).json({ message: "Invalid IDs" });
@@ -955,6 +956,9 @@ router.put("/:id/lendet/:lendaId/project-deadline", async (req: Request, res: Re
 
     lenda.projectStartDate = start ?? undefined;
     lenda.projectDeadline = end ?? undefined;
+    if (projectDeadlinesJson !== undefined) {
+      lenda.projectDeadlinesJson = Array.isArray(projectDeadlinesJson) ? projectDeadlinesJson : null;
+    }
 
     await lendetRepository.save(lenda);
 
@@ -974,6 +978,7 @@ router.put("/:id/lendet/:lendaId/project-deadline", async (req: Request, res: Re
         name: lenda.emriLendes,
         projectStartDate: formatLocalDate(lenda.projectStartDate),
         projectDeadline: formatLocalDate(lenda.projectDeadline),
+        projectDeadlinesJson: lenda.projectDeadlinesJson ?? [],
       },
     });
   } catch (error) {
@@ -1401,6 +1406,18 @@ router.delete("/:id/lendet/:lendaId/template", async (req: Request, res: Respons
 // GET: Eksporto rezultatet e të gjitha projekteve në CSV
 router.get("/:id/projekti/export-results", async (req: Request, res: Response) => {
   const profesorId = Number(req.params.id);
+  const lendaId = req.query.lendaId ? Number(req.query.lendaId) : null;
+  const selectedPeriod = req.query.selectedPeriod as string | null;
+  
+  // Parse deadline info from query params
+  const deadlineStartDate = req.query.deadlineStartDate as string;
+  const deadlineStartHour = req.query.deadlineStartHour as string;
+  const deadlineStartMinute = req.query.deadlineStartMinute as string;
+  const deadlineStartSecond = req.query.deadlineStartSecond as string;
+  const deadlineEndDate = req.query.deadlineEndDate as string;
+  const deadlineEndHour = req.query.deadlineEndHour as string;
+  const deadlineEndMinute = req.query.deadlineEndMinute as string;
+  const deadlineEndSecond = req.query.deadlineEndSecond as string;
   
   if (Number.isNaN(profesorId)) {
     return res.status(400).json({ message: "Profesor id is invalid" });
@@ -1412,21 +1429,29 @@ router.get("/:id/projekti/export-results", async (req: Request, res: Response) =
       return res.status(404).json({ message: "Profesor not found" });
     }
 
-    // Merr të gjitha lëndët e profesorit përmes mapping-ut
-    const mappings = await mappingRepository.find({
-      where: { profesorId },
-      relations: ["lendet"],
-    });
+    // Determine which lendaIds to include
+    let lendaIds: number[] = [];
+    
+    if (lendaId && !Number.isNaN(lendaId)) {
+      // Export only for the specific lenda
+      lendaIds = [lendaId];
+    } else {
+      // Merr të gjitha lëndët e profesorit përmes mapping-ut
+      const mappings = await mappingRepository.find({
+        where: { profesorId },
+        relations: ["lendet"],
+      });
 
-    if (!mappings || mappings.length === 0) {
-      return res.status(404).json({ message: "Nuk keni asnjë lëndë të regjistruar" });
+      if (!mappings || mappings.length === 0) {
+        return res.status(404).json({ message: "Nuk keni asnjë lëndë të regjistruar" });
+      }
+
+      lendaIds = mappings.map((m) => m.lendetId);
     }
-
-    const lendaIds = mappings.map((m) => m.lendetId);
 
     // Merr të gjitha dorëzimet e projekteve për këto lëndë
     const dorezime = await dorezimProjektitRepository.find({
-      where: lendaIds.map((lendaId) => ({ lenda: { id: lendaId } })),
+      where: lendaIds.map((id) => ({ lenda: { id } })),
       relations: ["student", "lenda"],
       order: { lenda: { id: "ASC" }, student: { mbiemri: "ASC" } },
     });
@@ -1435,10 +1460,58 @@ router.get("/:id/projekti/export-results", async (req: Request, res: Response) =
       return res.status(404).json({ message: "Nuk ka dorëzime projektesh për lëndët tuaja" });
     }
 
+    // Filter by selected period if provided
+    let filteredDorezime = dorezime;
+    
+    if (selectedPeriod) {
+      // Check if it's a named period (deadline-based) or month-based
+      const isMonthPeriod = selectedPeriod.match(/^\d{4}-\d+$/);
+      
+      if (isMonthPeriod) {
+        // Month-based filter: YYYY-M format
+        filteredDorezime = dorezime.filter((d) => {
+          const submitDate = new Date(d.createdAt);
+          if (isNaN(submitDate.getTime())) return false;
+          const submitKey = `${submitDate.getFullYear()}-${submitDate.getMonth()}`;
+          return submitKey === selectedPeriod;
+        });
+      } else {
+        // Named period - use deadline dates
+        const parseDateParts = (dateStr: string, hStr: string, mStr: string, sStr: string): Date | null => {
+          const match = (dateStr || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+          if (!match) return null;
+          const [, dd, mm, yyyy] = match;
+          const h = Number(hStr);
+          const m = Number(mStr);
+          const s = Number(sStr);
+          if ([dd, mm, yyyy].some((v) => isNaN(Number(v)))) return null;
+          if ([h, m, s].some((v) => isNaN(v))) return null;
+          if (h < 0 || h > 23 || m < 0 || m > 59 || s < 0 || s > 59) return null;
+          const parsed = new Date(Number(yyyy), Number(mm) - 1, Number(dd), h, m, s);
+          return isNaN(parsed.getTime()) ? null : parsed;
+        };
+
+        const startDate = parseDateParts(deadlineStartDate, deadlineStartHour, deadlineStartMinute, deadlineStartSecond);
+        const endDate = parseDateParts(deadlineEndDate, deadlineEndHour, deadlineEndMinute, deadlineEndSecond);
+
+        if (startDate && endDate) {
+          filteredDorezime = dorezime.filter((d) => {
+            const submitDate = new Date(d.createdAt);
+            if (isNaN(submitDate.getTime())) return false;
+            return submitDate >= startDate && submitDate <= endDate;
+          });
+        }
+      }
+    }
+
+    if (filteredDorezime.length === 0) {
+      return res.status(404).json({ message: "Nuk ka dorëzime për filtrin e zgjedhur" });
+    }
+
     // Krijo CSV content
     const csvHeader = "Emri,Mbiemri,Emri i Projekti,Lënda,Pikët,Statusi,Data e Dorëzimit\n";
     
-    const csvRows = dorezime.map((d) => {
+    const csvRows = filteredDorezime.map((d) => {
       const emri = d.student?.emri || "N/A";
       const mbiemri = d.student?.mbiemri || "N/A";
       const emriProjekti = d.fileName || "N/A";
@@ -1455,7 +1528,16 @@ router.get("/:id/projekti/export-results", async (req: Request, res: Response) =
     const csvContent = csvHeader + csvRows;
 
     // Vendos headers për download
-    const fileName = `rezultate-projektet-${Date.now()}.csv`;
+    let fileName = 'rezultate-projektet';
+    if (lendaId && filteredDorezime.length > 0) {
+      const lendaName = filteredDorezime[0].lenda?.emriLendes || 'lenda';
+      fileName += `-${lendaName.replace(/[^a-zA-Z0-9]/g, '-')}`;
+    }
+    if (selectedPeriod) {
+      fileName += `-${selectedPeriod.replace(/[^a-zA-Z0-9]/g, '-')}`;
+    }
+    fileName += `-${Date.now()}.csv`;
+    
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
     

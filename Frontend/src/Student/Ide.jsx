@@ -51,7 +51,8 @@ const IdeaPage = () => {
         }
       })();
     }
-  }, [feedbackModal.open, feedbackModal.idea, feedbackModal.loading, STUDENT_ID]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feedbackModal.open, feedbackModal.loading]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);

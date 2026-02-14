@@ -48,6 +48,10 @@ export class Lendet {
     @Column({ type: "json", nullable: true })
     ideaDeadlinesJson?: any;
 
+    // Lista e afateve të projekteve (ruhet si JSON)
+    @Column({ type: "json", nullable: true })
+    projectDeadlinesJson?: any;
+
     // Template/Shabllon files per projektet
     @Column({ nullable: true })
     templateFile?: string;

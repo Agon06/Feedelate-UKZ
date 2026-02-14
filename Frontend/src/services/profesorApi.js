@@ -252,8 +252,24 @@ export const addFeedbackToSubmission = (profesorId, dorezimId, feedbackData) =>
   });
 
 // Eksporto rezultatet e projekteve në CSV
-export const exportProjectResults = async (profesorId) => {
-  const response = await fetch(`${API_BASE_URL}/profesoret/${profesorId}/projekti/export-results`, {
+export const exportProjectResults = async (profesorId, lendaId = null, selectedPeriod = null, deadlineInfo = null) => {
+  // Build query params
+  const params = new URLSearchParams();
+  if (lendaId) params.append('lendaId', lendaId);
+  if (selectedPeriod) params.append('selectedPeriod', selectedPeriod);
+  if (deadlineInfo) {
+    params.append('deadlineStartDate', deadlineInfo.deadlineStartDate || '');
+    params.append('deadlineStartHour', deadlineInfo.deadlineStartHour || '');
+    params.append('deadlineStartMinute', deadlineInfo.deadlineStartMinute || '');
+    params.append('deadlineStartSecond', deadlineInfo.deadlineStartSecond || '');
+    params.append('deadlineEndDate', deadlineInfo.deadlineEndDate || '');
+    params.append('deadlineEndHour', deadlineInfo.deadlineEndHour || '');
+    params.append('deadlineEndMinute', deadlineInfo.deadlineEndMinute || '');
+    params.append('deadlineEndSecond', deadlineInfo.deadlineEndSecond || '');
+  }
+  
+  const apiUrl = `${API_BASE_URL}/profesoret/${profesorId}/projekti/export-results${params.toString() ? '?' + params.toString() : ''}`;
+  const response = await fetch(apiUrl, {
     method: 'GET',
   });
 

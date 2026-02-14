@@ -12,7 +12,6 @@ import { Idete } from "../../entities/Student/Idete";
 import { DorezimiIdes } from "../../entities/Student/dorezimiIdes";
 import { Projekti } from "../../entities/Student/projekti";
 import { dorzimiProjektit } from "../../entities/Student/dorzimiProjektit";
-import { MenaxhimiAfateve } from "../../entities/Student/menaxhimiAfateve";
 import { stdZgjedhore } from "../../entities/Student/stdZgjedhore";
 
 
@@ -23,7 +22,6 @@ const ideaRepository = AppDataSource.getRepository(Idete);
 const dorezimRepository = AppDataSource.getRepository(DorezimiIdes);
 const projektiRepository = AppDataSource.getRepository(Projekti);
 const dorezimProjektitRepository = AppDataSource.getRepository(dorzimiProjektit);
-const menaxhimiAfateveRepository = AppDataSource.getRepository(MenaxhimiAfateve);
 const stdZgjedhoreRepository = AppDataSource.getRepository(stdZgjedhore);
 //e thirr repositorin e testi
 
@@ -1042,6 +1040,7 @@ router.get("/:id/projekti/:lendaId", async (req: Request, res: Response) => {
         projectMaxPoints,
         projectStartDate: formatLocalDate(projectStartDate),
         projectDeadline: formatLocalDate(projectDeadline),
+        projectDeadlinesJson: lenda?.projectDeadlinesJson ?? [],
       });
     }
     
@@ -1057,6 +1056,7 @@ router.get("/:id/projekti/:lendaId", async (req: Request, res: Response) => {
       projectMaxPoints,
       projectStartDate: formatLocalDate(projectStartDate),
       projectDeadline: formatLocalDate(projectDeadline),
+      projectDeadlinesJson: lenda?.projectDeadlinesJson ?? [],
     });
   } catch (error) {
     res.status(500).json({ message: "Error fetching projekt", error });
