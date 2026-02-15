@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { uploadStudentDorezim, getStudentTemplate, getStudentIdeaDeadline } from '../services/studentApi';
 import './StudentTheme.css';
@@ -24,7 +24,7 @@ const DorezimPage = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [template, setTemplate] = useState(null);
   const [templateLoading, setTemplateLoading] = useState(true);
-  const [ideaDeadline, setIdeaDeadline] = useState({ start: null, end: null, title: null });
+  const [ideaDeadline, setIdeaDeadline] = useState({ ideaStartDate: null, ideaEndDate: null, ideaTitle: null });
   const [deadlineLoading, setDeadlineLoading] = useState(true);
 
   useEffect(() => {
@@ -41,10 +41,8 @@ const DorezimPage = () => {
 
       try {
         const data = await getStudentTemplate(STUDENT_ID, lendaId);
-        console.log('Template fetched:', data);
         setTemplate(data);
       } catch (error) {
-        console.log('No template available:', error.message);
         setTemplate(null);
       } finally {
         setTemplateLoading(false);
@@ -61,12 +59,12 @@ const DorezimPage = () => {
       try {
         const data = await getStudentIdeaDeadline(STUDENT_ID, lendaId);
         setIdeaDeadline({ 
-          start: data.ideaStartDate ?? null, 
-          end: data.ideaDeadline ?? null,
-          title: data.ideaTitle ?? null 
+          ideaStartDate: data.ideaStartDate ?? null, 
+          ideaEndDate: data.ideaDeadline ?? null,
+          ideaTitle: data.ideaTitle ?? null 
         });
       } catch (error) {
-        setIdeaDeadline({ start: null, end: null, title: null });
+        setIdeaDeadline({ ideaStartDate: null, ideaEndDate: null, ideaTitle: null });
       } finally {
         setDeadlineLoading(false);
       }
@@ -77,22 +75,16 @@ const DorezimPage = () => {
   const handleDownloadTemplate = () => {
     try {
       if (!template || !template.hasTemplate || !STUDENT_ID || !lendaId) {
-        console.error('Missing required data:', { template, STUDENT_ID, lendaId });
         alert('Template nuk u gjet');
         return;
       }
 
-      // Use simple string concatenation without replace
       let baseUrl = import.meta.env?.VITE_API_URL || 'http://localhost:5000/api';
-      // Remove trailing slash if exists
       if (baseUrl && baseUrl.endsWith('/')) {
         baseUrl = baseUrl.slice(0, -1);
       }
 
       const downloadUrl = `${baseUrl}/studentet/${STUDENT_ID}/dorezime/template-download?lendaId=${lendaId}`;
-
-      console.log('Downloading from:', downloadUrl);
-      console.log('Template info:', { hasTemplate: template.hasTemplate, fileName: template.fileName });
 
       const link = document.createElement('a');
       link.href = downloadUrl;
@@ -101,7 +93,6 @@ const DorezimPage = () => {
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      console.error('Download error:', error);
       alert('Gabim gjatë shkarkimit të template-it');
     }
   };
@@ -137,8 +128,6 @@ const DorezimPage = () => {
     setFormFeedback({ type: null, message: null });
 
     try {
-      console.log('Uploading file:', { lendaId, fileName: formData.skedar.name });
-
       await uploadStudentDorezim(STUDENT_ID, { lendaId, file: formData.skedar });
 
       setFormFeedback({ type: 'success', message: 'Detyra u dorëzua me sukses!' });
@@ -147,7 +136,6 @@ const DorezimPage = () => {
         navigate(-1);
       }, 1200);
     } catch (error) {
-      console.error('Upload error:', error);
       setFormFeedback({ type: 'error', message: error?.message ?? 'Nuk u dorëzua detyra.' });
     } finally {
       setIsSubmitting(false);
@@ -329,19 +317,34 @@ const DorezimPage = () => {
 
   const parseLocal = (iso) => {
     if (!iso) return null;
-    // Parse local ISO without timezone
     return new Date(iso);
   };
 
-  const isSubmissionAllowed = (() => {
-    const now = new Date();
-    const start = parseLocal(ideaDeadline.start);
-    const end = parseLocal(ideaDeadline.end);
-    if (deadlineLoading) return true; // while loading, don't block UI hard
-    if (start && now < start) return false;
-    if (end && now > end) return false;
-    return true;
-  })();
+  const isSubmissionAllowed = useMemo(() => {
+    if (deadlineLoading) return false;
+    
+    // ideaStartDate është e detyrueshme
+    if (!ideaDeadline.ideaStartDate) return false;
+    if (ideaDeadline.ideaStartDate == null) return false;
+    
+    const now = Date.now();
+    const startTime = new Date(ideaDeadline.ideaStartDate).getTime();
+    
+    // Nëse është para fillimit
+    if (now < startTime) return false;
+    
+    // Check if deadline is passed or if deadline is not set, treat as blocking
+    const isDeadlinePassed = ideaDeadline.ideaEndDate ? new Date(ideaDeadline.ideaEndDate).getTime() < now : false;
+    const hasNoDeadline = !ideaDeadline.ideaEndDate;
+    
+    // Butoni bllokohet nëse afati ka kaluar OSE nëse nuk ka afat fare
+    const cannotSubmit = isDeadlinePassed || hasNoDeadline;
+    
+    return !cannotSubmit;
+  }, [ideaDeadline.ideaStartDate, ideaDeadline.ideaEndDate, deadlineLoading]);
+
+  // DEBUG: Log state before rendering
+  console.log('DEBUG isSubmissionAllowed:', isSubmissionAllowed, 'ideaDeadline:', ideaDeadline, 'deadlineLoading:', deadlineLoading);
 
   return (
     <div style={pageStyle} className="student-theme dorezimi-page">
@@ -363,14 +366,14 @@ const DorezimPage = () => {
         <div style={deadlineBoxStyle}>
           {deadlineLoading ? (
             <span>Duke u ngarkuar afatet...</span>
-          ) : (ideaDeadline.start || ideaDeadline.end) ? (
+          ) : (ideaDeadline.ideaStartDate || ideaDeadline.ideaEndDate) ? (
             <div>
               <div style={{ fontWeight: 700, marginBottom: 6 }}>
-                {ideaDeadline.title ? `📌 ${ideaDeadline.title}` : 'Afati i dorëzimit të idesë'}
+                {ideaDeadline.ideaTitle ? `📌 ${ideaDeadline.ideaTitle}` : 'Afati i dorëzimit të idesë'}
               </div>
               <div style={{ display: 'flex', justifyContent: 'center', gap: 24, flexWrap: 'wrap' }}>
-                <div>Fillimi: <span style={{ fontWeight: 600 }}>{formatDisplay(ideaDeadline.start)}</span></div>
-                <div>Mbarimi: <span style={{ fontWeight: 600 }}>{formatDisplay(ideaDeadline.end)}</span></div>
+                <div>Fillimi: <span style={{ fontWeight: 600 }}>{formatDisplay(ideaDeadline.ideaStartDate)}</span></div>
+                <div>Mbarimi: <span style={{ fontWeight: 600 }}>{formatDisplay(ideaDeadline.ideaEndDate)}</span></div>
               </div>
             </div>
           ) : (
@@ -461,15 +464,22 @@ const DorezimPage = () => {
                     border: '1px solid rgba(255,255,255,0.1)'
                   }}
                 >
-                  Dorëzimi i ideve është i mbyllur.
-                  {ideaDeadline.start && parseLocal(ideaDeadline.start) && new Date() < parseLocal(ideaDeadline.start) && (
-                    <span> Fillon më: {formatDisplay(ideaDeadline.start)}</span>
-                  )}
-                  {ideaDeadline.end && parseLocal(ideaDeadline.end) && new Date() > parseLocal(ideaDeadline.end) && (
-                    <span> Mbaroi më: {formatDisplay(ideaDeadline.end)}</span>
+                  {!ideaDeadline.ideaStartDate && !ideaDeadline.ideaEndDate ? (
+                    <span>Afati i dorëzimit nuk është caktuar akoma nga profesori.</span>
+                  ) : (
+                    <>
+                      Dorëzimi i ideve është i mbyllur.
+                      {ideaDeadline.ideaStartDate && parseLocal(ideaDeadline.ideaStartDate) && new Date() < parseLocal(ideaDeadline.ideaStartDate) && (
+                        <span> Fillon më: {formatDisplay(ideaDeadline.ideaStartDate)}</span>
+                      )}
+                      {ideaDeadline.ideaEndDate && parseLocal(ideaDeadline.ideaEndDate) && new Date() > parseLocal(ideaDeadline.ideaEndDate) && (
+                        <span> Mbaroi më: {formatDisplay(ideaDeadline.ideaEndDate)}</span>
+                      )}
+                    </>
                   )}
                 </div>
               )}
+
 
               <button
                 style={primaryButton}

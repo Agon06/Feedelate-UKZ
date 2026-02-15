@@ -243,16 +243,21 @@ const DorzimiProjektit = () => {
         navigate(-1);
     };
 
-    const isDeadlinePassed = projectDeadlineIso ? new Date(projectDeadlineIso).getTime() < Date.now() : false;
 
+const isDeadlinePassed = projectDeadlineIso ? new Date(projectDeadlineIso).getTime() < Date.now() : false;
+const hasNoDeadline = !projectDeadlineIso;
+const isBeforeStart = projectStartIso ? new Date(projectStartIso).getTime() > Date.now() : false;
+
+// Butoni bllokohet nëse afati ka kaluar, nuk ka afat fare, OSE nuk ka filluar akoma
+const cannotSubmit = isDeadlinePassed || hasNoDeadline || isBeforeStart;
     const handleFileChange = (e) => {
         setSelectedFile(e.target.files[0]);
     };
 
     const handleDorzoProjektin = async () => {
         setSubmitMessage(null);
-        if (isDeadlinePassed) {
-            setSubmitMessage({ type: "error", text: "Na vjen keq, afati i dorëzimit ka kaluar." });
+        if (cannotSubmit) {
+            setSubmitMessage({ type: "error", text: "Na vjen keq, afati i dorëzimit ka kaluar ose nuk ka afat të caktuar." });
             return;
         }
         if (!selectedFile) {
@@ -405,7 +410,7 @@ const DorzimiProjektit = () => {
                                 }}>
                                     Ngarko dokumentin e projektit për lëndën <strong>{subject}</strong>.
                                 </p>
-                                {isDeadlinePassed && (
+                                {cannotSubmit && (
                                     <div style={{
                                         marginBottom: "1rem",
                                         padding: "0.9rem 1rem",
@@ -416,13 +421,13 @@ const DorzimiProjektit = () => {
                                         textAlign: "center",
                                         fontWeight: 600
                                     }}>
-                                        Na vjen keq, afati i dorëzimit ka kaluar.
+                                        Na vjen keq, afati i dorëzimit ka kaluar ose nuk ka afat të caktuar.
                                     </div>
                                 )}
                                 <input
                                     type="file"
                                     onChange={handleFileChange}
-                                    disabled={isLoading || isDeadlinePassed}
+                                    disabled={isLoading || cannotSubmit}
                                     style={{
                                         display: "block",
                                         marginBottom: "1rem",
@@ -432,16 +437,16 @@ const DorzimiProjektit = () => {
                                         borderRadius: 8,
                                         color: "var(--st-text)",
                                         width: "100%",
-                                        opacity: (isLoading || isDeadlinePassed) ? 0.5 : 1,
-                                        cursor: (isLoading || isDeadlinePassed) ? "not-allowed" : "pointer",
+                                        opacity: (isLoading || cannotSubmit) ? 0.5 : 1,
+                                        cursor: (isLoading || cannotSubmit) ? "not-allowed" : "pointer",
                                         textAlign: "center"
                                     }}
                                 />
                                 <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
                                     <button
-                                        style={{ ...buttonStyle, flex: 1, opacity: (isLoading || isDeadlinePassed) ? 0.5 : 1 }}
+                                        style={{ ...buttonStyle, flex: 1, opacity: (isLoading || cannotSubmit) ? 0.5 : 1 }}
                                         onClick={handleDorzoProjektin}
-                                        disabled={isLoading || isDeadlinePassed}
+                                        disabled={isLoading || cannotSubmit}
                                     >
                                         {isLoading ? "Duke procesuar..." : "Dorëzo Projektin"}
                                     </button>

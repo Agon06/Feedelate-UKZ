@@ -54,6 +54,16 @@
   border: 1px solid var(--st-border);
 }
 
+.student-theme button:disabled,
+.student-theme .btn:disabled,
+.student-theme [class*="button"]:disabled,
+.student-theme [class*="Button"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #888 !important;
+  color: #eee !important;
+}
+
 .student-theme input,
 .student-theme select,
 .student-theme textarea {
