@@ -351,6 +351,7 @@ const DoreziметStudentesh = () => {
     }
   };
 
+  const [exportMessage, setExportMessage] = useState(null);
   const handleExportResults = async () => {
     try {
       // Export with current lenda and selected period filter
@@ -364,11 +365,35 @@ const DoreziметStudentesh = () => {
         deadlineEndMinute,
         deadlineEndSecond
       });
-      alert('Rezultatet u shkarkuan me sukses!');
+      setExportMessage({ type: 'success', text: 'Rezultatet u shkarkuan me sukses!' });
+      setTimeout(() => setExportMessage(null), 3500);
     } catch (error) {
-      alert('Error: ' + (error.message || 'Nuk u shkarkuan rezultatet'));
+      setExportMessage({ type: 'error', text: error.message || 'Nuk u shkarkuan rezultatet' });
+      setTimeout(() => setExportMessage(null), 3500);
     }
   };
+  {/* Toast message for export results */}
+  {exportMessage && (
+    <div style={{
+      position: 'fixed',
+      top: 24,
+      right: 24,
+      zIndex: 2000,
+      background: exportMessage.type === 'success' ? 'rgba(184, 227, 233, 0.95)' : 'rgba(255,99,71,0.95)',
+      color: exportMessage.type === 'success' ? '#0B2E33' : '#fff',
+      border: exportMessage.type === 'success' ? '1px solid #4F7C82' : '1px solid #e26464',
+      borderRadius: 12,
+      padding: '1rem 2rem',
+      fontWeight: 700,
+      fontSize: 15,
+      boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
+      minWidth: 220,
+      textAlign: 'center',
+      transition: 'all 0.2s'
+    }}>
+      {exportMessage.text}
+    </div>
+  )}
 
   const calculatePeriods = useCallback(() => {
     if (!lendaId) return [];

@@ -116,8 +116,11 @@ const DorzimiProjektit = () => {
         try {
             setIsLoading(true);
             await shkarkoTemplate(STUDENT_ID, lendaId, templateFileName);
+            setSubmitMessage({ type: "success", text: "Template u shkarkua me sukses!" });
+            setTimeout(() => setSubmitMessage(null), 3500);
         } catch (error) {
-            alert("Error: " + (error.message || "Nuk u shkarkua template"));
+            setSubmitMessage({ type: "error", text: error.message || "Nuk u shkarkua template" });
+            setTimeout(() => setSubmitMessage(null), 3500);
         } finally {
             setIsLoading(false);
         }
