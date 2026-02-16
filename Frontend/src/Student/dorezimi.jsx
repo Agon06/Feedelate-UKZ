@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { uploadStudentDorezim, getStudentTemplate, getStudentIdeaDeadline } from '../services/studentApi';
+import { uploadStudentDorezim, getStudentTemplate, getStudentIdeaDeadline, getStudentIdeaSubmission } from '../services/studentApi';
 import './StudentTheme.css';
 
 const DorezimPage = () => {
@@ -26,6 +26,8 @@ const DorezimPage = () => {
   const [templateLoading, setTemplateLoading] = useState(true);
   const [ideaDeadline, setIdeaDeadline] = useState({ ideaStartDate: null, ideaEndDate: null, ideaTitle: null });
   const [deadlineLoading, setDeadlineLoading] = useState(true);
+  const [existingSubmission, setExistingSubmission] = useState(null);
+  const [submissionLoading, setSubmissionLoading] = useState(true);
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -70,6 +72,23 @@ const DorezimPage = () => {
       }
     };
     fetchIdeaDeadline();
+  }, [lendaId]);
+
+  // Fetch existing submission
+  useEffect(() => {
+    const fetchExistingSubmission = async () => {
+      if (!lendaId) return;
+      try {
+        const data = await getStudentIdeaSubmission(STUDENT_ID, lendaId);
+        // API returns an array, take the first (most recent) submission
+        setExistingSubmission(Array.isArray(data) && data.length > 0 ? data[0] : null);
+      } catch (error) {
+        setExistingSubmission(null);
+      } finally {
+        setSubmissionLoading(false);
+      }
+    };
+    fetchExistingSubmission();
   }, [lendaId]);
 
   const handleDownloadTemplate = () => {
@@ -131,6 +150,15 @@ const DorezimPage = () => {
       await uploadStudentDorezim(STUDENT_ID, { lendaId, file: formData.skedar });
 
       setFormFeedback({ type: 'success', message: 'Detyra u dorëzua me sukses!' });
+      
+      // Përditëso listën e dorëzimeve për të shfaqur file-in e ri
+      try {
+        const updatedData = await getStudentIdeaSubmission(STUDENT_ID, lendaId);
+        setExistingSubmission(Array.isArray(updatedData) && updatedData.length > 0 ? updatedData[0] : null);
+      } catch (refreshError) {
+        console.error('Error refreshing submission:', refreshError);
+      }
+
       setTimeout(() => {
         setFormData({ skedar: null });
         navigate(-1);
@@ -492,6 +520,31 @@ const DorezimPage = () => {
                 }
               </button>
             </form>
+
+            {/* Existing Submission Info */}
+            {!submissionLoading && existingSubmission && existingSubmission.fileName && (
+              <div
+                style={{
+                  ...infoBoxStyle,
+                  background: 'rgba(79,196,130,0.25)',
+                  border: '1px solid rgba(79,196,130,0.4)',
+                  marginTop: '1.5rem',
+                  marginBottom: 0
+                }}
+              >
+                <div style={{ fontWeight: 700, marginBottom: '0.5rem', color: '#85E3A0' }}>
+                  ✓ File i Dorëzuar
+                </div>
+                <div style={{ fontSize: 12, opacity: 0.9 }}>
+                  📎 {existingSubmission.fileName}
+                </div>
+                {existingSubmission.createdAt && (
+                  <div style={{ fontSize: 11, opacity: 0.7, marginTop: '0.4rem' }}>
+                    Dorëzuar më: {formatDisplay(existingSubmission.createdAt)}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
