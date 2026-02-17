@@ -80,3 +80,20 @@ export const getSubjectsByYear = async (year) => {
         throw error;
     }
 };
+
+// Delete subject
+export const deleteSubject = async (subjectId) => {
+    try {
+        const url = `${API_BASE_URL}/lendet/${subjectId}`;
+        const response = await fetch(url, {
+            method: 'DELETE',
+        });
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Failed to delete subject: ${response.status} - ${errorText}`);
+        }
+        return await response.json();
+    } catch (error) {
+        throw error;
+    }
+};

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserMenu from '../components/UserMenu';
 import RoleSwitcher from '../components/RoleSwitcher';
-import { registerSubject, getAllSubjects } from '../services/adminApi';
+import { registerSubject, getAllSubjects, deleteSubject } from '../services/adminApi';
 
 const AdminRegisterSubjects = () => {
     const navigate = useNavigate();
@@ -19,6 +19,9 @@ const AdminRegisterSubjects = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
+    const [deletingId, setDeletingId] = useState(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [selectedDeleteId, setSelectedDeleteId] = useState('');
 
     // Dynamic semester options based on selected year
     const getSemesterOptions = (year) => {
@@ -108,6 +111,36 @@ const AdminRegisterSubjects = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleDeleteSubject = async () => {
+        if (!selectedDeleteId) return;
+        if (!window.confirm('A jeni i sigurt që dëshironi të fshini këtë lëndë?')) return;
+        setDeletingId(selectedDeleteId);
+        try {
+            await deleteSubject(selectedDeleteId);
+            setSuccess('Lenda u fshi me sukses!');
+            await fetchSubjects();
+            setTimeout(() => setSuccess(null), 2500);
+            setShowDeleteModal(false);
+            setSelectedDeleteId('');
+        } catch (err) {
+            setError(err.message || 'Fshirja dështoi');
+        } finally {
+            setDeletingId(null);
+        }
+    };
+
+    const deleteSubject = async (subjectId) => {
+        const url = `http://localhost:5000/api/admin/lendet/${subjectId}`;
+        const response = await fetch(url, {
+            method: 'DELETE',
+        });
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || 'Fshirja dështoi');
+        }
+        return await response.json();
     };
 
     const pageStyle = {
@@ -287,29 +320,31 @@ const AdminRegisterSubjects = () => {
                             Total lendet: <strong>{subjects.length}</strong>
                         </p>
                     </div>
-                    <button
-                        onClick={() => setShowModal(true)}
-                        style={{
-                            padding: '0.75rem 1.5rem',
-                            background: '#0B2E33',
-                            color: '#B8E3E9',
-                            border: '1px solid rgba(184,227,233,0.35)',
-                            borderRadius: 8,
-                            fontWeight: 600,
-                            fontSize: 16,
-                            cursor: 'pointer',
-                            transition: 'all 200ms ease',
-                            boxShadow: '0 4px 12px rgba(11,46,51,0.3)'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.boxShadow = '0 6px 16px rgba(11,46,51,0.45)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(11,46,51,0.3)';
-                        }}
-                    >
-                        Regjistro Lenden
-                    </button>
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                        <button
+                            onClick={() => setShowModal(true)}
+                            style={{
+                                padding: '0.75rem 1.5rem',
+                                background: '#0B2E33',
+                                color: '#B8E3E9',
+                                border: '1px solid rgba(184,227,233,0.35)',
+                                borderRadius: 8,
+                                fontWeight: 600,
+                                fontSize: 16,
+                                cursor: 'pointer',
+                                transition: 'all 200ms ease',
+                                boxShadow: '0 4px 12px rgba(11,46,51,0.3)'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.boxShadow = '0 6px 16px rgba(11,46,51,0.45)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(11,46,51,0.3)';
+                            }}
+                        >
+                            Regjistro Lenden
+                        </button>
+                    </div>
                 </div>
 
                 {/* Subjects grouped by year */}
@@ -394,6 +429,38 @@ const AdminRegisterSubjects = () => {
                                                     }}>
                                                         {subject.isZgjedhore ? 'Zgjedhore' : 'Obligative'}
                                                     </span>
+                                                    <button
+                                                        onClick={async () => {
+                                                            if (!window.confirm('A jeni i sigurt që dëshironi të fshini këtë lëndë?')) return;
+                                                            setDeletingId(subject.id);
+                                                            try {
+                                                                await deleteSubject(subject.id);
+                                                                setSuccess('Lenda u fshi me sukses!');
+                                                                await fetchSubjects();
+                                                                setTimeout(() => setSuccess(null), 2500);
+                                                            } catch (err) {
+                                                                setError(err.message || 'Fshirja dështoi');
+                                                            } finally {
+                                                                setDeletingId(null);
+                                                            }
+                                                        }}
+                                                        disabled={deletingId === subject.id}
+                                                        style={{
+                                                            padding: '0.3rem 0.7rem',
+                                                            background: deletingId === subject.id ? '#ef4444' : 'rgba(239,68,68,0.15)',
+                                                            color: '#fff',
+                                                            border: 'none',
+                                                            borderRadius: 6,
+                                                            fontSize: 12,
+                                                            fontWeight: 600,
+                                                            cursor: deletingId === subject.id ? 'not-allowed' : 'pointer',
+                                                            opacity: deletingId === subject.id ? 0.6 : 1,
+                                                            transition: 'all 200ms ease',
+                                                            marginLeft: 'auto'
+                                                        }}
+                                                    >
+                                                        {deletingId === subject.id ? 'Duke fshirë...' : 'Fshi'}
+                                                    </button>
                                                 </div>
                                             </div>
                                         ))}

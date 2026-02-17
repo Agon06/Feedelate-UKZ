@@ -197,6 +197,20 @@ router.get("/lendet/all", async (req: Request, res: Response) => {
 });
 
 // Create lendet (register a new subject)
+// Delete lendet (subject) by id
+router.delete("/lendet/:id", async (req: Request, res: Response) => {
+    try {
+        const lendetId = parseInt(req.params.id);
+        const result = await lendetRepository.delete(lendetId);
+        if (result.affected === 0) {
+            return res.status(404).json({ message: "Lenda nuk u gjet" });
+        }
+        res.json({ message: "Lenda u fshi me sukses" });
+    } catch (error) {
+        console.error("Error deleting lendet:", error);
+        res.status(500).json({ message: "Error deleting lendet", error });
+    }
+});
 router.post("/lendet", async (req: Request, res: Response) => {
     try {
         const { emriLendes, viti, semestri, isZgjedhore } = req.body;
