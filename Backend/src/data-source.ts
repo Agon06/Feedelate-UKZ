@@ -22,7 +22,7 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USER || "root",
   password: process.env.DB_PASSWORD || "",
   database: process.env.DB_NAME || "feedelate",
-  synchronize: false, // Auto-create tables from entities
+  synchronize: true, // Auto-create tables from entities
   logging: false,
   entities: [
     Admin,
