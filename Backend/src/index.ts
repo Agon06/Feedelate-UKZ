@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import session from "express-session";
 import passport from "./config/passport";
 import { AppDataSource } from "./data-source";
-import userRoutes from "./routes/userRoutes";
+// import userRoutes from "./routes/userRoutes";
 import profesorRoutes from "./routes/Profesor/profesorRoutes";
 import projektiRoutesp from "./routes/Profesor/projektiRoutesp";  // ✅ ADD: Mount projekt routes
 import studentRoutes from "./routes/Student/studentRoutes";
@@ -56,7 +56,7 @@ app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
 //intex i bashkon krejt me routes entetis edhe nis serverin pa u kan ky okej nuk nis.
 // API Routes 
 app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
+// app.use("/api/users", userRoutes);
 app.use("/api/profesoret", profesorRoutes);
 app.use("/api/projektip", projektiRoutesp);  // ✅ FIX: Mount projekt routes (was causing 404)
 app.use("/api/studentet", studentRoutes);

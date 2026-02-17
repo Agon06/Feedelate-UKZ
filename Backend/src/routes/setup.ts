@@ -52,24 +52,51 @@ router.post("/setup", async (req, res) => {
     };
 
     const year1Subjects = [
-      { emriLendes: "Algoritmet dhe Strukturat e të Dhënave", semestri: 1, viti: 1, isZgjedhore: false },
-      { emriLendes: "Programimi i Orientuar në Objekte", semestri: 1, viti: 1, isZgjedhore: false },
-      { emriLendes: "Matematika Diskrete", semestri: 1, viti: 1, isZgjedhore: false },
-      { emriLendes: "Bazat e të Dhënave", semestri: 2, viti: 1, isZgjedhore: false },
-      { emriLendes: "Inxhinieria e Softuerit", semestri: 2, viti: 1, isZgjedhore: false }
+      { emriLendes: "Shkrimi Akademik", semestri: 1, viti: 1, isZgjedhore: false },
+      { emriLendes: "Gjuha Gjermane I për shkencat kompjuterike", semestri: 1, viti: 1, isZgjedhore: true },
+      {emriLendes: "Gjuha Angleze I për shkencat kompjuterike", semestri: 1, viti: 1, isZgjedhore: true },
+      { emriLendes: "Qarqet Digjitale", semestri: 1, viti: 1, isZgjedhore: false },
+      { emriLendes: "Matematika I për informatikë", semestri: 1, viti: 1, isZgjedhore: false },
+      { emriLendes: "Arkitektura e Kompjuterëve & SO", semestri: 1, viti: 1, isZgjedhore: false },
+      { emriLendes: "Programimi I", semestri: 1, viti: 1, isZgjedhore: false },
+      { emriLendes: "Gjuha Gjermane II për shkencat kompjuterike", semestri: 2, viti: 1, isZgjedhore: true },
+      { emriLendes: "Gjuha Angleze II për shkencat kompjuterike", semestri: 2, viti: 1, isZgjedhore: true },
+      { emriLendes: "Analiza e kërkesave të web-aplikacioneve", semestri: 2, viti: 1, isZgjedhore: true },
+      { emriLendes: "Matematika II për informatikë", semestri: 2, viti: 1, isZgjedhore: false },
+      { emriLendes: "Programimi II", semestri: 2, viti: 1, isZgjedhore: false },
+      { emriLendes: "Rrjetat Kompjuterike", semestri: 2, viti: 1, isZgjedhore: false },
+      { emriLendes: "Web Teknologjitë", semestri: 2, viti: 1, isZgjedhore: false },
+     
     ];
 
     const year2Subjects = [
-      { emriLendes: "Rrjetat Kompjuterike", semestri: 3, viti: 2, isZgjedhore: false },
-      { emriLendes: "Siguria e Informacionit", semestri: 3, viti: 2, isZgjedhore: false },
-      { emriLendes: "Inteligjenca Artificiale", semestri: 4, viti: 2, isZgjedhore: true },
-      { emriLendes: "Machine Learning", semestri: 4, viti: 2, isZgjedhore: true }
+      { emriLendes: "Sigurimi i kualitetit të softuerëve", semestri: 3, viti: 2, isZgjedhore: true },
+      { emriLendes: "Bazat e të dhënave", semestri: 3, viti: 2, isZgjedhore: false },
+      { emriLendes: "Hyrje në grafikën kompjuterike", semestri: 3, viti: 2, isZgjedhore: false },
+      { emriLendes: "Zhvillimi i Web aplikacioneve", semestri: 3, viti: 2, isZgjedhore: false },
+      { emriLendes: "Algoritmet dhe strukturat e të dhënave", semestri: 3, viti: 2, isZgjedhore: false },
+      { emriLendes: "Teknologjitë bashkëkohore të komunikimit dhe rrjetat", semestri: 3, viti: 2, isZgjedhore: false },
+      { emriLendes: "Rrjetat dhe Cloud", semestri: 4, viti: 2, isZgjedhore: false },
+      { emriLendes: "Teoria e Grafeve", semestri: 4, viti: 2, isZgjedhore: false },
+      { emriLendes: "Kriptografia dhe Siguria e Rrjetave", semestri: 4, viti: 2, isZgjedhore: true },
+      { emriLendes: "Hyrje në Inteligjencën Artificiale", semestri: 4, viti: 2, isZgjedhore: false },
+      { emriLendes: "Sistemet e Shpërndara", semestri: 4, viti: 2, isZgjedhore: false },
+      { emriLendes: "Programimi i Orientuar në Objekte", semestri: 4, viti: 2, isZgjedhore: false }
     ];
 
     const year3Subjects = [
-      { emriLendes: "Sistemet e Distribuuara", semestri: 5, viti: 3, isZgjedhore: false },
-      { emriLendes: "Cloud Computing", semestri: 5, viti: 3, isZgjedhore: true },
-      { emriLendes: "Aplikacione Mobile", semestri: 6, viti: 3, isZgjedhore: true }
+      { emriLendes: "Web Dizajn i Avancuar (SEW) (07SHK-SEW0507)", semestri: 5, viti: 3, isZgjedhore: false },
+      { emriLendes: "Databaza e Avancuar (SEW) (07SHK-SEW0508)", semestri: 5, viti: 3, isZgjedhore: false },
+      { emriLendes: "Projekti në SEW (07SHK-SEW0505)", semestri: 5, viti: 3, isZgjedhore: false },
+      { emriLendes: "Hyrje në Mekatronikë (STC) (07SHK-STC0501)", semestri: 5, viti: 3, isZgjedhore: false },
+      { emriLendes: "Vizualizimi dhe procesimi i Imazheve (SEW) (07SHK-SEW0504)", semestri: 5, viti: 3, isZgjedhore: false },
+      { emriLendes: "Analiza e Sistemeve të Kontrollit dhe Dizajnimi (STC) (07SHK-STC0503)", semestri: 5, viti: 3, isZgjedhore: false },
+      // Semestri 6, viti 3
+      { emriLendes: "Sistemet e Integruara dhe Hibridet të Kontrollit (STC) (07SHK-STC0604)", semestri: 6, viti: 3, isZgjedhore: false },
+      { emriLendes: "Shkenca e të Dhënave (STC) (07SHK-STC0602)", semestri: 6, viti: 3, isZgjedhore: false },
+      { emriLendes: "Punimi i Diplomës (SEW) (07SHK-SEW0608)", semestri: 6, viti: 3, isZgjedhore: false },
+      { emriLendes: "Dizajnimi i Multimedias (SEW) (07SHK-SEW0605)", semestri: 6, viti: 3, isZgjedhore: false },
+      { emriLendes: "Siguria e Rrjetave (SEW) (07SHK-SEW0606)", semestri: 6, viti: 3, isZgjedhore: false }
     ];
 
     const seeded = [];
