@@ -144,7 +144,8 @@ const ProfesorDashboard = () => {
     fontWeight: 800,
     cursor: 'pointer',
     transition: 'transform 180ms ease, box-shadow 180ms ease',
-    border: '1px solid rgba(184,227,233,0.2)'
+    border: '1px solid rgba(184,227,233,0.2)',
+    marginBottom: isMobile ? 24 : 0
   };
 
   const cardHoverStyle = {
@@ -172,9 +173,9 @@ const ProfesorDashboard = () => {
   const positions = useMemo(() => (
     isMobile
       ? [
-          { left: '50%', top: '20%', transform: 'translateX(-50%)' },
-          { left: '50%', top: '20%', transform: 'translateX(-50%)' },
-          { left: '50%', top: '20%', transform: 'translateX(-50%)' }
+          { left: '50%', top: '18%', transform: 'translateX(-50%)' },
+          { left: '50%', top: '42%', transform: 'translateX(-50%)' },
+          { left: '50%', top: '66%', transform: 'translateX(-50%)' }
         ]
       : [
           { left: '14%', top: '24%' },
