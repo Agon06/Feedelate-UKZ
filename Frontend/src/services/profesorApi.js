@@ -90,6 +90,11 @@ export const getProfesorIdeaSubmission = (profesorId, lendaId) =>
 export const getProfesorTemplate = (profesorId, lendaId) =>
   request(`/profesoret/${profesorId}/dorezime/shabllon?lendaId=${lendaId}`);
 
+export const deleteProfesorTemplate = (profesorId, lendaId) =>
+  request(`/profesoret/${profesorId}/dorezime/shabllon?lendaId=${lendaId}`, {
+    method: 'DELETE',
+  });
+  
 export const getStudentSubmissions = (profesorId, lendaId) =>
   request(`/profesoret/${profesorId}/dorezime-studentesh/${lendaId}`);
 

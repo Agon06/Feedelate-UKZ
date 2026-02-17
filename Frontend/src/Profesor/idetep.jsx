@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import JSZip from 'jszip';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getProfesorIdeas, getStudentSubmissions, getIdeaDeadline, updateIdeaDeadline, uploadLendaTemplate, getLendaTemplateInfo, deleteLendaTemplate } from '../services/profesorApi';
+import { getProfesorIdeas, getStudentSubmissions, getIdeaDeadline, updateIdeaDeadline, uploadProfesorDorezim, getProfesorTemplate, deleteProfesorTemplate } from '../services/profesorApi';
 import './idetep.css';
 
 const Idetep = () => {
@@ -209,8 +209,8 @@ const Idetep = () => {
       return;
     }
     try {
-      const data = await getLendaTemplateInfo(PROFESOR_ID, lendaId);
-      setTemplateInfo(data.hasTemplate ? { hasTemplate: true, fileName: data.fileName } : { hasTemplate: false, fileName: '' });
+      const data = await getProfesorTemplate(PROFESOR_ID, lendaId);
+      setTemplateInfo(data?.fileName ? { hasTemplate: true, fileName: data.fileName } : { hasTemplate: false, fileName: '' });
     } catch (error) {
       console.error('Error loading template info:', error);
       setTemplateInfo({ hasTemplate: false, fileName: '' });
@@ -222,7 +222,7 @@ const Idetep = () => {
     if (!file) return;
     try {
       setUploadingTemplate(true);
-      await uploadLendaTemplate(PROFESOR_ID, lendaId, file);
+      await uploadProfesorDorezim(PROFESOR_ID, { lendaId, file, isShabllon: true });
       await loadTemplateInfo();
       alert('Template u ngarkua me sukses!');
     } catch (error) {
@@ -239,7 +239,7 @@ const Idetep = () => {
       onConfirm: async () => {
         try {
           setUploadingTemplate(true);
-          await deleteLendaTemplate(PROFESOR_ID, lendaId);
+          await deleteProfesorTemplate(PROFESOR_ID, lendaId);
           setTemplateInfo({ hasTemplate: false, fileName: '' });
           setToastMessage({ type: 'success', text: 'Template u fshi me sukses!' });
           setTimeout(() => setToastMessage(null), 4000);

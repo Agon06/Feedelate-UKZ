@@ -12,8 +12,8 @@ export class DorezimiIdes {
     @JoinColumn({ name: "studentId" })
     student: Student;
 
-    @Column()
-    studentId: number;
+    @Column({nullable: true})
+    studentId?: number;
 
     @ManyToOne(() => Lendet, (lenda) => lenda.dorezime, { onDelete: "CASCADE" })
     @JoinColumn({ name: "lendaId" })

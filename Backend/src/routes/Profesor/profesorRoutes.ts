@@ -482,6 +482,30 @@ router.post("/:id/dorezime", upload.single("file"), async (req: Request, res: Re
     // Get relative path from uploads folder
     const filePath = path.relative(process.cwd(), req.file.path).replace(/\\/g, "/");
     console.log("File path to save:", filePath);
+    
+    const isTemplate = isShabllon === 'true' || isShabllon === true;
+
+    if (isTemplate) {
+      const existingTemplate = await dorezimiIdeeshRepository.findOne({
+        where: {
+          lenda: { id: parsedLendaId },
+          isShabllon: true,
+        },
+        order: { createdAt: "DESC" },
+      });
+
+      if (existingTemplate) {
+        const oldPath = path.resolve(process.cwd(), existingTemplate.fileDorezimi);
+        if (fs.existsSync(oldPath)) {
+          try {
+            fs.unlinkSync(oldPath);
+          } catch (err) {
+            console.warn("Could not delete old template file:", oldPath, err);
+          }
+        }
+        await dorezimiIdeeshRepository.remove(existingTemplate);
+      }
+    }
 
     const record = dorezimiIdeeshRepository.create({
       profesor,
@@ -1365,7 +1389,7 @@ router.delete("/:id/lendet/:lendaId/instructions/:instructionId", async (req: Re
       return res.status(404).json({ message: "Lenda not found" });
     }
 
-    lenda.projectInstructions = undefined;
+    lenda.projectInstructions = '';
     await lendetRepository.save(lenda);
     res.json({ message: "Instruction deleted" });
   } catch (error) {

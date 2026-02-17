@@ -80,7 +80,6 @@ const DorezimPage = () => {
       if (!lendaId) return;
       try {
         const data = await getStudentIdeaSubmission(STUDENT_ID, lendaId);
-        // API returns an array, take the first (most recent) submission
         setExistingSubmission(Array.isArray(data) && data.length > 0 ? data[0] : null);
       } catch (error) {
         setExistingSubmission(null);
@@ -150,8 +149,7 @@ const DorezimPage = () => {
       await uploadStudentDorezim(STUDENT_ID, { lendaId, file: formData.skedar });
 
       setFormFeedback({ type: 'success', message: 'Detyra u dorëzua me sukses!' });
-      
-      // Përditëso listën e dorëzimeve për të shfaqur file-in e ri
+
       try {
         const updatedData = await getStudentIdeaSubmission(STUDENT_ID, lendaId);
         setExistingSubmission(Array.isArray(updatedData) && updatedData.length > 0 ? updatedData[0] : null);
@@ -521,7 +519,6 @@ const DorezimPage = () => {
               </button>
             </form>
 
-            {/* Existing Submission Info */}
             {!submissionLoading && existingSubmission && existingSubmission.fileName && (
               <div
                 style={{

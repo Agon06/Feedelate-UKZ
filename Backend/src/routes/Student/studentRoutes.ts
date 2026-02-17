@@ -563,7 +563,7 @@ router.delete("/:id/idet/:ideaId", async (req: Request, res: Response) => {
   }
 });
 
-// Get template info për nje lende (lexo nga Lendet.templateFile)
+// Get template info për nje lende (shablloni i idesë nga dorezimet)
 router.get("/:id/dorezime/template-info", async (req: Request, res: Response) => {
   const studentId = Number(req.params.id);
   const lendaId = req.query.lendaId ? Number(req.query.lendaId) : undefined;
@@ -587,7 +587,15 @@ router.get("/:id/dorezime/template-info", async (req: Request, res: Response) =>
       return res.status(404).json({ message: "Lenda nuk u gjet" });
     }
 
-    if (!lenda.templateFile || !lenda.templateFileName) {
+    const template = await dorezimRepository.findOne({
+      where: {
+        lenda: { id: lendaId },
+        isShabllon: true,
+      },
+      order: { createdAt: "DESC" },
+    });
+
+    if (!template) {
       return res.json({
         hasTemplate: false,
         fileName: null,
@@ -596,7 +604,7 @@ router.get("/:id/dorezime/template-info", async (req: Request, res: Response) =>
 
     res.json({
       hasTemplate: true,
-      fileName: lenda.templateFileName,
+      fileName: template.fileName,
     });
   } catch (error) {
     console.error("Template info fetch error:", error);
@@ -604,7 +612,7 @@ router.get("/:id/dorezime/template-info", async (req: Request, res: Response) =>
   }
 });
 
-// DOWNLOAD: Shkarko template-in për nje lende
+// DOWNLOAD: Shkarko template-in për nje lende (shablloni i idesë)
 router.get("/:id/dorezime/template-download", async (req: Request, res: Response) => {
   const studentId = Number(req.params.id);
   const lendaId = req.query.lendaId ? Number(req.query.lendaId) : undefined;
@@ -628,21 +636,29 @@ router.get("/:id/dorezime/template-download", async (req: Request, res: Response
       return res.status(404).json({ message: "Lenda nuk u gjet" });
     }
 
-    if (!lenda.templateFile || !lenda.templateFileName) {
+    const template = await dorezimRepository.findOne({
+      where: {
+        lenda: { id: lendaId },
+        isShabllon: true,
+      },
+      order: { createdAt: "DESC" },
+    });
+
+    if (!template) {
       console.log(`[Template Download] Nuk ka template per Lenda ID: ${lendaId}`);
       return res.status(404).json({ message: "Template nuk u gjet" });
     }
 
-    const absolutePath = path.resolve(process.cwd(), lenda.templateFile);
-    console.log(`[Template Download] Lenda ID: ${lendaId}, templateFile: ${lenda.templateFile}, absolutePath: ${absolutePath}`);
+    const absolutePath = path.resolve(process.cwd(), template.fileDorezimi);
+    console.log(`[Template Download] Lenda ID: ${lendaId}, templateFile: ${template.fileDorezimi}, absolutePath: ${absolutePath}`);
     
     if (!fs.existsSync(absolutePath)) {
       console.log(`[Template Download] File-i nuk ekziston: ${absolutePath}`);
       return res.status(404).json({ message: "Template file nuk ekziston ne disk" });
     }
 
-    console.log(`[Template Download] Shkarkimet e file-it: ${absolutePath} as ${lenda.templateFileName}`);
-    return res.download(absolutePath, lenda.templateFileName);
+    console.log(`[Template Download] Shkarkimet e file-it: ${absolutePath} as ${template.fileName}`);
+    return res.download(absolutePath, template.fileName);
   } catch (error) {
     console.error("Template download error:", error);
     res.status(500).json({ message: "Error downloading template", error: String(error) });
