@@ -38,6 +38,7 @@ const IdeaPage = () => {
   const [confirmDialog, setConfirmDialog] = useState({ open: false, message: '', onConfirm: null });
   // Feedback modal state
   const [feedbackModal, setFeedbackModal] = useState({ open: false, feedback: '', loading: false, error: null, idea: null });
+  const [toastMessage, setToastMessage] = useState(null);
 
   // Fetch feedback when modal opens
   useEffect(() => {
@@ -177,8 +178,31 @@ const IdeaPage = () => {
       });
     }
     else {
-      alert('Nuk ka ende feedback të lidhur me këtë ide.');
+      setToastMessage({ type: 'error', text: 'Nuk ka ende feedback të lidhur me këtë ide.' });
+      setTimeout(() => setToastMessage(null), 3000);
     }
+    {/* Toast message for feedback error */}
+    {toastMessage && (
+      <div style={{
+        position: 'fixed',
+        top: 24,
+        right: 24,
+        zIndex: 2000,
+        background: toastMessage.type === 'success' ? 'rgba(184, 227, 233, 0.95)' : 'rgba(255,99,71,0.95)',
+        color: toastMessage.type === 'success' ? '#0B2E33' : '#fff',
+        border: toastMessage.type === 'success' ? '1px solid #4F7C82' : '1px solid #e26464',
+        borderRadius: 12,
+        padding: '1rem 2rem',
+        fontWeight: 700,
+        fontSize: 15,
+        boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
+        minWidth: 220,
+        textAlign: 'center',
+        transition: 'all 0.2s'
+      }}>
+        {toastMessage.text}
+      </div>
+    )}
   };
 
 

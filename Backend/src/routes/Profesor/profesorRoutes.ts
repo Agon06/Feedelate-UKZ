@@ -1,3 +1,4 @@
+
 import { Router, Request, Response } from "express";
 import { FindOptionsWhere } from "typeorm";
 import { AppDataSource } from "../../data-source";
@@ -40,13 +41,13 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   fileFilter: (_req, file, cb) => {
-    const allowed = [".doc", ".docx", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+    const allowed = [".doc", ".pdf", ".docx", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/pdf"];
     const ext = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf('.'));
     const mime = file.mimetype;
     if (allowed.includes(ext) || allowed.includes(mime)) {
       cb(null, true);
     } else {
-      cb(new Error("Lejohen vetem DOC/DOCX"));
+      cb(new Error("Lejohen vetem DOC/DOCX/PDF"));
     }
   },
   limits: { fileSize: 10 * 1024 * 1024 }
@@ -1396,6 +1397,48 @@ router.delete("/:id/lendet/:lendaId/instructions/:instructionId", async (req: Re
     res.status(500).json({ message: "Error deleting instruction", error: String(error) });
   }
 });
+// DELETE: Fshij template-in (shabllon) nga DorezimiIdes për një lëndë
+router.delete('/:id/dorezime/shabllon', async (req, res) => {
+  const profesorId = Number(req.params.id);
+  const lendaId = req.query.lendaId ? Number(req.query.lendaId) : undefined;
+
+  if (Number.isNaN(profesorId)) {
+    return res.status(400).json({ message: 'Profesor id is invalid' });
+  }
+  if (!lendaId || Number.isNaN(lendaId)) {
+    return res.status(400).json({ message: 'lendaId eshte i detyrueshem' });
+  }
+
+  try {
+    // Gjej template-in (shabllon) për këtë lëndë
+    const template = await dorezimiIdeeshRepository.findOne({
+      where: {
+        lenda: { id: lendaId },
+        isShabllon: true,
+      },
+      order: { createdAt: 'DESC' },
+    });
+
+    if (!template) {
+      return res.status(404).json({ message: 'Nuk ka template për këtë lëndë' });
+    }
+
+    // Fshij file-in fizik nëse ekziston
+    const filePath = require('path').resolve(process.cwd(), template.fileDorezimi);
+    const fs = require('fs');
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    // Fshij rekordin nga databaza
+    await dorezimiIdeeshRepository.remove(template);
+
+    res.json({ message: 'Template u fshi me sukses!' });
+  } catch (error) {
+    console.error('Error deleting template:', error);
+    res.status(500).json({ message: 'Error deleting template', error: String(error) });
+  }
+});
 
 // DELETE: Fshij template-in për një lëndë
 router.delete("/:id/lendet/:lendaId/template", async (req: Request, res: Response) => {
@@ -1434,6 +1477,7 @@ router.delete("/:id/lendet/:lendaId/template", async (req: Request, res: Respons
     res.status(500).json({ message: "Error deleting template", error });
   }
 });
+
 
 // ============ EKSPORTI I REZULTATEVE TË PROJEKTEVE ============
 

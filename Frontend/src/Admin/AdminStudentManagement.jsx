@@ -281,23 +281,33 @@ const AdminStudentManagement = () => {
                 setIsEditModalOpen(false);
                 setSelectedStudent(null);
                 setEditData({});
-                
                 // Show success notification
                 setNotification({
                     type: 'success',
                     message: 'Ndryshimet u ruajtën me sukses!'
                 });
-                
                 // Auto-hide notification after 3 seconds
                 setTimeout(() => {
                     setNotification(null);
                 }, 3000);
             } else {
-                alert('Gabim gjatë ruajtjes. Provo përsëri.');
+                setNotification({
+                    type: 'error',
+                    message: 'Gabim gjatë ruajtjes. Provo përsëri.'
+                });
+                setTimeout(() => {
+                    setNotification(null);
+                }, 3000);
             }
         } catch (err) {
             console.error('Error saving student:', err);
-            alert('Gabim: ' + err.message);
+            setNotification({
+                type: 'error',
+                message: 'Gabim: ' + err.message
+            });
+            setTimeout(() => {
+                setNotification(null);
+            }, 3000);
         }
     };
 

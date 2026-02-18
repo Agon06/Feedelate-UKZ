@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
+  // Toast message state
+  const [toastMessage, setToastMessage] = useState(null);
 import { useLocation, useNavigate } from 'react-router-dom';
 import { uploadStudentDorezim, getStudentTemplate, getStudentIdeaDeadline, getStudentIdeaSubmission } from '../services/studentApi';
 import './StudentTheme.css';
@@ -93,7 +95,8 @@ const DorezimPage = () => {
   const handleDownloadTemplate = () => {
     try {
       if (!template || !template.hasTemplate || !STUDENT_ID || !lendaId) {
-        alert('Template nuk u gjet');
+        setToastMessage({ type: 'error', text: 'Template nuk u gjet' });
+        setTimeout(() => setToastMessage(null), 3500);
         return;
       }
 
@@ -111,9 +114,32 @@ const DorezimPage = () => {
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      alert('Gabim gjatë shkarkimit të template-it');
+      setToastMessage({ type: 'error', text: 'Gabim gjatë shkarkimit të template-it' });
+      setTimeout(() => setToastMessage(null), 3500);
     }
   };
+  {/* Toast Message */}
+  {toastMessage && (
+    <div style={{
+      position: 'fixed',
+      top: 24,
+      right: 24,
+      zIndex: 2000,
+      background: toastMessage.type === 'success' ? 'rgba(184, 227, 233, 0.95)' : toastMessage.type === 'error' ? 'rgba(255,99,71,0.95)' : 'rgba(79,124,130,0.95)',
+      color: toastMessage.type === 'success' ? '#0B2E33' : '#fff',
+      border: toastMessage.type === 'success' ? '1px solid #4F7C82' : toastMessage.type === 'error' ? '1px solid #e26464' : '1px solid #4F7C82',
+      borderRadius: 12,
+      padding: '1rem 2rem',
+      fontWeight: 700,
+      fontSize: 15,
+      boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
+      minWidth: 220,
+      textAlign: 'center',
+      transition: 'all 0.2s'
+    }}>
+      {toastMessage.text}
+    </div>
+  )}
 
   const handleFileChange = (event) => {
     const file = event.target.files?.[0] || null;

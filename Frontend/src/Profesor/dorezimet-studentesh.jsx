@@ -51,6 +51,8 @@ const DoreziметStudentesh = () => {
   const [templateInfo, setTemplateInfo] = useState({ hasTemplate: false, fileName: '' });
   const [templateUploadFile, setTemplateUploadFile] = useState(null);
   const [uploadingTemplate, setUploadingTemplate] = useState(false);
+  // Toast message state
+  const [toastMessage, setToastMessage] = useState(null);
 
   const pad2 = (num) => String(num).padStart(2, '0');
   const formatDateDisplay = (isoString) => {
@@ -226,8 +228,13 @@ const DoreziметStudentesh = () => {
     loadTemplates();
   }, [lendaId]);
 
-  const profesorName = 'Profesor';
-  const avatarLetter = 'P';
+  // Get professor's name and avatar letter from localStorage
+  let profesorName = 'Profesor';
+  let avatarLetter = 'P';
+  if (student && (student.emri || student.mbiemri)) {
+    profesorName = `${student.emri ?? ''} ${student.mbiemri ?? ''}`.trim() || 'Profesor';
+    avatarLetter = (student.emri?.[0] ?? 'P').toUpperCase();
+  }
 
   const pageStyle = {
     color: '#B8E3E9',
@@ -311,13 +318,15 @@ const DoreziметStudentesh = () => {
   const handleUpdateGrade = async (projectId) => {
     const piket = gradeValues[projectId];
     if (piket === undefined || piket === null || piket === '') {
-      alert('Ju lutem vendosni pikët');
+      setToastMessage({ type: 'error', text: 'Ju lutem vendosni pikët' });
+      setTimeout(() => setToastMessage(null), 3000);
       return;
     }
 
     const numPiket = Number(piket);
     if (isNaN(numPiket) || numPiket < 0 || numPiket > projectMaxPoints) {
-      alert(`Pikët duhet të jenë numër ndërmjet 0 dhe ${projectMaxPoints}`);
+      setToastMessage({ type: 'error', text: `Pikët duhet të jenë numër ndërmjet 0 dhe ${projectMaxPoints}` });
+      setTimeout(() => setToastMessage(null), 3000);
       return;
     }
 
@@ -327,16 +336,19 @@ const DoreziметStudentesh = () => {
         sub.id === projectId ? { ...sub, piket: numPiket } : sub
       ));
       setEditingGrade(null);
-      alert('Pikët u ruajtën me sukses!');
+      setToastMessage({ type: 'success', text: 'Pikët u ruajtën me sukses!' });
+      setTimeout(() => setToastMessage(null), 3000);
     } catch (error) {
-      alert('Error: ' + (error.message || 'Nuk u ruajtën pikët'));
+      setToastMessage({ type: 'error', text: 'Error: ' + (error.message || 'Nuk u ruajtën pikët') });
+      setTimeout(() => setToastMessage(null), 3000);
     }
   };
 
   const handleSetProjectMax = async () => {
     const total = Number(bulkGradeValue);
     if (isNaN(total) || total < 0 || total > 100) {
-      alert('Pikët totale duhet të jenë numër ndërmjet 0 dhe 100');
+      setToastMessage({ type: 'error', text: 'Pikët totale duhet të jenë numër ndërmjet 0 dhe 100' });
+      setTimeout(() => setToastMessage(null), 3000);
       return;
     }
 
@@ -345,9 +357,11 @@ const DoreziметStudentesh = () => {
       setProjectMaxPoints(total);
       setShowBulkGrade(false);
       setBulkGradeValue('');
-      alert('Pikët totale u përditësuan!');
+      setToastMessage({ type: 'success', text: 'Pikët totale u përditësuan!' });
+      setTimeout(() => setToastMessage(null), 3000);
     } catch (error) {
-      alert('Error: ' + (error.message || 'Nuk u ruajtën pikët totale'));
+      setToastMessage({ type: 'error', text: 'Error: ' + (error.message || 'Nuk u ruajtën pikët totale') });
+      setTimeout(() => setToastMessage(null), 3000);
     }
   };
 
@@ -372,16 +386,16 @@ const DoreziметStudentesh = () => {
       setTimeout(() => setExportMessage(null), 3500);
     }
   };
-  {/* Toast message for export results */}
-  {exportMessage && (
+  {/* Toast message for export results and all alerts */}
+  {(exportMessage || toastMessage) && (
     <div style={{
       position: 'fixed',
       top: 24,
       right: 24,
       zIndex: 2000,
-      background: exportMessage.type === 'success' ? 'rgba(184, 227, 233, 0.95)' : 'rgba(255,99,71,0.95)',
-      color: exportMessage.type === 'success' ? '#0B2E33' : '#fff',
-      border: exportMessage.type === 'success' ? '1px solid #4F7C82' : '1px solid #e26464',
+      background: (exportMessage?.type || toastMessage?.type) === 'success' ? 'rgba(184, 227, 233, 0.95)' : 'rgba(255,99,71,0.95)',
+      color: (exportMessage?.type || toastMessage?.type) === 'success' ? '#0B2E33' : '#fff',
+      border: (exportMessage?.type || toastMessage?.type) === 'success' ? '1px solid #4F7C82' : '1px solid #e26464',
       borderRadius: 12,
       padding: '1rem 2rem',
       fontWeight: 700,
@@ -391,7 +405,7 @@ const DoreziметStudentesh = () => {
       textAlign: 'center',
       transition: 'all 0.2s'
     }}>
-      {exportMessage.text}
+      {(exportMessage && exportMessage.text) || (toastMessage && toastMessage.text)}
     </div>
   )}
 
@@ -579,20 +593,23 @@ const DoreziметStudentesh = () => {
 
     if (deadlineStartDate || deadlineStartHour || deadlineStartMinute || deadlineStartSecond) {
       if (!startDate) {
-        alert('Format i pavlefshëm për fillimin. Përdor DD/MM/YYYY dhe orën 00-23, minutat 00-59, sekondat 00-59.');
+        setToastMessage({ type: 'error', text: 'Format i pavlefshëm për fillimin. Përdor DD/MM/YYYY dhe orën 00-23, minutat 00-59, sekondat 00-59.' });
+        setTimeout(() => setToastMessage(null), 3000);
         return;
       }
     }
 
     if (deadlineEndDate || deadlineEndHour || deadlineEndMinute || deadlineEndSecond) {
       if (!endDate) {
-        alert('Format i pavlefshëm për mbarimin. Përdor DD/MM/YYYY dhe orën 00-23, minutat 00-59, sekondat 00-59.');
+        setToastMessage({ type: 'error', text: 'Format i pavlefshëm për mbarimin. Përdor DD/MM/YYYY dhe orën 00-23, minutat 00-59, sekondat 00-59.' });
+        setTimeout(() => setToastMessage(null), 3000);
         return;
       }
     }
 
     if (startDate && endDate && startDate > endDate) {
-      alert('Data e fillimit duhet të jetë para afatit të dorëzimit');
+      setToastMessage({ type: 'error', text: 'Data e fillimit duhet të jetë para afatit të dorëzimit' });
+      setTimeout(() => setToastMessage(null), 3000);
       return;
     }
 
@@ -649,10 +666,12 @@ const DoreziметStudentesh = () => {
           console.error('Nuk u ruajt titulli i periudhës:', err);
         }
       }
-
-      alert('Afatet u përditësuan!');
+setToastMessage({ type: 'success', text: 'Afati u ruajt me sukses!' });
+      setTimeout(() => setToastMessage(null), 3000);
+      
     } catch (error) {
-      alert('Error: ' + (error.message || 'Nuk u ruajt afati'));
+     setToastMessage({ type: 'error', text: 'Error: ' + (error.message || 'Nuk u ruajt afati') });
+      setTimeout(() => setToastMessage(null), 3000);
     }
   };
 
@@ -950,7 +969,8 @@ const DoreziметStudentesh = () => {
                           disabled={uploadingTemplate}
                           onClick={async () => {
                             if (!templateUploadFile) {
-                              alert('Zgjedh një fajll për template.');
+                              setToastMessage({ type: 'error', text: 'Zgjedh një fajll për template.' });
+                              setTimeout(() => setToastMessage(null), 3500);
                               return;
                             }
                             try {
@@ -959,10 +979,12 @@ const DoreziметStudentesh = () => {
                               const data = await getLendaTemplateInfo(PROFESOR_ID, lendaId);
                               setTemplateInfo(data?.hasTemplate ? { hasTemplate: true, fileName: data.fileName } : { hasTemplate: false, fileName: '' });
                               setTemplateUploadFile(null);
-                              alert('Template u ngarkua me sukses!');
+                              setToastMessage({ type: 'success', text: 'Template u ngarkua me sukses!' });
+                              setTimeout(() => setToastMessage(null), 3500);
                             } catch (error) {
                               console.error('Error uploading template:', error);
-                              alert('Error: ' + (error.message || 'Nuk u ngarkua template'));
+                              setToastMessage({ type: 'error', text: 'Error: ' + (error.message || 'Nuk u ngarkua template') });
+                              setTimeout(() => setToastMessage(null), 3500);
                             } finally {
                               setUploadingTemplate(false);
                             }
@@ -987,10 +1009,12 @@ const DoreziметStudentesh = () => {
                             try {
                               await deleteLendaTemplate(PROFESOR_ID, lendaId);
                               setTemplateInfo({ hasTemplate: false, fileName: '' });
-                              alert('Template u fshi.');
+                              setToastMessage({ type: 'success', text: 'Template u fshi.' });
+                              setTimeout(() => setToastMessage(null), 3500);
                             } catch (error) {
                               console.error('Error deleting template:', error);
-                              alert('Error: ' + (error.message || 'Nuk u fshi template'));
+                              setToastMessage({ type: 'error', text: 'Error: ' + (error.message || 'Nuk u fshi template') });
+                              setTimeout(() => setToastMessage(null), 3500);
                             }
                           }}
                         >
@@ -1065,14 +1089,16 @@ const DoreziметStudentesh = () => {
                               title: templateTitle || 'Instruksione',
                               content: templateContent
                             });
-                            alert('Template u përditësua me sukses!');
+                            setToastMessage({ type: 'success', text: 'Template u përditësua me sukses!' });
+                            setTimeout(() => setToastMessage(null), 3500);
                           } else {
                             // Create new template
                             await addInstructionTemplate(PROFESOR_ID, lendaId, {
                               title: templateTitle || 'Instruksione',
                               content: templateContent
                             });
-                            alert('Template u ruajt me sukses!');
+                            setToastMessage({ type: 'success', text: 'Template u ruajt me sukses!' });
+                            setTimeout(() => setToastMessage(null), 3500);
                           }
 
                           // Reload templates from backend
@@ -1085,15 +1111,39 @@ const DoreziметStudentesh = () => {
                           setShowTemplateForm(false);
                         } catch (error) {
                           console.error('Error saving template:', error);
-                          alert('Error: ' + (error.message || 'Nuk u ruajt template'));
+                          setToastMessage({ type: 'error', text: 'Error: ' + (error.message || 'Nuk u ruajt template') });
+                          setTimeout(() => setToastMessage(null), 3500);
                         }
                       } else {
-                        alert('Shto instruksion!');
+                        setToastMessage({ type: 'error', text: 'Shto instruksion!' });
+                        setTimeout(() => setToastMessage(null), 3500);
                       }
                     }}
                   >
                     {editingTemplateId ? 'Përditëso Template' : 'Ruaj Template'}
                   </button>
+                  {/* Toast Message */}
+                  {toastMessage && (
+                    <div style={{
+                      position: 'fixed',
+                      top: 24,
+                      right: 24,
+                      zIndex: 2000,
+                      background: toastMessage.type === 'success' ? 'rgba(184, 227, 233, 0.95)' : 'rgba(255,99,71,0.95)',
+                      color: toastMessage.type === 'success' ? '#0B2E33' : '#fff',
+                      border: toastMessage.type === 'success' ? '1px solid #4F7C82' : '1px solid #e26464',
+                      borderRadius: 12,
+                      padding: '1rem 2rem',
+                      fontWeight: 700,
+                      fontSize: 15,
+                      boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
+                      minWidth: 220,
+                      textAlign: 'center',
+                      transition: 'all 0.2s'
+                    }}>
+                      {toastMessage.text}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1161,7 +1211,8 @@ const DoreziметStudentesh = () => {
                                 setTemplates(updatedTemplates || []);
                               } catch (error) {
                                 console.error('Error deleting template:', error);
-                                alert('Error: ' + (error.message || 'Nuk u fshi template'));
+                                setToastMessage({ type: 'error', text: 'Error: ' + (error.message || 'Nuk u fshi template') });
+                                setTimeout(() => setToastMessage(null), 3500);
                               }
                             }}
                           >
@@ -1238,7 +1289,8 @@ const DoreziметStudentesh = () => {
                                       whiteSpace: 'nowrap'
                                     }}
                                     onClick={() => {
-                                      alert(`Për të shkarkuar "${file.name}", do të nevojitet integrimi me serverin. Fajlli mund të shkarkohet pasi të ruhet në bazën e të dhënave.`);
+                                      setToastMessage({ type: 'info', text: `Për të shkarkuar "${file.name}", do të nevojitet integrimi me serverin. Fajlli mund të shkarkohet pasi të ruhet në bazën e të dhënave.` });
+                                      setTimeout(() => setToastMessage(null), 3500  );
                                     }}
                                   >
                                     Shkarko

@@ -20,6 +20,7 @@ const Lendetp = () => {
   const [showDebug, setShowDebug] = useState(false);
   const [debugInfo, setDebugInfo] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState({ open: false, message: '', onConfirm: null });
+  const [toastMessage, setToastMessage] = useState(null);
 
   const baseSemesters = useMemo(() => {
     const parsed = Number(yearId);
@@ -350,12 +351,36 @@ const Lendetp = () => {
       setUploadingTemplate(true);
       await uploadLendaTemplate(PROFESOR_ID, activeModal.subject.id, file);
       await loadTemplateInfo(activeModal.subject.id);
-      alert('Template u ngarkua me sukses!');
+      setToastMessage({ type: 'success', text: 'Template u ngarkua me sukses!' });
+      setTimeout(() => setToastMessage(null), 3000);
     } catch (error) {
-      alert('Error: ' + (error.message || 'Ngarkimi dështoi'));
+      setToastMessage({ type: 'error', text: 'Error: ' + (error.message || 'Ngarkimi dështoi') });
+      setTimeout(() => setToastMessage(null), 3000);
     } finally {
       setUploadingTemplate(false);
     }
+    {/* Toast message for template upload */}
+    {toastMessage && (
+      <div style={{
+        position: 'fixed',
+        top: 24,
+        right: 24,
+        zIndex: 2000,
+        background: toastMessage.type === 'success' ? 'rgba(184, 227, 233, 0.95)' : 'rgba(255,99,71,0.95)',
+        color: toastMessage.type === 'success' ? '#0B2E33' : '#fff',
+        border: toastMessage.type === 'success' ? '1px solid #4F7C82' : '1px solid #e26464',
+        borderRadius: 12,
+        padding: '1rem 2rem',
+        fontWeight: 700,
+        fontSize: 15,
+        boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
+        minWidth: 220,
+        textAlign: 'center',
+        transition: 'all 0.2s'
+      }}>
+        {toastMessage.text}
+      </div>
+    )}
   };
 
   const handleDeleteTemplate = async () => {
@@ -371,7 +396,7 @@ const Lendetp = () => {
           setTemplateInfo({ hasTemplate: false, fileName: '' });
           setConfirmDialog({ open: false, message: '', onConfirm: null });
         } catch (error) {
-          alert('Error: ' + (error.message || 'Fshirja dështoi'));
+         setToastMessage({ type: 'error', text: 'Error: ' + (error.message || 'Nuk u fshi template') });  
           setConfirmDialog({ open: false, message: '', onConfirm: null });
         } finally {
           setUploadingTemplate(false);

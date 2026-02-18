@@ -71,6 +71,7 @@ const Lendet = () => {
   const [showElectivePicker, setShowElectivePicker] = useState(false);
   const [selectedElectives, setSelectedElectives] = useState([]);
   const [activeModal, setActiveModal] = useState({ open: false, subject: null });
+  const [toastMessage, setToastMessage] = useState(null);
   const [yearData, setYearData] = useState(null);
   const [status, setStatus] = useState({ loading: true, error: null });
 
@@ -124,7 +125,8 @@ const Lendet = () => {
       setShowElectivePicker(false);
     } catch (error) {
       console.error('Error toggling elective:', error);
-      alert(error.message || 'Ndodhi një gabim gjatë zgjedhjes së lëndës');
+      setToastMessage({ type: 'error', text: error.message || 'Ndodhi një gabim gjatë zgjedhjes së lëndës' });
+      setTimeout(() => setToastMessage(null), 3000);
     }
   }, [STUDENT_ID, selectedElectives, canInteractWithYear]);
 
@@ -137,8 +139,31 @@ const Lendet = () => {
       setSelectedElectives((prev) => prev.filter((item) => item.id !== course.id));
     } catch (error) {
       console.error('Error removing elective:', error);
-      alert(error.message || 'Ndodhi një gabim gjatë heqjes së lëndës');
+      setToastMessage({ type: 'error', text: error.message || 'Ndodhi një gabim gjatë heqjes së lëndës' });
+      setTimeout(() => setToastMessage(null), 3000);
     }
+    {/* Toast message for elective errors */}
+    {toastMessage && (
+      <div style={{
+        position: 'fixed',
+        top: 24,
+        right: 24,
+        zIndex: 2000,
+        background: toastMessage.type === 'success' ? 'rgba(184, 227, 233, 0.95)' : 'rgba(255,99,71,0.95)',
+        color: toastMessage.type === 'success' ? '#0B2E33' : '#fff',
+        border: toastMessage.type === 'success' ? '1px solid #4F7C82' : '1px solid #e26464',
+        borderRadius: 12,
+        padding: '1rem 2rem',
+        fontWeight: 700,
+        fontSize: 15,
+        boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
+        minWidth: 220,
+        textAlign: 'center',
+        transition: 'all 0.2s'
+      }}>
+        {toastMessage.text}
+      </div>
+    )}
   }, [STUDENT_ID, canInteractWithYear]);
 
   const openSubjectModal = useCallback((subject) => {

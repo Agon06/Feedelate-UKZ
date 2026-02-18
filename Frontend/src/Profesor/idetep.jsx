@@ -224,9 +224,11 @@ const Idetep = () => {
       setUploadingTemplate(true);
       await uploadProfesorDorezim(PROFESOR_ID, { lendaId, file, isShabllon: true });
       await loadTemplateInfo();
-      alert('Template u ngarkua me sukses!');
+      setToastMessage({ type: 'success', text: 'Template u ngarkua me sukses!' });
+      setTimeout(() => setToastMessage(null), 4000);
     } catch (error) {
-      alert('Error: ' + (error.message || 'Ngarkimi dështoi'));
+      setToastMessage({ type: 'error', text: 'Error: ' + (error.message || 'Ngarkimi dështoi') });
+      setTimeout(() => setToastMessage(null), 4000);
     } finally {
       setUploadingTemplate(false);
     }

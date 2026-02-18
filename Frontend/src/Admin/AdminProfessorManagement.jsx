@@ -284,11 +284,20 @@ const AdminProfessorManagement = () => {
                     setNotification(null);
                 }, 3000);
             } else {
-                alert('Gabim gjatë ruajtjes. Provo përsëri.');
+                //bone toast msg
+                
+              setNotification({
+                    type: 'error',
+                    message: 'Gabim në ruajtjen e ndryshimeve: ' + (response.statusText || 'Përpiquni përsëri')
+                });
             }
         } catch (err) {
             console.error('Error saving professor:', err);
-            alert('Gabim: ' + err.message);
+            setNotification({
+                type: 'error',
+                message: 'Gabim: ' + err.message
+            });
+            setTimeout(() => setNotification(null), 3000);
         }
     };
 

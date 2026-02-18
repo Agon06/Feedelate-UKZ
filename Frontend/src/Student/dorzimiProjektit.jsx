@@ -295,10 +295,33 @@ const cannotSubmit = isDeadlinePassed || hasNoDeadline || isBeforeStart;
                 setIsLoading(true);
                 await shkarkoProjektin(STUDENT_ID, lendaId, dorezimData.fileName);
             } catch (error) {
-                alert("Error: " + (error.message || "Nuk u shkarkua"));
+                setSubmitMessage({ type: 'error', text: "Error: " + (error.message || "Nuk u shkarkua") });
+                setTimeout(() => setSubmitMessage(null), 3000);
             } finally {
                 setIsLoading(false);
             }
+                {/* Toast message for download error */}
+                {submitMessage && (
+                    <div style={{
+                        position: 'fixed',
+                        top: 24,
+                        right: 24,
+                        zIndex: 2000,
+                        background: submitMessage.type === 'success' ? 'rgba(184, 227, 233, 0.95)' : 'rgba(255,99,71,0.95)',
+                        color: submitMessage.type === 'success' ? '#0B2E33' : '#fff',
+                        border: submitMessage.type === 'success' ? '1px solid #4F7C82' : '1px solid #e26464',
+                        borderRadius: 12,
+                        padding: '1rem 2rem',
+                        fontWeight: 700,
+                        fontSize: 15,
+                        boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
+                        minWidth: 220,
+                        textAlign: 'center',
+                        transition: 'all 0.2s'
+                    }}>
+                        {submitMessage.text}
+                    </div>
+                )}
         }
     };
 
@@ -737,7 +760,7 @@ const cannotSubmit = isDeadlinePassed || hasNoDeadline || isBeforeStart;
                                                                                 }}
                                                                                 onClick={() => {
                                                                                     downloadInstructionFile(STUDENT_ID, lendaId, file.name)
-                                                                                        .catch(error => alert("Error: " + (error.message || "Nuk u shkarkua fajlli")));
+                                                                                        .catch(error => setToast({ type: "error", message: "Error: " + (error.message || "Nuk u shkarkua") }));
                                                                                 }}
                                                                             >
                                                                                 ⬇ Shkarko

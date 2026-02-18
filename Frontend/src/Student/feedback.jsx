@@ -43,6 +43,7 @@ const Feedback = () => {
   // Toggle Office embed for exact layout
   const [showOfficeView, setShowOfficeView] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState({ open: false, message: '', onConfirm: null });
+  const [toastMessage, setToastMessage] = useState(null);
 
   const handleBack = () => {
     navigate(-1); // Go back in browser history instead of hardcoding route
@@ -50,7 +51,8 @@ const Feedback = () => {
 
   const handleDelete = async (dorezimId) => {
     if (!dorezimId) {
-      alert("Dorezim ID nuk u gjet");
+      setToastMessage({ type: 'error', text: 'Dorezim ID nuk u gjet' });
+      setTimeout(() => setToastMessage(null), 3000);
       return;
     }
 
@@ -68,13 +70,36 @@ const Feedback = () => {
           setConfirmDialog({ open: false, message: '', onConfirm: null });
         } catch (error) {
           console.error("Error deleting dorezim:", error);
-          alert("Error: " + error.message);
+          setToastMessage({ type: 'error', text: 'Error: ' + error.message });
+          setTimeout(() => setToastMessage(null), 3000);
           setConfirmDialog({ open: false, message: '', onConfirm: null });
         } finally {
           setIsDeleting(false);
         }
       }
     });
+    {/* Toast message for errors */}
+    {toastMessage && (
+      <div style={{
+        position: 'fixed',
+        top: 24,
+        right: 24,
+        zIndex: 2000,
+        background: toastMessage.type === 'success' ? 'rgba(184, 227, 233, 0.95)' : 'rgba(255,99,71,0.95)',
+        color: toastMessage.type === 'success' ? '#0B2E33' : '#fff',
+        border: toastMessage.type === 'success' ? '1px solid #4F7C82' : '1px solid #e26464',
+        borderRadius: 12,
+        padding: '1rem 2rem',
+        fontWeight: 700,
+        fontSize: 15,
+        boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
+        minWidth: 220,
+        textAlign: 'center',
+        transition: 'all 0.2s'
+      }}>
+        {toastMessage.text}
+      </div>
+    )}
   };
 
 
