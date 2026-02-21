@@ -1,9 +1,31 @@
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 import Login from './Login/Login';
+import AuthCallback from './Login/AuthCallback';
 import AdminDashboard from './Admin/AdminDashboard';
+import AdminStudentManagement from './Admin/AdminStudentManagement';
+import AdminProfessorManagement from './Admin/AdminProfessorManagement';
+import AdminRegisterSubjects from './Admin/AdminRegisterSubjects';
 import ProfesorDashboard from './Profesor/ProfesorDashboard';
 import StudentDashboard from './Student/StudentDashboard';
+import Lendet from './Student/lendet';
+import IdeaPage from './Student/Ide';
+import DorezimPage from './Student/Dorezimi';
+import StudentProfile from './Student/profile';
+import Projekti from './Student/projekti';
+import Feedback from './Student/feedback';
+import DorzimiProjektit from './Student/dorzimiProjektit';
+
+// Profesor imports
+import Lendetp from './Profesor/lendetp';
+import Idetep from './Profesor/idetep';
+import Dorezimip from './Profesor/dorezimip';
+import Profilep from './Profesor/profilep';
+import Projektip from './Profesor/projektip';
+import Feedbackp from './Profesor/feedback';
+import DoreziметStudentesh from './Profesor/dorezimet-studentesh';
+
+
 
 
 function App() {
@@ -21,9 +43,36 @@ function App() {
 
         <Routes>
           <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/menaxho-studentet" element={<AdminStudentManagement />} />
+          <Route path="/admin/menaxho-profesoret" element={<AdminProfessorManagement />} />
+          <Route path="/admin/regjistro-lendet" element={<AdminRegisterSubjects />} />
+
+          {/* Profesor routes */}
           <Route path="/profesor" element={<ProfesorDashboard />} />
+          <Route path="/profesor/lendet/:yearId" element={<Lendetp />} />
+          <Route path="/profesor/idete" element={<Idetep />} />
+          <Route path="/profesor/dorezimi" element={<Dorezimip />} />
+          <Route path="/profesor/dorezimet-studentesh" element={<DoreziметStudentesh />} />
+          <Route path="/profesor/profile" element={<Profilep />} />
+          <Route path="/profesor/projekti" element={<Projektip />} />
+          <Route path="/profesor/feedback" element={<Feedbackp />} />
+
+          {/* Student routes */}
           <Route path="/student" element={<StudentDashboard />} />
+          <Route path="/student/lendet/:yearId" element={<Lendet />} />
+          <Route path="/student/ide" element={<IdeaPage />} />
+          <Route path="/student/dorezimi" element={<DorezimPage />} />
+          <Route path="/student/profile" element={<StudentProfile />} />
+          <Route path="/student/projekti" element={<Projekti />} />
+          <Route path="/student/feedback" element={<Feedback />} />
+
+          <Route path="/student/dorzimiProjektit" element={<DorzimiProjektit />} />
+
+          {/* ketu shtohen rruget e reja */}
+
         </Routes>
       </div>
     </Router>

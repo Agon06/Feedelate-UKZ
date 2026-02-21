@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "title": "Sistem Menaxhimi për Librari",
+    "shorthand": "SML",
+    "subject": { "id": 101, "name": "Algoritmet dhe Strukturat e të Dhënave" },
+    "student": { "id": 1, "emri": "Agon", "mbiemri": "Krasniqi", "fullName": "Agon Krasniqi" },
+    "createdAt": "2026-01-03T09:00:00Z"
+  },
+  {
+    "id": 2,
+    "title": "Aplikacion për Menaxhimin e Taskave",
+    "shorthand": "AMT",
+    "subject": { "id": 102, "name": "Programimi i Orientuar në Objekte" },
+    "student": { "id": 2, "emri": "Blerta", "mbiemri": "Hoxha", "fullName": "Blerta Hoxha" },
+    "createdAt": "2026-01-04T11:30:00Z"
+  },
+  {
+    "id": 3,
+    "title": "Platformë E-Learning",
+    "shorthand": "PEL",
+    "subject": { "id": 201, "name": "Bazat e të Dhënave" },
+    "student": { "id": 3, "emri": "Dardan", "mbiemri": "Berisha", "fullName": "Dardan Berisha" },
+    "createdAt": "2026-01-05T14:15:00Z"
+  },
+  {
+    "id": 4,
+    "title": "Sistem Rezervimi për Restorant",
+    "shorthand": "SRR",
+    "subject": { "id": 103, "name": "Matematika Diskrete" },
+    "student": { "id": 4, "emri": "Elira", "mbiemri": "Shala", "fullName": "Elira Shala" },
+    "createdAt": "2026-01-06T16:45:00Z"
+  },
+  {
+    "id": 5,
+    "title": "Menaxhim i Inventarit",
+    "shorthand": "MI",
+    "subject": { "id": 201, "name": "Bazat e të Dhënave" },
+    "student": { "id": 5, "emri": "Ardit", "mbiemri": "Gashi", "fullName": "Ardit Gashi" },
+    "createdAt": "2026-01-07T10:00:00Z"
+  },
+  {
+    "id": 6,
+    "title": "Analiza e Sentimentit",
+    "shorthand": "AS",
+    "subject": { "id": 402, "name": "Machine Learning" },
+    "student": { "id": 6, "emri": "Lira", "mbiemri": "Rama", "fullName": "Lira Rama" },
+    "createdAt": "2026-01-07T11:30:00Z"
+  },
+  {
+    "id": 7,
+    "title": "Planifikues Orari",
+    "shorthand": "PO",
+    "subject": { "id": 102, "name": "Programimi i Orientuar në Objekte" },
+    "student": { "id": 7, "emri": "Visar", "mbiemri": "Musa", "fullName": "Visar Musa" },
+    "createdAt": "2026-01-07T12:00:00Z"
+  },
+  {
+    "id": 8,
+    "title": "Monitorim i Rrjetit",
+    "shorthand": "MR",
+    "subject": { "id": 301, "name": "Rrjetat Kompjuterike" },
+    "student": { "id": 8, "emri": "Nita", "mbiemri": "Thaci", "fullName": "Nita Thaci" },
+    "createdAt": "2026-01-07T12:30:00Z"
+  },
+  {
+    "id": 9,
+    "title": "Aplikacion i Meteove",
+    "shorthand": "AM",
+    "subject": { "id": 103, "name": "Matematika Diskrete" },
+    "student": { "id": 9, "emri": "Kushtrim", "mbiemri": "Hasani", "fullName": "Kushtrim Hasani" },
+    "createdAt": "2026-01-07T13:00:00Z"
+  },
+  {
+    "id": 10,
+    "title": "Shporte Blerjesh",
+    "shorthand": "SB",
+    "subject": { "id": 101, "name": "Algoritmet dhe Strukturat e të Dhënave" },
+    "student": { "id": 10, "emri": "Rron", "mbiemri": "Kelmendi", "fullName": "Rron Kelmendi" },
+    "createdAt": "2026-01-07T13:30:00Z"
+  }
+]

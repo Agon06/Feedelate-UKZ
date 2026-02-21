@@ -1,0 +1,252 @@
+import React, { useState, useEffect } from "react";
+import { getStudentProjects, createStudentProject, deleteStudentProject } from "../services/studentApi";
+import "./StudentTheme.css";
+
+const Projekti = () => {
+  const student = JSON.parse(localStorage.getItem('student') || '{}');
+  if (!student.id) {
+    // navigate to login, but no navigate here
+    window.location.href = '/';
+    return null;
+  }
+  const STUDENT_ID = student.id;
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [formData, setFormData] = useState({
+    emriProjekti: "",
+    pershkrimiProjekti: "",
+    deaAdline: "",
+    lendaId: 1,
+  });
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      const data = await getStudentProjects(STUDENT_ID);
+      setProjects(data);
+      setError(null);
+    } catch (err) {
+      setError(err.message || "Error fetching projects");
+      setProjects([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await createStudentProject(STUDENT_ID, {
+        ...formData,
+        lendaId: parseInt(formData.lendaId),
+      });
+      setFormData({
+        emriProjekti: "",
+        pershkrimiProjekti: "",
+        deaAdline: "",
+        lendaId: 1,
+      });
+      setShowForm(false);
+      await fetchProjects();
+    } catch (err) {
+      setError(err.message || "Error creating project");
+    }
+  };
+
+  const handleDelete = async (projectId) => {
+    try {
+      await deleteStudentProject(STUDENT_ID, projectId);
+      await fetchProjects();
+    } catch (err) {
+      setError(err.message || "Error deleting project");
+    }
+  };
+
+  if (loading) return <div style={{ padding: "2rem", color: "var(--st-text)" }}>Po ngarkohen projektet...</div>;
+
+  return (
+    <div className="student-theme" style={{ padding: "2rem", color: "var(--st-text)" }}>
+      <h1>Projektet e Mia</h1>
+
+      {error && (
+        <div style={{ padding: "1rem", background: "rgba(255,82,82,0.2)", borderRadius: "8px", marginBottom: "1rem" }}>
+          {error}
+        </div>
+      )}
+
+      <button
+        onClick={() => setShowForm(!showForm)}
+        style={{
+          padding: "0.5rem 1rem",
+          background: "var(--st-2)",
+          color: "var(--st-text-dark)",
+          border: "none",
+          borderRadius: "6px",
+          cursor: "pointer",
+          marginBottom: "1rem",
+        }}
+      >
+        {showForm ? "Mbyll formularin" : "Shto projekt të ri"}
+      </button>
+
+      {showForm && (
+        <form
+          onSubmit={handleSubmit}
+          style={{
+            background: "rgba(79, 124, 130, 0.25)",
+            padding: "1.5rem",
+            borderRadius: "12px",
+            marginBottom: "2rem",
+            border: "1px solid var(--st-border)",
+          }}
+        >
+          <div style={{ marginBottom: "1rem" }}>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "600" }}>
+              Emri i projektit
+            </label>
+            <input
+              type="text"
+              name="emriProjekti"
+              value={formData.emriProjekti}
+              onChange={handleInputChange}
+              required
+              style={{
+                width: "100%",
+                padding: "0.75rem",
+                background: "rgba(11, 46, 51, 0.7)",
+                color: "var(--st-text)",
+                border: "1px solid var(--st-border)",
+                borderRadius: "6px",
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: "1rem" }}>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "600" }}>
+              Përshkrimi
+            </label>
+            <textarea
+              name="pershkrimiProjekti"
+              value={formData.pershkrimiProjekti}
+              onChange={handleInputChange}
+              required
+              style={{
+                width: "100%",
+                padding: "0.75rem",
+                background: "rgba(11, 46, 51, 0.7)",
+                color: "var(--st-text)",
+                border: "1px solid var(--st-border)",
+                borderRadius: "6px",
+                minHeight: "100px",
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: "1rem" }}>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "600" }}>
+              Afati (deadline)
+            </label>
+            <input
+              type="date"
+              name="deaAdline"
+              value={formData.deaAdline}
+              onChange={handleInputChange}
+              style={{
+                width: "100%",
+                padding: "0.75rem",
+                background: "rgba(11, 46, 51, 0.7)",
+                color: "var(--st-text)",
+                border: "1px solid var(--st-border)",
+                borderRadius: "6px",
+              }}
+            />
+          </div>
+
+          <button
+            type="submit"
+            style={{
+              padding: "0.75rem 1.5rem",
+              background: "var(--st-1)",
+              color: "var(--st-text-dark)",
+              border: "none",
+              borderRadius: "6px",
+              cursor: "pointer",
+              fontWeight: "600",
+            }}
+          >
+            Shto projektin
+          </button>
+        </form>
+      )}
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+          gap: "1.5rem",
+        }}
+      >
+        {projects.length === 0 ? (
+          <p style={{ color: "var(--st-text)", opacity: 0.8 }}>Nuk keni projekte të krijuara akoma.</p>
+        ) : (
+          projects.map((project) => (
+            <div
+              key={project.id}
+              style={{
+                background: "rgba(11, 46, 51, 0.7)",
+                border: "1px solid rgba(184, 227, 233, 0.25)",
+                borderRadius: "12px",
+                padding: "1.5rem",
+              }}
+            >
+              <h3 style={{ color: "var(--st-1)", marginTop: 0 }}>{project.emriProjekti}</h3>
+              <p>{project.pershkrimiProjekti}</p>
+              {project.deaAdline && (
+                <p style={{ fontSize: "0.9rem", color: "var(--st-1)" }}>
+                  Afati: {new Date(project.deaAdline).toLocaleDateString()}
+                </p>
+              )}
+              <button
+                onClick={() => handleDelete(project.id)}
+                style={{
+                  padding: "0.5rem 1rem",
+                  background: "rgba(255,82,82,0.18)",
+                  color: "#ff9a9a",
+                  border: "1px solid rgba(255,82,82,0.4)",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  marginTop: "1rem",
+                }}
+              >
+                Fshi
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Projekti;

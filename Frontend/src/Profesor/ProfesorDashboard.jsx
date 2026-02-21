@@ -1,21 +1,250 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import UserMenu from '../components/UserMenu';
+import RoleSwitcher from '../components/RoleSwitcher';
+import '../Student/StudentTheme.css';
 
 const ProfesorDashboard = () => {
-  const [profesoret, setProfesoret] = useState([]);
+  const navigate = useNavigate();
+  const [profesorName, setProfessorName] = useState('Profesor');
+  const [avatarLetter, setAvatarLetter] = useState('P');
 
   useEffect(() => {
-    // Fetch profesoret from API
-    // fetch('http://localhost:5000/api/profesoret')
-    //   .then(res => res.json())
-    //   .then(data => setProfesoret(data));
+    // Load user data from localStorage - try profesor first, fallback to student for compatibility
+    const storedUser = localStorage.getItem('profesor') || localStorage.getItem('student');
+    if (storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        const firstName = userData.emri || 'Profesor';
+        const lastName = userData.mbiemri || '';
+        const fullName = `${firstName} ${lastName}`.trim();
+        setProfessorName(fullName);
+        setAvatarLetter((firstName.charAt(0) + lastName.charAt(0)).toUpperCase());
+      } catch (err) {
+        console.error('Failed to load user data:', err);
+      }
+    }
   }, []);
 
+  const years = useMemo(() => ([
+    { id: '1', label: 'Viti I' },
+    { id: '2', label: 'Viti II' },
+    { id: '3', label: 'Viti III' }
+  ]), []);
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 720);
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const pageStyle = {
+    color: '#0B2E33',
+    minHeight: '100vh',
+    background: 'linear-gradient(180deg, #FFFFFF 0%, #0B2E33 100%, #0B2E33 0%)',
+    padding: 0,
+    margin: 0,
+    fontFamily: 'Inter, system-ui, Arial, sans-serif',
+    boxSizing: 'border-box'
+  };
+
+  const topBarStyle = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: isMobile ? '0.85rem 1.5rem' : '1rem 2.5rem',
+    minHeight: 64,
+    width: '100%',
+    boxSizing: 'border-box',
+    background: 'linear-gradient(180deg,  #4F7C82 10%, #0B2E33 90%, #0B2E33 100%)'
+  };
+
+  const brandStyle = {
+    color: '#0B2E33',
+    fontWeight: 800,
+    fontSize: isMobile ? 18 : 22,
+    letterSpacing: 0.6
+  };
+
+  const titleStyle = {
+    textAlign: 'center',
+    fontSize: isMobile ? 16 : 19,
+    marginTop: isMobile ? 10 : 6,
+    opacity: 0.95,
+    letterSpacing: 0.5,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '1rem',
+    color: '#B8E3E9'
+  };
+
+  const backButtonStyle = {
+    background: 'none',
+    border: 'none',
+    color: '#B8E3E9',
+    fontSize: isMobile ? 20 : 24,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '0.5rem',
+    transition: 'color 200ms ease'
+  };
+
+  const actionsStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: isMobile ? 12 : 18
+  };
+
+  const profesorBadge = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    fontWeight: 600
+  };
+
+  const avatarStyle = {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    background: '#4F7C82',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#f2f2f2',
+    fontWeight: 700,
+    letterSpacing: 0.8
+  };
+
+  const layoutContainer = {
+    position: 'relative',
+    minHeight: isMobile ? '90vh' : '70vh',
+    width: '100%',
+    display: 'block',
+    overflow: 'visible'
+  };
+
+  const cardBase = {
+    position: 'absolute',
+    width: isMobile ? 160 : 260,
+    height: isMobile ? 160 : 260,
+    background: '#0B2E33',
+    color: '#B8E3E9',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 14,
+    boxShadow: '0 18px 36px rgba(0,0,0,0.45)',
+    fontSize: isMobile ? 16 : 22,
+    fontWeight: 800,
+    cursor: 'pointer',
+    transition: 'transform 180ms ease, box-shadow 180ms ease',
+    border: '1px solid rgba(184,227,233,0.2)',
+    marginBottom: isMobile ? 24 : 0
+  };
+
+  const cardHoverStyle = {
+    ...cardBase,
+    background: 'rgba(184, 227, 233, 0.12)',
+    borderColor: '#B8E3E9',
+    boxShadow: '0 20px 40px rgba(184, 227, 233, 0.2)',
+    transform: 'scale(1.05)'
+  };
+
+  const handleCardHover = (e, isHovering) => {
+    if (isHovering) {
+      e.currentTarget.style.background = cardHoverStyle.background;
+      e.currentTarget.style.borderColor = cardHoverStyle.borderColor;
+      e.currentTarget.style.boxShadow = cardHoverStyle.boxShadow;
+      e.currentTarget.style.transform = cardHoverStyle.transform;
+    } else {
+      e.currentTarget.style.background = cardBase.background;
+      e.currentTarget.style.borderColor = 'rgba(184,227,233,0.2)';
+      e.currentTarget.style.boxShadow = cardBase.boxShadow;
+      e.currentTarget.style.transform = 'scale(1)';
+    }
+  };
+
+  const positions = useMemo(() => (
+    isMobile
+      ? [
+          { left: '50%', top: '18%', transform: 'translateX(-50%)' },
+          { left: '50%', top: '42%', transform: 'translateX(-50%)' },
+          { left: '50%', top: '66%', transform: 'translateX(-50%)' }
+        ]
+      : [
+          { left: '14%', top: '24%' },
+          { left: '45%', top: '24%' },
+          { left: '76%', top: '24%' }
+        ]
+  ), [isMobile]);
+
+  const handleNavigate = useCallback((yearId) => {
+    navigate(`/profesor/lendet/${yearId}`);
+  }, [navigate]);
+
+  const handleKeyDown = useCallback((event, yearId) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleNavigate(yearId);
+    }
+  }, [handleNavigate]);
+
+  const handleBackClick = useCallback(() => {
+    navigate('/profesor');
+  }, [navigate]);
+
   return (
-    <div className="profesor-dashboard">
-      <h1>Profesor Dashboard</h1>
-      <p>Mirë se vini në panelin e profesorit</p>
+    <div className="profesor-dashboard student-theme" style={pageStyle}>
+      {/* Top bar - uses full available width (no negative margins) */}
+      <div style={topBarStyle}>
+        <div style={brandStyle}>Feedelate</div>
+        <div style={{flex: 1}} />
+        <div style={actionsStyle}>
+          <RoleSwitcher currentRole="profesor" />
+          <UserMenu userName={profesorName} userType="profesor" />
+        </div>
+      </div>
+
+      <div style={{width: '100%', boxSizing: 'border-box'}}>
+        <div style={titleStyle}>
+          <h2 style={{color: '#0B2E33', margin: 0}}>Universiteti Publik Kadri Zeka</h2>
+        </div>
+      </div>
+
+      <main style={{...layoutContainer, width: '100%', boxSizing: 'border-box'}}>
+        {years.map(({ id, label }, idx) => {
+          const pos = positions[idx % positions.length];
+          const transformStyle = pos.transform ? { transform: pos.transform } : {};
+          return (
+            <div
+              key={id}
+              role="button"
+              tabIndex={0}
+              aria-label={`Hapet programi ${label}`}
+              onClick={() => handleNavigate(id)}
+              onKeyDown={(event) => handleKeyDown(event, id)}
+              onMouseEnter={(e) => handleCardHover(e, true)}
+              onMouseLeave={(e) => handleCardHover(e, false)}
+              style={{ ...cardBase, left: pos.left, top: pos.top, ...transformStyle }}
+              className="profesor-year-card"
+            >
+              {label}
+            </div>
+          );
+        })}
+      </main>
     </div>
   );
 };
 
 export default ProfesorDashboard;
+
+
+
+

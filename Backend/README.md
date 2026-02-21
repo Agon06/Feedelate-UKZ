@@ -67,3 +67,26 @@ Backend/
 - `POST /api/users` - Krijo përdorues të ri
 - `PUT /api/users/:id` - Përditëso përdorues
 - `DELETE /api/users/:id` - Fshi përdorues
+
+## Setup i shpejtë me Docker (opsionale)
+
+Nëse nuk ke MySQL të instaluar lokalisht, mund të përdorësh Docker:
+
+1. Kërkohet Docker Desktop në Windows.
+2. Kopjo `.env.example` në `.env` dhe (nëse përdor Docker) lëre `DB_PASSWORD=example` dhe `DB_USER=root`.
+3. Nga rrënja e projektit ekzekuto:
+
+```bash
+docker compose up -d
+```
+
+Kjo starton një MySQL në portin 3306 dhe phpMyAdmin në http://localhost:8080.
+
+4. Pastaj nga folderi Backend:
+
+```bash
+npm install
+npm run dev
+```
+
+Nëse databaza `feedelate` nuk ekziston, `docker-compose` e krijon automatikisht. Për prova, mund të përdorësh [Backend/create_test_table.sql](Backend/create_test_table.sql).

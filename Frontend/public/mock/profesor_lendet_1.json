@@ -1,0 +1,25 @@
+{
+  "profesor": { "id": 1, "emri": "Test", "mbiemri": "Profesor", "fullName": "Test Profesor", "email": "test.profesor@uni-gjilan.net" },
+  "year": { "id": "1", "title": "Viti I" },
+  "semesters": [
+    {
+      "id": 1,
+      "name": "Semestri 1",
+      "subjects": [
+        { "id": 101, "name": "Algoritmet dhe Strukturat e të Dhënave", "isElective": false },
+        { "id": 102, "name": "Programimi i Orientuar në Objekte", "isElective": false },
+        { "id": 103, "name": "Matematika Diskrete", "isElective": false }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Semestri 2",
+      "subjects": [
+        { "id": 201, "name": "Bazat e të Dhënave", "isElective": false },
+        { "id": 202, "name": "Inxhinieria e Softuerit", "isElective": false }
+      ]
+    }
+  ],
+  "electives": [],
+  "selectedElectives": []
+}

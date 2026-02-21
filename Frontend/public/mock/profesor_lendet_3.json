@@ -1,0 +1,26 @@
+{
+  "profesor": { "id": 1, "emri": "Test", "mbiemri": "Profesor", "fullName": "Test Profesor", "email": "test.profesor@uni-gjilan.net" },
+  "year": { "id": "3", "title": "Viti III" },
+  "semesters": [
+    {
+      "id": 5,
+      "name": "Semestri 5",
+      "subjects": [
+        { "id": 501, "name": "Sistemet e Distribuuara", "isElective": false },
+        { "id": 502, "name": "Cloud Computing", "isElective": true }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Semestri 6",
+      "subjects": [
+        { "id": 601, "name": "Aplikacione Mobile", "isElective": true }
+      ]
+    }
+  ],
+  "electives": [
+    { "id": 502, "name": "Cloud Computing", "semester": 5 },
+    { "id": 601, "name": "Aplikacione Mobile", "semester": 6 }
+  ],
+  "selectedElectives": []
+}

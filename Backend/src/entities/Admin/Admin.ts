@@ -14,17 +14,18 @@ export class Admin {
   @Column({ unique: true })
   email: string;
 
-  @Column()
-  password: string;
-
   @Column({ unique: true })
   username: string;
 
   @Column({ type: "enum", enum: ["super_admin", "admin", "moderator"], default: "admin" })
-  role: string;
+  adminLevel: string;
 
   @Column({ nullable: true })
   telefoni: string;
+
+  // Roles: admin-only users have "admin" role
+  @Column({ default: 'admin', type: 'text' })
+  roles: string; // Always "admin" for admin-only users
 
   @CreateDateColumn()
   createdAt: Date;
